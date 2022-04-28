@@ -1,0 +1,46 @@
+#!/bin/zsh               
+source ${0:a:h}/common.zsh
+__CHECK_IMPORTS
+#####################################################################
+
+[ ! $NOPROMPT ] && {
+	__yN 'change the template before sync?' && __EDIT $__ENV_TEMPLATE
+	sed -i "s/^[A-Z]/export &/; s/^[^#=]\\+$/&=/; s/=.*$/=/" $__ENV_TEMPLATE
+	LC_COLLATE=C sort -uo $__ENV_TEMPLATE $__ENV_TEMPLATE
+	git add $__ENV_TEMPLATE >/dev/null 2>&1
+}
+
+ENVIRONMENTS=$(__GET_ENV_FILES)
+
+__STATUS 'inserting new environment variables...'
+while read line
+do
+	for ENV_FILE in $(echo $ENVIRONMENTS)
+    do
+        grep -q "^$line" $ENV_FILE || {
+            echo $line >> $ENV_FILE && __STATUS "added '$line' to '$ENV_FILE'"
+        }
+    done
+done < <(sed -n '/^./p' $__ENV_TEMPLATE)
+
+__STATUS 'removing old environment variables...'
+for ENV_FILE in $(echo $ENVIRONMENTS)
+do
+    while read line
+    do
+        ENV_VAR=$(echo "$line" | sed 's/=.*/=/')
+        grep -q "$ENV_VAR" $__ENV_TEMPLATE || {
+            sed -i "\\%$ENV_VAR%d" $ENV_FILE
+            __WARNING "removed unwanted '$ENV_VAR' from '$ENV_FILE'"
+        }
+    done < $ENV_FILE
+done
+
+for ENV_FILE in $(echo $ENVIRONMENTS)
+do
+	sed -i "s/^[A-Z]/export &/; s/^[^#=]\\+$/&=/" $ENV_FILE
+	LC_COLLATE=C sort -uo $ENV_FILE $ENV_FILE
+done
+LC_COLLATE=C sort -uo $__ENV_TEMPLATE $__ENV_TEMPLATE
+
+__SUCCESS 'finished sync!'

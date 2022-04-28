@@ -1,0 +1,34 @@
+#!/bin/zsh
+source ${0:a:h}/common.zsh
+__CHECK_IMPORTS
+#####################################################################
+
+_ROUTE53_BACKUP() {
+	local BACKUP_PATH="$SCWRYPTS_OUTPUT_PATH/$ENV_NAME/aws-dns-backup/$(date '+%Y-%m-%d')"
+	mkdir -p $BACKUP_PATH >/dev/null 2>&1
+
+	local DOMAIN
+	local JOBS=()
+	for DOMAIN in $(_ROUTE53_GET_DOMAINS)
+	do
+		( __STATUS "creating '$BACKUP_PATH/$DOMAIN.txt'" \
+			&& cli53 export --profile $_AWS_PROFILE $DOMAIN > "$BACKUP_PATH/$DOMAIN.txt" \
+			&& __SUCCESS "backed up '$DOMAIN'" \
+			|| __ERROR "failed to back up '$DOMAIN'" \
+		) &
+		JOBS+=$!
+	done
+
+	local P
+	for P in ${JOBS[@]}; do wait $P >/dev/null 2>&1; done
+}
+
+_ROUTE53_GET_DOMAINS() {
+	cli53 list --profile $_AWS_PROFILE \
+		| awk '{print $2;}' \
+		| sed '1d; s/\.$//'\
+		;
+}
+
+#####################################################################
+_ROUTE53_BACKUP

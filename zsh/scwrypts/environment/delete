@@ -1,0 +1,24 @@
+#!/bin/zsh               
+source ${0:a:h}/common.zsh
+__CHECK_IMPORTS
+#####################################################################
+
+__PROMPT 'choose an environment to delete'
+ENV_NAME=$(__SELECT_ENV)
+[ ! $ENV_NAME ] && __ABORT
+
+ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
+
+__STATUS "preparing to remove '$ENV_NAME'"
+
+__WARNING
+__WARNING "the '$ENV_NAME' environment will be removed"
+__WARNING 'configured options and stored credentials will be lost forever'
+__WARNING
+
+__yN 'continue?' || __ABORT
+
+__STATUS "removing environment"
+rm "$ENV_FILE" \
+	&& __SUCCESS "removed '$ENV_NAME'" \
+	|| __FAIL 3 "unable to remove '$ENV_FILE'; is it protected?"

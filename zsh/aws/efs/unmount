@@ -1,0 +1,33 @@
+#!/bin/zsh
+source ${0:a:h}/common.zsh
+__CHECK_IMPORTS
+#####################################################################
+
+_EFS_DISCONNECT() {
+	[ ! -d "$AWS__EFS__LOCAL_MOUNT_POINT" ] && {
+		__STATUS 'no efs currently mounted'
+		exit 0
+	}
+
+	local MOUNTED=$(ls "$AWS__EFS__LOCAL_MOUNT_POINT")
+	[ ! $MOUNTED ] && {
+		__STATUS 'no efs currently mounted'
+		exit 0
+	}
+
+	__GETSUDO || exit 1
+
+
+	local SELECTED=$(echo $MOUNTED | __FZF 'select a file system to unmount')
+	[ ! $SELECTED ] && __ABORT
+
+	local EFS="$AWS__EFS__LOCAL_MOUNT_POINT/$SELECTED"
+	__STATUS "unmounting '$SELECTED'"
+	sudo umount $EFS >/dev/null 2>&1
+	sudo rmdir $EFS \
+		&& __SUCCESS "done" \
+		|| __FAIL 2 "failed to unmount '$EFS'"
+}
+
+#####################################################################
+_EFS_DISCONNECT

@@ -1,0 +1,20 @@
+#!/bin/zsh               
+source ${0:a:h}/common.zsh
+__CHECK_IMPORTS
+#####################################################################
+
+cd $SCWRYPTS_ROOT
+
+__STATUS "Found $(ls $SCWRYPTS_LOG_PATH | wc -l) log files"
+__WARNING
+__WARNING 'this will permanently clear all local cloud script logs found in'
+__WARNING "'$SCWRYPTS_LOG_PATH'"
+__WARNING
+
+__yN 'continue?' || __ABORT
+
+__STATUS 'removing logfiles'
+rm -rf $SCWRYPTS_LOG_PATH/* \
+	&& __SUCCESS 'done' \
+	|| { __ERROR 'failed :c'; exit 2; }\
+	;
