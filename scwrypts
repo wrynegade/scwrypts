@@ -1,0 +1,151 @@
+#!/bin/zsh
+SCWRYPTS_ROOT="${0:a:h}"
+
+source "$SCWRYPTS_ROOT/zsh/common.zsh"
+
+__CHECK_DEPENDENCIES \
+	fzf \
+	;
+
+__CHECK_IMPORTS
+
+#####################################################################
+
+__RUN() {
+	cd "$SCWRYPTS_ROOT"
+
+	##########################################
+	### parse arguments ######################
+	##########################################
+
+	local ENV_NAME
+	[ $SCWRYPTS_ENV ] && ENV_NAME="$SCWRYPTS_ENV" || {
+		[ $1 ] && [ -f $(__GET_ENV_FILE $1) ] && {
+			ENV_NAME="$1"
+			shift 1
+		}
+	}
+
+	local SCRIPT
+	local SCRIPTS=$(__GET_AVAILABLE_SCRIPTS)
+
+	[ $1 ] && {
+		for PATTERN in $*
+		do
+			shift 1
+			[[ $PATTERN =~ ^--$ ]] && break
+			SCRIPT=$(echo $SCRIPTS | grep $PATTERN)
+		done
+
+		[ ! $SCRIPT ] && __FAIL 2 "no script found by name '$@'"
+
+		[[ $(echo $SCRIPT | wc -l) -gt 1 ]] && {
+			__STATUS "more than one script matched '$@'"
+			SCRIPT=$(echo $SCRIPT | __FZF 'select a script')
+		}
+		true
+	} || SCRIPT=$(echo $SCRIPTS | __FZF 'select a script')
+
+	[ ! $SCRIPT ] && exit 2
+
+	##########################################
+	### check type and min dependencies ######
+	##########################################
+
+	local ENV_REQUIRED=1
+	local RUN_STRING="./$SCRIPT"
+	local TYPE=$(echo $SCRIPT | sed 's/\/.*$//')
+
+	local VIRTUALENV="$SCWRYPTS_ROOT/$TYPE/.env/bin/activate"
+	[ -f $VIRTUALENV ] && source $VIRTUALENV
+
+	case $TYPE in
+		py ) __CHECK_DEPENDENCY python || exit 3
+
+			python --version | grep -q '3.[91]' || {
+				__WARNING 'only tested on python>=3.9'
+				__WARNING 'compatibility may vary'
+			}
+
+			RUN_STRING="python -m $(echo $SCRIPT | sed 's/\//./g; s/\.py$//; s/\.\.//')"
+			;;
+
+		zsh ) __CHECK_DEPENDENCY zsh || exit 3
+			echo $SCRIPT | grep -q 'scwrypts' && ENV_REQUIRED=0
+
+			RUN_STRING="./$SCRIPT"
+			;;
+
+		zx ) __CHECK_DEPENDENCY zx || exit 3
+
+			RUN_STRING="FORCE_COLOR=3 ./$SCRIPT.mjs"
+			;;
+
+		* ) __FAIL 4 "unsupported script type '$SCRIPT_TYPE'" ;;
+	esac
+
+	##########################################
+	### load scwrypts env and virtualenv #####
+	##########################################
+
+	[[ $ENV_REQUIRED -eq 1 ]] && {
+		[ ! $ENV_NAME ] && ENV_NAME=$(__SELECT_ENV)
+		[ ! $ENV_NAME ] && __ABORT
+
+		local ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
+
+		[ -f "$ENV_FILE" ] \
+			&& source "$ENV_FILE" \
+			&& export ENV_NAME \
+			|| __FAIL 5 "missing or invalid environment '$ENV_NAME'"
+
+		[[ $ENV_NAME =~ prod ]] && {
+			__STATUS "on '$ENV_NAME'; checking diff against origin/main"
+
+			git fetch --quiet origin main \
+				&& git diff --exit-code origin/main -- . >&2 \
+				&& __SUCCESS 'up-to-date with main!' \
+				|| {
+					__WARNING
+					__WARNING 'your branch differs from origin/main'
+					__WARNING 'in '$ENV_NAME', being out-of-sync with main may have BAD CONSEQUENCES'
+					__WARNING
+					__yN 'continue?' || __ABORT
+			}
+		}
+	}
+
+	##########################################
+	### run the scwrypt ######################
+	##########################################
+
+	local HEADER=$(
+		echo '====================================================================='
+		echo "script : $SCRIPT"
+		echo "run at : $(date)"
+		echo "config : $ENV_NAME"
+		echo '------------------------------------------'
+	)
+
+	echo $SCRIPT | grep -q 'interactive' && {
+		echo $HEADER
+		eval $RUN_STRING $@ </dev/tty >/dev/tty 2>&1; exit $?
+	}
+
+	local LOGFILE="$SCWRYPTS_LOG_PATH/$(echo $SCRIPT | sed 's/^\.\///; s/\//\%/g').log"
+	[[ $SCRIPT =~ scwrypts/logs ]] && LOGFILE=/dev/null
+	{
+		echo $HEADER
+		echo '--- BEGIN OUTPUT--------------------------'
+		eval $RUN_STRING $@; local EXIT_CODE="$?"
+		echo '--- END OUTPUT ---------------------------'
+
+		local C
+		[[ $EXIT_CODE -eq 0 ]] && C='32m' || C='31m';
+
+		echo "terminated with\\033[1;$C code $EXIT_CODE\\033[0m"
+	} 2>&1 | tee --append "$LOGFILE"
+}
+
+#####################################################################
+__RUN $@

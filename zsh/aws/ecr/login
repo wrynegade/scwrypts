@@ -1,0 +1,13 @@
+#!/bin/zsh
+source ${0:a:h}/common.zsh
+__CHECK_IMPORTS
+#####################################################################
+
+__STATUS "performing AWS ECR docker login"
+
+_AWS ecr get-login-password | docker login \
+	--username AWS \
+	--password-stdin \
+	"$_AWS_ACCOUNT.dkr.ecr.$_AWS_REGION.amazonaws.com" \
+	&& __SUCCESS "logged in to 'AWS:$_AWS_ACCOUNT:$_AWS_REGION'" \
+	|| __FAIL 1 "unable to login to '$_AWS_ACCOUNT' in '$_AWS_REGION'"

@@ -1,0 +1,24 @@
+#!/bin/zsh               
+source ${0:a:h}/common.zsh
+__CHECK_IMPORTS
+#####################################################################
+
+__PROMPT 'choose an environment to copy'
+TEMPLATE_ENV_NAME=$(__SELECT_ENV)
+[ ! $TEMPLATE_ENV_NAME ] && __ABORT
+
+__STATUS "selected '$TEMPLATE_ENV_NAME'"
+
+__PROMPT 'enter new environment name'
+ENV_NAME=$(__FZF_HEAD 'new environment')
+[ ! $ENV_NAME ] && __ABORT
+
+TEMPLATE_ENV_FILE=$(__GET_ENV_FILE $TEMPLATE_ENV_NAME)
+ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
+
+[ -f "$ENV_FILE" ] && __FAIL 2 "'$ENV_NAME' already exists"
+
+__STATUS "creating environment"
+cp "$TEMPLATE_ENV_FILE" "$ENV_FILE" \
+	&& __SUCCESS "created '$ENV_NAME'" \
+	|| __FAIL 3 "unable to create '$ENV_NAME'"

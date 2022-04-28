@@ -1,0 +1,17 @@
+#!/bin/zsh
+source ${0:a:h}/common.zsh
+__CHECK_IMPORTS
+#####################################################################
+
+ENV_TYPE=$(echo $__AVAILABLE_VIRTUALENVS | sed 's/ \+/\n/' | __FZF 'select an environment to refresh')
+[ ! $ENV_TYPE ] && __ABORT
+
+__REMINDER
+__REMINDER "this will permanently remove all artifacts for the scwrypts $ENV_TYPE environment"
+__REMINDER "(safe unless you have put something important in $(__GET_VIRTUALENV_PATH $ENV_TYPE))"
+__REMINDER
+
+
+__Yn "drop and recreate $ENV_TYPE virtual environment?" || __ABORT
+
+__REFRESH_VIRTUALENV $ENV_TYPE

@@ -1,0 +1,12 @@
+{
+  "name": "scwrypts",
+  "version": "1.0.0",
+  "description": "zx scripts for scwrypts",
+  "main": "index.js",
+  "scripts": {
+    "test": "",
+		"preinstall": "npm i -g zx"
+  },
+  "author": "yage",
+  "license": "GPL-3.0-or-later"
+}

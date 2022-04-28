@@ -1,0 +1,49 @@
+#!/bin/zsh               
+source ${0:a:h}/common.zsh
+__CHECK_IMPORTS
+#####################################################################
+
+[ $SCWRYPTS_ENV ] \
+	&& ENV_NAME=$SCWRYPTS_ENV \
+	|| ENV_NAME=$(__SELECT_OR_CREATE_ENV)
+[ ! $ENV_NAME ] && __ABORT
+
+ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
+[ ! -f $ENV_FILE ] && {
+	__STATUS "Creating '$ENV_NAME'..." \
+		&& cp $__ENV_TEMPLATE $ENV_FILE \
+		&& __SUCCESS 'created!' \
+		|| { __ERROR "failed to create '$ENV_FILE'"; exit 1; }
+}
+
+__STATUS "opening '$ENV_NAME' for editing..."
+__EDIT $ENV_FILE
+sed -i "s/^[A-Z]/export &/; s/^[^#=]\\+$/&=/" $ENV_FILE
+LC_COLLATE=C sort -uo $ENV_FILE $ENV_FILE
+
+__STATUS "finished editing; looking for new environment variables"
+while read line
+do
+	ENV_VAR=$(echo "$line" | sed 's/=.*$//; s/^export //')
+	grep -q "$ENV_VAR" $__ENV_TEMPLATE || {
+		((NEW_VAR+=1))
+		echo "export $ENV_VAR=" >> $__ENV_TEMPLATE
+		__STATUS "detected new variable '$ENV_VAR'"
+	}
+done < $ENV_FILE
+
+[ $NEW_VAR ] && {
+	LC_COLLATE=C sort -uo $__ENV_TEMPLATE $__ENV_TEMPLATE
+	NOPROMPT=1 ${0:a:h}/synchronize
+	git add $__ENV_TEMPLATE \
+		&& __SUCCESS "auto-staged the $(basename $__ENV_TEMPLATE) changes" \
+		|| {
+			__WARNING "unable to stage $(basename $__ENV_TEMPLATE) changes"
+			__REMINDER "don't forget to commit changes to $(basename $__ENV_TEMPLATE)"
+		}
+	true
+} || {
+	__STATUS 'no new environment variables'
+}
+
+__SUCCESS "environment '$ENV_NAME' successfully modified"

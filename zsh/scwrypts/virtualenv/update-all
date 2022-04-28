@@ -1,0 +1,17 @@
+#!/bin/zsh
+source ${0:a:h}/common.zsh
+__CHECK_IMPORTS
+#####################################################################
+
+__STATUS 'beginning update for all environments'
+
+FAILED_COUNT=0
+
+for ENV_TYPE in $(echo $__AVAILABLE_VIRTUALENVS)
+do
+	__UPDATE_VIRTUALENV $ENV_TYPE || ((FAILED_COUNT+=1))
+done
+
+[[ $FAILED_COUNT -eq 0 ]] \
+	&& __SUCCESS 'all environments up-to-date' \
+	|| __FAIL $FAILED_COUNT 'failed to update one or more environments'

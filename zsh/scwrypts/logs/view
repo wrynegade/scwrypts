@@ -1,0 +1,13 @@
+#!/bin/zsh               
+source ${0:a:h}/common.zsh
+__CHECK_IMPORTS
+#####################################################################
+
+cd $SCWRYPTS_ROOT
+__PROMPT 'select a script log'
+LOG_FILE=$(ls $SCWRYPTS_LOG_PATH | __FZF 'logfile')
+[ ! $LOG_FILE ] && { __ERROR 'user abort'; exit 1; }
+
+__STATUS 'opening logfile'
+__LESS "$SCWRYPTS_LOG_PATH/$LOG_FILE"
+__SUCCESS 'done'
