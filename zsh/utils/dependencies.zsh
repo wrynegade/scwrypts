@@ -1,19 +1,15 @@
 __CHECK_DEPENDENCIES() {
-	local DEPENDENCY
-	for DEPENDENCY in $*
-	do
-		__CHECK_DEPENDENCY $DEPENDENCY || ((__DEPENDENCY_ERROR+=1))
-	done
+	local DEP ERROR=0
 
-	__CHECK_COREUTILS || ((__DEPENDENCY_ERROR+=$?))
+	for DEP in $*; do __CHECK_DEPENDENCY $DEP || ((ERROR+=1)); done
+	__CHECK_COREUTILS || ((ERROR+=$?))
 
-	return $__DEPENDENCY_ERROR
+	return $ERROR
 }
 
 __CHECK_DEPENDENCY() {
 	local DEPENDENCY="$1"
 	[ ! $DEPENDENCY ] && return 1
-
 	command -v $DEPENDENCY >/dev/null 2>&1 || {
 		__ERROR "'$1' required but not installed. $(__CREDITS $1)"
 		return 1

@@ -1,16 +1,12 @@
+_DEPENDENCIES+=()
+_REQUIRED_ENV+=(
+	AWS__S3__MEDIA_TARGETS
+	AWS__S3__MEDIA_BUCKET
+)
 source ${0:a:h}/../common.zsh
-
-__CHECK_DEPENDENCIES \
-	;
-
-__CHECK_ENV_VARS \
-	AWS__S3__MEDIA_TARGETS \
-	AWS__S3__MEDIA_BUCKET \
-	;
+#####################################################################
 
 AWS__S3__MEDIA_TARGETS=($(echo $AWS__S3__MEDIA_TARGETS | sed 's/,/\n/g'))
-
-#####################################################################
 
 __SYNC_MEDIA() {
 	local ACTION="$1"

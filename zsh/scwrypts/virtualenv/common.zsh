@@ -1,13 +1,9 @@
+_DEPENDENCIES+=(
+	virtualenv
+	nodeenv
+)
+_REQUIRED_ENV+=()
 source ${0:a:h}/../common.zsh
-
-__CHECK_DEPENDENCIES \
-	virtualenv \
-	nodeenv \
-	;
-
-__CHECK_ENV_VARS \
-	;
-
 #####################################################################
 
 __AVAILABLE_VIRTUALENVS=(python node)
