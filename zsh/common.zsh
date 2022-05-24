@@ -1,3 +1,5 @@
+#####################################################################
+
 [ ! $SCWRYPTS_ROOT ] && SCWRYPTS_ROOT="$(dirname ${0:a:h})"
 
 source $SCWRYPTS_ROOT/.config
@@ -12,23 +14,7 @@ __NODE_VERSION=18.0.0
 
 #####################################################################
 
-__DEPENDENCY_ERROR=0
-__ENVIRONMENT_ERROR=0
-
-source ${0:a:h}/utils/io.zsh
-source ${0:a:h}/utils/os.zsh
-source ${0:a:h}/utils/credits.zsh
-source ${0:a:h}/utils/dependencies.zsh
-source ${0:a:h}/utils/environment.zsh
-
-#####################################################################
-
-__CHECK_IMPORTS() {
-	[[ $__DEPENDENCY_ERROR -eq 0 ]] \
-		&& [[ $__ENVIRONMENT_ERROR -eq 0 ]] \
-		|| __FAIL 1 'import error (see output above)' \
-		;
-}
+source ${0:a:h}/utils/utils.zsh
 
 #####################################################################
 

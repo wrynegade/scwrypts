@@ -1,14 +1,7 @@
-__CHECK_ENV_VARS() {
-	local OPTIONAL=0
-	[[ $1 =~ ^--optional$ ]] && { shift 1; OPTIONAL=1; }
-
-	local VAR_NAME
-	for VAR_NAME in $*
-	do
-		__CHECK_ENV_VAR $VAR_NAME $OPTIONAL || ((__ENVIRONMENT_ERROR+=1))
-	done
-
-	return $__ENVIRONMENT_ERROR
+__CHECK_REQUIRED_ENV() {
+	local VAR ERROR=0
+	for VAR in $*; do __CHECK_ENV_VAR $VAR_NAME || ((ERROR+=1)); done
+	return $ERROR
 }
 
 __CHECK_ENV_VAR() {

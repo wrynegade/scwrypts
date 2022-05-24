@@ -1,4 +1,7 @@
 __CREDITS() {
+	# only applicable within scwrypts ("credits" pulled from README files)
+	[ ! $SCWRYPTS_ROOT ] && return 0
+
 	local COMMAND="$1"
 	cd $SCWRYPTS_ROOT
 	cat ./**/README.md \

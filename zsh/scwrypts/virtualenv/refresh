@@ -1,6 +1,7 @@
 #!/bin/zsh
+_DEPENDENCIES+=()
+_REQUIRED_ENV+=()
 source ${0:a:h}/common.zsh
-__CHECK_IMPORTS
 #####################################################################
 
 ENV_TYPE=$(echo $__AVAILABLE_VIRTUALENVS | sed 's/ \+/\n/' | __FZF 'select an environment to refresh')

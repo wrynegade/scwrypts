@@ -1,14 +1,6 @@
 #!/bin/zsh
 SCWRYPTS_ROOT="${0:a:h}"
-
 source "$SCWRYPTS_ROOT/zsh/common.zsh"
-
-__CHECK_DEPENDENCIES \
-	fzf \
-	;
-
-__CHECK_IMPORTS
-
 #####################################################################
 
 __RUN() {

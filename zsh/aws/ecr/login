@@ -1,6 +1,7 @@
 #!/bin/zsh
+_DEPENDENCIES+=()
+_REQUIRED_ENV+=()
 source ${0:a:h}/common.zsh
-__CHECK_IMPORTS
 #####################################################################
 
 __STATUS "performing AWS ECR docker login"
