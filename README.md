@@ -28,11 +28,8 @@ Check out [Meta Scwrypts](./zsh/scwrypts) to quickly set up environments and adj
 ### No Install / API Usage
 Alternatively, the `scwrypts` API can be used directly:
 ```zsh
-./scwrypts (environment-name) (...script-patterns)
+./scwrypts [--env environment-name] (...script-name-patterns...) [-- ...passthrough arguments... ]
 ```
-
-If not already set with `$SCWRYPTS_ENV`, Scwrypts will try to load `$1` as an environment.
-If no environment with the name `$1` is found, `$1` is assumed to be a script pattern.
 
 Given one or more script patterns, Scwrypts will filter the commands by pattern conjunction.
 If only one command is found which matches the pattern(s), it will immediately begin execution.
@@ -42,6 +39,16 @@ Of course, if no commands match, Scwrypts will exit with an error.
 Given no script patterns, Scwrypts becomes an interactive CLI, prompting the user to select a command.
 
 After determining which script to run, if no environment has been specified, Scwrypts prompts the user to choose one.
+
+
+### Using in CI/CD or Automated Workflows
+Set environment variable `CI=true` (and use the no install method) to run in an automated pipeline.
+There are a few notable changes to this runtime:
+- **The Scwrypts sandbox environment will not load.** All variables will be read from context.
+	- The underscore-prefixed `_AWS_(PROFILE|REGION|ACCOUNT)` variables will be read from the standard `AWS_` variables
+- User yes/no prompts will **always be YES**
+- Other user input will default to an empty string
+- Logs will not be captured
 
 
 ## Contributing

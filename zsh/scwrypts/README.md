@@ -15,12 +15,21 @@ This will immediately open your custom configuration file and reload any necessa
 If you use Scwrypts, **you should use these commands all the time**.
 This is your gateway to managing scwrypts sandboxed environments.
 
-Command       | Description
-------------- | ---------------------------------------------------------------------------------------
-`edit`        | edit an existing environment; synchronizes environments if new variables are added
-`copy`        | copy an existing environment to a new one
-`delete`      | permanently delete an environment by name
-`synchronize` | uses [template](../../.template.env) to add missing and remove extemporaneous variables
+Command           | Description
+----------------- | ---------------------------------------------------------------------------------------
+`edit`            | edit an existing environment
+`copy`            | create and edit a new environment from an existing one
+`delete`          | permanently delete an environment by name
+`stage-variables` | stage missing variables; [helpful for non-ZSH scwrypts](../../py/scwrypts/getenv.py)
+`synchronize`     | uses [template](../../.env.template) to add missing and remove extemporaneous variables
+
+### Environment Inheritance
+You can make a child environment by naming an environment `<parent-name>.<child-name>`.
+Children inherit all parent-set values, and **parent-set values overwrite child-set values**.
+Remember that synchronize runs *every time you edit an environment*, so changes propagate to children immediately.
+Inherited values are denoted by `# inherited from <parent-name>` in the environment file.
+
+Nested children will inherit values from all parents.
 
 ## Logs
 Quickly view or clear Scwrypts logs.

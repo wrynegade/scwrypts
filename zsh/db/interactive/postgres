@@ -1,0 +1,45 @@
+#!/bin/zsh
+_DEPENDENCIES+=(
+	pgcli
+)
+_REQUIRED_ENV+=()
+source ${0:a:h}/common.zsh
+#####################################################################
+
+_LOGIN_POSTGRES() {
+	local _HOST _NAME _PASS _PORT _USER
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			--host | -h ) _HOST="$2"; shift 2 ;;
+			--name | -d ) _NAME="$2"; shift 2 ;;
+			--pass | -w ) _PASS="$2"; shift 2 ;;
+			--port | -p ) _PORT="$2"; shift 2 ;;
+			--user | -U ) _USER="$2"; shift 2 ;;
+			* ) shift 1 ;;
+		esac
+	done
+
+	[ ! $_HOST ] && _HOST=127.0.0.1
+	[ ! $_NAME ] && _NAME=postgres
+	[ ! $_PORT ] && _PORT=5432
+	[ ! $_USER ] && _USER=postgres
+
+	local DATA_DIR="$SCWRYPTS_DATA_PATH/db/$_HOST"
+	[ ! -d $DATA_DIR ] && mkdir -p $DATA_DIR
+	cd $DATA_DIR
+
+	__STATUS "performing login  : $_USER@$_HOST:$_PORT/$_NAME"
+	__STATUS "working directory : $DATA_DIR"
+
+	PGPASSWORD="$_PASS" pgcli \
+		--host $_HOST \
+		--port $_PORT \
+		--user $_USER \
+		--dbname $_NAME \
+		;
+}
+
+#####################################################################
+_LOGIN_POSTGRES $@

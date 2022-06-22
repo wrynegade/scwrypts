@@ -1,47 +1,130 @@
-#!/bin/zsh               
+#!/bin/zsh
 _DEPENDENCIES+=()
 _REQUIRED_ENV+=()
 source ${0:a:h}/common.zsh
 #####################################################################
 
-[ ! $NOPROMPT ] && {
-	__yN 'change the template before sync?' && __EDIT $__ENV_TEMPLATE
-	sed -i "s/^[A-Z]/export &/; s/^[^#=]\\+$/&=/; s/=.*$/=/" $__ENV_TEMPLATE
-	LC_COLLATE=C sort -uo $__ENV_TEMPLATE $__ENV_TEMPLATE
-	git add $__ENV_TEMPLATE >/dev/null 2>&1
+_SYNCHRONIZE() {
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			--no-prompt ) SLIENT=1; shift 1 ;;
+
+			* ) __WARNING "argument '$1' not recognized"
+				shift 1 ;;
+		esac
+	done
+
+	[ ! $SLIENT ] && {
+		__yN 'change the template before sync?' && __EDIT $__ENV_TEMPLATE
+		_SORT_ENV "$__ENV_TEMPLATE"
+		git add $__ENV_TEMPLATE >/dev/null 2>&1
+	}
+
+	ENVIRONMENTS=$(__GET_ENV_NAMES | sort -r)
+
+	_CLEAR_INHERITED_VARIABLES
+	_INSERT_NEW_VARIABLES
+	_REMOVE_OLD_VARIABLES
+	_SORT_AND_CASCADE
+
+	__SUCCESS 'finished sync!'
 }
 
-ENVIRONMENTS=$(__GET_ENV_FILES)
+#####################################################################
 
-__STATUS 'inserting new environment variables...'
-while read line
-do
-	for ENV_FILE in $(echo $ENVIRONMENTS)
-    do
-        grep -q "^$line" $ENV_FILE || {
-            echo $line >> $ENV_FILE && __STATUS "added '$line' to '$ENV_FILE'"
-        }
-    done
-done < <(sed -n '/^./p' $__ENV_TEMPLATE)
+_CLEAR_INHERITED_VARIABLES() {
+	for ENV_NAME in $(echo $ENVIRONMENTS)
+	do
+		ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
+		sed -i 's/ # inherited from.*//' "$ENV_FILE"
+	done
+}
 
-__STATUS 'removing old environment variables...'
-for ENV_FILE in $(echo $ENVIRONMENTS)
-do
-    while read line
-    do
-        ENV_VAR=$(echo "$line" | sed 's/=.*/=/')
-        grep -q "$ENV_VAR" $__ENV_TEMPLATE || {
-            sed -i "\\%$ENV_VAR%d" $ENV_FILE
-            __WARNING "removed unwanted '$ENV_VAR' from '$ENV_FILE'"
-        }
-    done < $ENV_FILE
-done
+_INSERT_NEW_VARIABLES() {
+	__STATUS 'inserting new environment variables...'
 
-for ENV_FILE in $(echo $ENVIRONMENTS)
-do
-	sed -i "s/^[A-Z]/export &/; s/^[^#=]\\+$/&=/" $ENV_FILE
-	LC_COLLATE=C sort -uo $ENV_FILE $ENV_FILE
-done
-LC_COLLATE=C sort -uo $__ENV_TEMPLATE $__ENV_TEMPLATE
+	local ENV_NAME ENV_FILE line
+	while read line
+	do
+		for ENV_NAME in $(echo $ENVIRONMENTS)
+	    do
+			ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
+	        grep -q "$line" $ENV_FILE || {
+	            echo $line >> $ENV_FILE && __STATUS "added '$line' to '$ENV_NAME'"
+	        }
+	    done
+	done < <(sed -n '/^./p' "$__ENV_TEMPLATE")
+}
 
-__SUCCESS 'finished sync!'
+_REMOVE_OLD_VARIABLES() {
+	__STATUS 'removing old environment variables...'
+
+	local ENV_NAME ENV_FILE line
+	for ENV_NAME in $(echo $ENVIRONMENTS)
+	do
+		ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
+	    while read line
+	    do
+	        ENV_VAR=$(echo "$line" | sed 's/=.*/=/')
+	        grep -q "$ENV_VAR" "$__ENV_TEMPLATE" || {
+	            sed -i "\\%$ENV_VAR%d" "$ENV_FILE"
+	            echo "$ENV_VAR" | grep -qv '^#' \
+					&& __WARNING "removed unwanted '$ENV_VAR' from '$ENV_NAME'"
+	        }
+	    done < $ENV_FILE
+	done
+}
+
+_SORT_AND_CASCADE() {
+	local ENV_NAM ENV_FILE
+
+	for ENV_NAME in $(echo $ENVIRONMENTS)
+	do
+		ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
+		_CASCADE_ENVIRONMENT $ENV_NAME
+	done
+
+	for ENV_NAME in $(echo $ENVIRONMENTS)
+	do
+		ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
+		_SORT_ENV "$ENV_FILE"
+	done
+}
+
+_CASCADE_ENVIRONMENT() {
+	local PARENT_NAME="$1"
+	local PARENT_FILE=$(__GET_ENV_FILE $PARENT_NAME)
+
+	local CHILD_NAMES=$(echo $ENVIRONMENTS | grep "^$PARENT_NAME\\.")
+	[ ! $CHILD_NAMES ] && return 0
+
+	__STATUS "cascading '$PARENT_NAME' to children"
+	for CHILD_NAME in $(echo $CHILD_NAMES)
+	do
+		__SUCCESS "detected child '$CHILD_NAME'"
+	done
+
+	local PARENT_VAR VAR_PATTERN CHILD_NAME CHILD_FILE
+
+	while read PARENT_VAR
+	do
+		VAR_PATTERN=$(echo "$PARENT_VAR" | sed 's/=.*/=/; s/\//\/\//g')
+		__STATUS "propagating '$(echo $VAR_PATTERN | sed 's/^export \([^=]*\)=/\1/')' to children"
+
+		PARENT_VAR+=" # inherited from $PARENT_NAME"
+
+		for CHILD_NAME in $(echo $CHILD_NAMES)
+		do
+			CHILD_FILE=$(__GET_ENV_FILE $CHILD_NAME)
+
+			sed -i "/^$VAR_PATTERN/d" "$CHILD_FILE"
+			echo $PARENT_VAR >> "$CHILD_FILE"
+		done
+	done < <(sed -n '/^[^#][^=]*=[^#]\+$/p' "$PARENT_FILE")
+
+	__SUCCESS "finished '$PARENT_NAME' propagation"
+}
+
+#####################################################################
+_SYNCHRONIZE $@

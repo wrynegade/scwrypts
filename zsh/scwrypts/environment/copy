@@ -11,7 +11,7 @@ TEMPLATE_ENV_NAME=$(__SELECT_ENV)
 __STATUS "selected '$TEMPLATE_ENV_NAME'"
 
 __PROMPT 'enter new environment name'
-ENV_NAME=$(__FZF_HEAD 'new environment')
+ENV_NAME=$(echo '' | __FZF_HEAD 'new environment')
 [ ! $ENV_NAME ] && __ABORT
 
 TEMPLATE_ENV_FILE=$(__GET_ENV_FILE $TEMPLATE_ENV_NAME)
@@ -19,7 +19,19 @@ ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
 
 [ -f "$ENV_FILE" ] && __FAIL 2 "'$ENV_NAME' already exists"
 
-__STATUS "creating environment"
+__STATUS "creating environment '$ENV_NAME'"
 cp "$TEMPLATE_ENV_FILE" "$ENV_FILE" \
 	&& __SUCCESS "created '$ENV_NAME'" \
 	|| __FAIL 3 "unable to create '$ENV_NAME'"
+
+__STATUS 'stripping inherited values'
+sed -i 's/ # inherited from.*$//' "$ENV_FILE" 2>/dev/null
+
+__RUN_SCWRYPT zsh/scwrypts/environment/synchronize -- --no-prompt \
+	|| __FAIL 4 'failed to run environment sync'
+
+__RUN_SCWRYPT zsh/scwrypts/environment/edit -- $ENV_NAME \
+	|| __FAIL 4 'failed to edit new environment'
+	;
+
+__SUCCESS "finished copy environment '$TEMPLATE_ENV_NAME > $ENV_NAME'"

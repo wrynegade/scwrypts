@@ -1,16 +1,15 @@
 #!/usr/bin/env python
-from os import getenv
 
 from py.redis.client import Client
-from py.scwrypts import interactive
+from py.scwrypts import interactive, getenv
 
 
 @interactive
 def main():
     r = Client
 
-    print('''
-    r = StrictRedis("{getenv("REDIS_HOST")}")
+    print(f'''
+>>> r = StrictRedis({getenv("REDIS_HOST")}:{getenv("REDIS_PORT")})
     ''')
 
     return locals()

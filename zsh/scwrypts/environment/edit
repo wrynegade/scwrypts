@@ -4,9 +4,13 @@ _REQUIRED_ENV+=()
 source ${0:a:h}/common.zsh
 #####################################################################
 
-[ $SCWRYPTS_ENV ] \
-	&& ENV_NAME=$SCWRYPTS_ENV \
-	|| ENV_NAME=$(__SELECT_OR_CREATE_ENV)
+[ $1 ] && ENV_NAME="$1"
+
+[ ! $1 ] && {
+	[ $SCWRYPTS_ENV ] \
+		&& ENV_NAME=$SCWRYPTS_ENV \
+		|| ENV_NAME=$(__SELECT_OR_CREATE_ENV)
+}
 [ ! $ENV_NAME ] && __ABORT
 
 ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
@@ -33,18 +37,8 @@ do
 	}
 done < $ENV_FILE
 
-[ $NEW_VAR ] && {
-	LC_COLLATE=C sort -uo $__ENV_TEMPLATE $__ENV_TEMPLATE
-	NOPROMPT=1 ${0:a:h}/synchronize
-	git add $__ENV_TEMPLATE \
-		&& __SUCCESS "auto-staged the $(basename $__ENV_TEMPLATE) changes" \
-		|| {
-			__WARNING "unable to stage $(basename $__ENV_TEMPLATE) changes"
-			__REMINDER "don't forget to commit changes to $(basename $__ENV_TEMPLATE)"
-		}
-	true
-} || {
-	__STATUS 'no new environment variables'
-}
+__RUN_SCWRYPT zsh/scwrypts/environment/synchronize -- --no-prompt \
+	|| __FAIL 4 'failed to run environment sync' \
+	;
 
 __SUCCESS "environment '$ENV_NAME' successfully modified"

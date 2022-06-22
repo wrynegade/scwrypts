@@ -42,11 +42,11 @@ __UPDATE_VIRTUALENV() {
 		return 1
 	}
 
-	cd $VIRTUALENV_PATH/../
+	cd $SCWRYPTS_ROOT
 	local UPDATE_CODE=0
 	case $TYPE in
-		python ) pip install -r requirements.txt; UPDATE_CODE=$? ;;
-		node   ) npm install ;
+		python ) cd py; pip install -r requirements.txt; UPDATE_CODE=$? ;;
+		node   ) cd zx; npm install ;;
 	esac
 	UPDATE_CODE=$?
 	[[ $UPDATE_CODE -eq 0 ]] \
@@ -78,8 +78,8 @@ __DELETE_VIRTUALENV() {
 __GET_VIRTUALENV_PATH() {
 	local TYPE="$1"
 	case $TYPE in
-		python ) echo "$SCWRYPTS_ROOT/py/.env" ;;
-		node   ) echo "$SCWRYPTS_ROOT/zx/.env" ;;
+		python ) echo "$SCWRYPTS_VIRTUALENV_PATH/py" ;;
+		node   ) echo "$SCWRYPTS_VIRTUALENV_PATH/zx" ;;
 	esac
 }
 

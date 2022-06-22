@@ -1,0 +1,121 @@
+#!/bin/zsh
+_DEPENDENCIES+=()
+_REQUIRED_ENV+=()
+source ${0:a:h}/common.zsh
+#####################################################################
+
+__CONNECT_TO_RDS() {
+	local DATABASE=$(__SELECT_DATABASE)
+	[ ! $DATABASE ] && __ABORT
+
+	local DB_HOST DB_USER DB_PORT DB_NAME DB_AUTH DB_TYPE
+
+	DB_HOST=$(echo $DATABASE | jq -r '.host')
+	DB_USER=$(echo $DATABASE | jq -r '.user')
+	DB_PORT=$(echo $DATABASE | jq -r '.port')
+	DB_TYPE=$(echo $DATABASE | jq -r '.type')
+
+	[[ $DB_PORT =~ null ]] && DB_PORT=5432
+	DB_NAME=postgres
+
+	local AUTH_METHODS=(iam secretsmanager user-input)
+	local AUTH_METHOD=$(\
+		echo $AUTH_METHODS | sed 's/\s\+/\n/g' \
+			| __FZF 'select an authentication method' \
+	)
+
+	[ ! $AUTH_METHOD ] && __ABORT
+
+	case $AUTH_METHOD in
+		iam )
+			DB_AUTH=$(\
+				_AWS rds generate-db-auth-token \
+					--hostname $DB_HOST \
+					--port $DB_PORT \
+					--username $DB_USER \
+			)
+			;;
+		secretsmanager )
+			CREDENTIALS=$(__GET_SECRETSMANAGER_CREDENTIALS)
+			echo $CREDENTIALS | jq -e '.pass' >/dev/null 2>&1 \
+				&& DB_AUTH=$(echo $CREDENTIALS | jq -r '.pass')
+
+			echo $CREDENTIALS | jq -e '.password' >/dev/null 2>&1 \
+				&& DB_AUTH=$(echo $CREDENTIALS | jq -r '.password')
+
+			echo $CREDENTIALS | jq -e '.user' >/dev/null 2>&1 \
+				&& DB_USER=$(echo $CREDENTIALS | jq -r '.user')
+
+			echo $CREDENTIALS | jq -e '.username' >/dev/null 2>&1 \
+				&& DB_USER=$(echo $CREDENTIALS | jq -r '.username')
+
+			echo $CREDENTIALS | jq -e '.name' >/dev/null 2>&1 \
+				&& DB_NAME=$(echo $CREDENTIALS | jq -r '.name')
+
+			echo $CREDENTIALS | jq -e '.dbname' >/dev/null 2>&1 \
+				&& DB_NAME=$(echo $CREDENTIALS | jq -r '.dbname')
+			;;
+		user-input )
+			;;
+	esac
+
+	__STATUS
+	__STATUS "host     : $DB_HOST"
+	__STATUS "type     : $DB_TYPE"
+	__STATUS "port     : $DB_PORT"
+	__STATUS "database : $DB_NAME"
+	__STATUS "username : $DB_USER"
+	__STATUS
+
+	__RUN_SCWRYPT 'zsh/db/interactive/postgres' -- \
+		--host $DB_HOST \
+		--port $DB_PORT \
+		--name $DB_NAME \
+		--user $DB_USER \
+		--pass $DB_AUTH \
+		;
+}
+
+__SELECT_DATABASE() {
+	local DATABASES=$(__GET_AVAILABLE_DATABASES)
+	[ ! $DATABASES ] && __FAIL 1 'no databases available'
+
+	local ID=$(\
+		echo $DATABASES | jq -r '.instance + " @ " + .cluster' \
+			| __FZF 'select a database (instance@cluster)' \
+	)
+	[ ! $ID ] && __ABORT
+
+	local INSTANCE=$(echo $ID | sed 's/ @ .*$//')
+	local CLUSTER=$(echo $ID  | sed 's/^.* @ //')
+
+	echo $DATABASES | jq "select (.instance == \"$INSTANCE\" and .cluster == \"$CLUSTER\")"
+}
+
+__GET_AVAILABLE_DATABASES() {
+	_AWS rds describe-db-instances \
+		| jq -r '.[] | .[] | {
+			instance: .DBInstanceIdentifier,
+			cluster:  .DBClusterIdentifier,
+			type:     .Engine,
+			host:     .Endpoint.Address,
+			port:     .Endpoint.Port,
+			user:     .MasterUsername,
+			database: .DBName
+		}'
+}
+
+__GET_SECRETSMANAGER_CREDENTIALS() {
+	local ID=$(\
+		_AWS secretsmanager list-secrets \
+			| jq -r '.[] | .[] | .Name' \
+			| __FZF 'select a secret' \
+	)
+	[ ! $ID ] && return 1
+
+	_AWS secretsmanager get-secret-value --secret-id "$ID" \
+		| jq -r '.SecretString' | jq
+}
+
+#####################################################################
+__CONNECT_TO_RDS

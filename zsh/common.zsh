@@ -2,25 +2,20 @@
 
 [ ! $SCWRYPTS_ROOT ] && SCWRYPTS_ROOT="$(dirname ${0:a:h})"
 
-source $SCWRYPTS_ROOT/.config
-[ -f $SCWRYPTS_CONFIG_PATH/config ] && source $SCWRYPTS_CONFIG_PATH/config
-
-[ ! -d $SCWRYPTS_CONFIG_PATH ] && mkdir -p $SCWRYPTS_CONFIG_PATH
-[ ! -d $SCWRYPTS_ENV_PATH    ] && mkdir -p $SCWRYPTS_ENV_PATH
-[ ! -d $SCWRYPTS_LOG_PATH    ] && mkdir -p $SCWRYPTS_LOG_PATH
-
 __PREFERRED_PYTHON_VERSIONS=(3.10 3.9)
 __NODE_VERSION=18.0.0
+__ENV_TEMPLATE=$SCWRYPTS_ROOT/.env.template
+
+__SCWRYPT=1
+
+source $SCWRYPTS_ROOT/.config
+source ${0:a:h}/utils/utils.module.zsh || {
+	[ $DONT_EXIT ] && return 1 || exit 1
+}
 
 #####################################################################
 
-source ${0:a:h}/utils/utils.zsh
-
-#####################################################################
-
-__ENV_TEMPLATE=$SCWRYPTS_ROOT/.template.env
-
-__GET_ENV_FILES() { find $SCWRYPTS_CONFIG_PATH/env -maxdepth 1 -type f; }
+__GET_ENV_FILES() { find $SCWRYPTS_CONFIG_PATH/env -maxdepth 1 -type f | sort -r }
 [ ! "$(__GET_ENV_FILES)" ] && {
 	cp $__ENV_TEMPLATE "$SCWRYPTS_CONFIG_PATH/env/dev"
 	cp $__ENV_TEMPLATE "$SCWRYPTS_CONFIG_PATH/env/local"
@@ -41,4 +36,23 @@ __GET_AVAILABLE_SCRIPTS() {
 		| grep -v 'node_modules' \
 		| sed 's/^\.\///; s/\.[^.]*$//' \
 		;
+}
+
+#####################################################################
+
+__RUN_SCWRYPT() {
+	# run a scwrypt inside a scwrypt w/stack-depth indicators
+	((SUBSCWRYPT+=1))
+	printf ' '; printf '--%.0s' {1..$SUBSCWRYPT}; printf " ($SUBSCWRYPT) "
+	echo "  BEGIN SUBSCWRYPT : $(basename $1)"
+
+	SUBSCWRYPT=$SUBSCWRYPT SCWRYPTS_ENV=$ENV_NAME \
+		"$SCWRYPTS_ROOT/scwrypts" $@
+	EXIT_CODE=$?
+
+	printf ' '; printf '--%.0s' {1..$SUBSCWRYPT}; printf " ($SUBSCWRYPT) "
+	echo "  END SUBSCWRYPT   : $(basename $1)"
+	((SUBSCWRYPT-=1))
+
+	return $EXIT_CODE
 }

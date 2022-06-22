@@ -6,7 +6,7 @@ source ${0:a:h}/common.zsh
 
 cd $SCWRYPTS_ROOT
 __PROMPT 'select a script log'
-LOG_FILE=$(ls $SCWRYPTS_LOG_PATH | __FZF 'logfile')
+LOG_FILE=$(ls -t $SCWRYPTS_LOG_PATH | __FZF 'logfile')
 [ ! $LOG_FILE ] && { __ERROR 'user abort'; exit 1; }
 
 __STATUS 'opening logfile'

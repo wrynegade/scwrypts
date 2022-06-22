@@ -4,6 +4,7 @@
 [![Generic Badge](https://img.shields.io/badge/junegunn-fzf-informational.svg)](https://github.com/junegunn/fzf)
 [![Generic Badge](https://img.shields.io/badge/mikefarah-yq-informational.svg)](https://github.com/mikefarah/yq)
 [![Generic Badge](https://img.shields.io/badge/stedolan-jq-informational.svg)](https://github.com/stedolan/jq)
+[![Generic Badge](https://img.shields.io/badge/dbcli-pgcli-informational.svg)](https://github.com/dbcli/pgcli)
 <br>
 
 Since they emulate direct user interaction, shell scripts are often the straightforward choice for task automation.

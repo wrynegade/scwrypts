@@ -1,7 +1,4 @@
-#!/bin/zsh
 _DEPENDENCIES+=()
 _REQUIRED_ENV+=()
-source ${0:a:h}/common.zsh
+source ${0:a:h}/../common.zsh
 #####################################################################
-
-__CHECK_REQUIRED_ENV $@

@@ -6,12 +6,20 @@ source ${0:a:h}/common.zsh
 
 [ ! -f $SCWRYPTS_CONFIG_PATH/config ] && {
 	__STATUS 'first-time setup detected; creating local configuration override...'
-	cp $SCWRYPTS_ROOT/.config $SCWRYPTS_CONFIG_PATH/config \
+	touch $SCWRYPTS_CONFIG_PATH/config \
 		&& __SUCCESS 'created!' \
 		|| __FAIL 1 "unable to create config at '$SCWRYPTS_CONFIG_PATH/config'"
+	{
+		echo '#'
+		echo '# configuration for scwrypts'
+		echo '#'
+		sed -n '1d; /^###/q; p' $SCWRYPTS_ROOT/.config | sed '$d'
+	} > $SCWRYPTS_CONFIG_PATH/config
+
+	__EDIT $SCWRYPTS_CONFIG_PATH/config
 
 	__STATUS 'attempting to build virtual environments'
-	$SCWRYPTS_ROOT/zsh/scwrypts/virutalenv/update-all \
+	__RUN_SCWRYPT zsh/scwrypts/virtualenv/update-all \
 		&& __SUCCESS 'finished updating virtualenvs' \
 		|| __WARNING 'unable to create one or more virtualenv (see above)' \
 		;
@@ -20,16 +28,12 @@ source ${0:a:h}/common.zsh
 	__REMINDER 'use "zsh/scwrypts/virtualenv/update-all" to update environments'
 	__REMINDER '(equivalent to "npm install" or "pip install -r requirements.txt")'
 	__REMINDER
+} || {
+	__STATUS 'opening local config for editing'
+	__EDIT $SCWRYPTS_CONFIG_PATH/config
+	__STATUS 'finished editing!'
 }
 
-__STATUS 'opening local config for editing'
-__EDIT $SCWRYPTS_CONFIG_PATH/config
-__STATUS 'finished editing!'
-
-which __SCWRYPTS >/dev/null 2>&1 && {
-	__STATUS 'reloading configuration for current session'
-	source $SCWRYPTS_ROOT/zsh/common.zsh \
-		|| __FAIL 2 'unable to reload configuration :c'
-}
 
 __SUCCESS 'saved new configuration'
+__REMINDER 'changes which affect the hot-key plugin will require a ZSHRC reload'

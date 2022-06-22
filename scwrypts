@@ -1,32 +1,117 @@
 #!/bin/zsh
 SCWRYPTS_ROOT="${0:a:h}"
-source "$SCWRYPTS_ROOT/zsh/common.zsh"
+source "$SCWRYPTS_ROOT/zsh/common.zsh" || exit 42
 #####################################################################
 
 __RUN() {
 	cd "$SCWRYPTS_ROOT"
 
-	##########################################
-	### parse arguments ######################
+	local ENV_NAME="$SCWRYPTS_ENV"
+	local SEARCH_PATTERNS=()
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			-e|--env )
+				[ $ENV_NAME ] && __WARNING 'overwriting session environment'
+				ENV_NAME="$2"
+				__STATUS "using CLI environment '$ENV_NAME'"
+				shift 2
+				;;
+			-- )
+				shift 1
+				break # pass arguments after '--' to the scwrypt
+				;;
+			* )
+				SEARCH_PATTERNS+=$1
+				shift 1
+				;;
+		esac
+	done
+
 	##########################################
 
-	local ENV_NAME
-	[ $SCWRYPTS_ENV ] && ENV_NAME="$SCWRYPTS_ENV" || {
-		[ $1 ] && [ -f $(__GET_ENV_FILE $1) ] && {
-			ENV_NAME="$1"
-			shift 1
-		}
+	local SCRIPT=$(__SELECT_SCRIPT $SEARCH_PATTERNS)
+	[ ! $SCRIPT ] && exit 2
+
+	local ENV_REQUIRED=$(__CHECK_ENV_REQUIRED && echo 1 || echo 0)
+
+	[[ $ENV_REQUIRED -eq 1 ]] && {
+		[ ! $ENV_NAME ] && ENV_NAME=$(__SELECT_ENV)
+		local ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
+
+		[ -f "$ENV_FILE" ] && source "$ENV_FILE" \
+			|| __FAIL 5 "missing or invalid environment '$ENV_NAME'"
+
+		export ENV_NAME
 	}
 
+	[ ! $SUBSCWRYPT ] \
+		&& [[ $ENV_NAME =~ prod ]] \
+		&& { __VALIDATE_UPSTREAM_TIMELINE || __ABORT; }
+
+	local RUN_STRING=$(__GET_RUN_STRING $SCRIPT $ENV_NAME)
+	[ ! $RUN_STRING ] && exit 3
+
+	[ -f $_VIRTUALENV ] && source $_VIRTUALENV
+
+	##########################################
+
+	local LOGFILE=$(__GET_LOGFILE $SCRIPT)
+
+	local HEADER=$(
+		[ $SUBSCWRYPT ] && return 0
+		echo '====================================================================='
+		echo "script : $SCRIPT"
+		echo "run at : $(date)"
+		echo "config : $ENV_NAME"
+		[ ! $LOGFILE ] && echo '\033[1;33m------------------------------------------\033[0m'
+	)
+
+	[ ! $LOGFILE ] && {
+		[ $HEADER ] && echo $HEADER
+		eval $RUN_STRING $@ </dev/tty >/dev/tty 2>&1
+		exit $?
+	}
+
+	{
+		[ $HEADER ] && echo $HEADER
+		echo '\033[1;33m--- BEGIN OUTPUT -------------------------\033[0m'
+		eval $RUN_STRING $@
+		EXIT_CODE=$?
+		echo '\033[1;33m--- END OUTPUT ---------------------------\033[0m'
+
+		[[ $EXIT_CODE -eq 0 ]] && EXIT_COLOR='32m' || EXIT_COLOR='31m'
+
+		echo "terminated with\\033[1;$EXIT_COLOR code $EXIT_CODE\\033[0m"
+	} 2>&1 | tee --append "$LOGFILE"
+
+	exit $(\
+		sed -n 's/^terminated with.*code \([0-9]*\).*$/\1/p' $LOGFILE \
+			| tail -n1
+	)
+}
+
+#####################################################################
+
+__SELECT_SCRIPT() {
 	local SCRIPT
 	local SCRIPTS=$(__GET_AVAILABLE_SCRIPTS)
+	local SEARCH=($@)
 
-	[ $1 ] && {
-		for PATTERN in $*
+	[[ ${#SEARCH[@]} -eq 0 ]] && {
+		SCRIPT=$(echo $SCRIPTS | __FZF 'select a script')
+	}
+
+	[[ ${#SEARCH[@]} -eq 1 ]] && [ -f ./$SEARCH ] && {
+		SCRIPT=$SEARCH
+	}
+
+	[ ! $SCRIPT ] && [[ ${#SEARCH[@]} -gt 0 ]] && {
+		SCRIPT=$SCRIPTS
+		for PATTERN in $SEARCH
 		do
-			shift 1
-			[[ $PATTERN =~ ^--$ ]] && break
-			SCRIPT=$(echo $SCRIPTS | grep $PATTERN)
+			SCRIPT=$(echo $SCRIPT | grep $PATTERN)
 		done
 
 		[ ! $SCRIPT ] && __FAIL 2 "no script found by name '$@'"
@@ -35,108 +120,91 @@ __RUN() {
 			__STATUS "more than one script matched '$@'"
 			SCRIPT=$(echo $SCRIPT | __FZF 'select a script')
 		}
-		true
-	} || SCRIPT=$(echo $SCRIPTS | __FZF 'select a script')
+	}
 
-	[ ! $SCRIPT ] && exit 2
+	echo $SCRIPT
+}
 
-	##########################################
-	### check type and min dependencies ######
-	##########################################
-
-	local ENV_REQUIRED=1
-	local RUN_STRING="./$SCRIPT"
+__GET_RUN_STRING() {
+	local SCRIPT="$1"
+	local ENV_NAME="$2"
 	local TYPE=$(echo $SCRIPT | sed 's/\/.*$//')
 
-	local VIRTUALENV="$SCWRYPTS_ROOT/$TYPE/.env/bin/activate"
-	[ -f $VIRTUALENV ] && source $VIRTUALENV
+	local RUN_STRING
+
+	local _VIRTUALENV="$SCWRYPTS_VIRTUALENV_PATH/$TYPE/bin/activate"
+	[ -f $_VIRTUALENV ] && source $_VIRTUALENV
 
 	case $TYPE in
-		py ) __CHECK_DEPENDENCY python || exit 3
+		py ) __CHECK_DEPENDENCY python || return 1
+			RUN_STRING="python -m $(echo $SCRIPT | sed 's/\//./g; s/\.py$//; s/\.\.//')"
 
-			python --version | grep -q '3.[91]' || {
-				__WARNING 'only tested on python>=3.9'
+			CURRENT_PYTHON_VERSION=$(python --version | sed 's/^[^0-9]*\(3\.[^.]*\).*$/\1/')
+
+			echo $__PREFERRED_PYTHON_VERSIONS | grep -q $CURRENT_PYTHON_VERSION || {
+				__WARNING "only tested on the following python versions: $(printf ', %s.x' ${__PREFERRED_PYTHON_VERSIONS[@]} | sed 's/^, //')"
 				__WARNING 'compatibility may vary'
 			}
-
-			RUN_STRING="python -m $(echo $SCRIPT | sed 's/\//./g; s/\.py$//; s/\.\.//')"
 			;;
 
-		zsh ) __CHECK_DEPENDENCY zsh || exit 3
-			echo $SCRIPT | grep -q 'scwrypts' && ENV_REQUIRED=0
-
+		zsh ) __CHECK_DEPENDENCY zsh || return 1
 			RUN_STRING="./$SCRIPT"
 			;;
 
-		zx ) __CHECK_DEPENDENCY zx || exit 3
-
+		zx ) __CHECK_DEPENDENCY zx || return 1
 			RUN_STRING="FORCE_COLOR=3 ./$SCRIPT.mjs"
 			;;
 
-		* ) __FAIL 4 "unsupported script type '$SCRIPT_TYPE'" ;;
+		* ) __ERROR "unsupported script type '$SCRIPT_TYPE'"
+			return 2
+			;;
 	esac
 
-	##########################################
-	### load scwrypts env and virtualenv #####
-	##########################################
+	RUN_STRING="SCWRYPTS_ENV='$ENV_NAME' $RUN_STRING"
+	[ -f $_VIRTUALENV ] && RUN_STRING="source '$_VIRTUALENV'; $RUN_STRING"
 
-	[[ $ENV_REQUIRED -eq 1 ]] && {
-		[ ! $ENV_NAME ] && ENV_NAME=$(__SELECT_ENV)
-		[ ! $ENV_NAME ] && __ABORT
+	echo $RUN_STRING
+}
 
-		local ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
+__CHECK_ENV_REQUIRED() {
+	[ $CI ] && return 1
 
-		[ -f "$ENV_FILE" ] \
-			&& source "$ENV_FILE" \
-			&& export ENV_NAME \
-			|| __FAIL 5 "missing or invalid environment '$ENV_NAME'"
+	echo $SCRIPT | grep -q 'zsh/scwrypts/logs' && return 1
 
-		[[ $ENV_NAME =~ prod ]] && {
-			__STATUS "on '$ENV_NAME'; checking diff against origin/main"
+	return 0
+}
 
-			git fetch --quiet origin main \
-				&& git diff --exit-code origin/main -- . >&2 \
-				&& __SUCCESS 'up-to-date with main!' \
-				|| {
-					__WARNING
-					__WARNING 'your branch differs from origin/main'
-					__WARNING 'in '$ENV_NAME', being out-of-sync with main may have BAD CONSEQUENCES'
-					__WARNING
-					__yN 'continue?' || __ABORT
-			}
-		}
+__VALIDATE_UPSTREAM_TIMELINE() {
+	__STATUS "on '$ENV_NAME'; checking diff against origin/main"
+
+	git fetch --quiet origin main
+	local SYNC_STATUS=$?
+
+	git diff --exit-code origin/main -- . >&2
+	local DIFF_STATUS=$?
+
+	[[ $SYNC_STATUS -eq 0 ]] && [[ $DIFF_STATUS -eq 0 ]] && {
+		__SUCCESS 'up-to-date with origin/main'
+	} || {
+		__WARNING
+		[[ $SYNC_STATUS -ne 0 ]] && __WARNING 'unable to synchronize with origin/main'
+		[[ $DIFF_STATUS -ne 0 ]] && __WARNING 'your branch differs from origin/main (diff listed above)'
+		__WARNING
+
+		__yN 'continue?' || return 1
 	}
+}
 
-	##########################################
-	### run the scwrypt ######################
-	##########################################
+__GET_LOGFILE() {
+	local SCRIPT="$1"
 
-	local HEADER=$(
-		echo '====================================================================='
-		echo "script : $SCRIPT"
-		echo "run at : $(date)"
-		echo "config : $ENV_NAME"
-		echo '------------------------------------------'
-	)
+	[ $CI ] \
+		|| [ $SUBSCWRYPT ] \
+		|| [[ $SCRIPT =~ scwrypts/logs ]] \
+		|| [[ $SCRIPT =~ interactive ]] \
+		&& return 0
 
-	echo $SCRIPT | grep -q 'interactive' && {
-		echo $HEADER
-		eval $RUN_STRING $@ </dev/tty >/dev/tty 2>&1; exit $?
-	}
-
-	local LOGFILE="$SCWRYPTS_LOG_PATH/$(echo $SCRIPT | sed 's/^\.\///; s/\//\%/g').log"
-	[[ $SCRIPT =~ scwrypts/logs ]] && LOGFILE=/dev/null
-	{
-		echo $HEADER
-		echo '--- BEGIN OUTPUT--------------------------'
-		eval $RUN_STRING $@; local EXIT_CODE="$?"
-		echo '--- END OUTPUT ---------------------------'
-
-		local C
-		[[ $EXIT_CODE -eq 0 ]] && C='32m' || C='31m';
-
-		echo "terminated with\\033[1;$C code $EXIT_CODE\\033[0m"
-	} 2>&1 | tee --append "$LOGFILE"
+	echo "$SCWRYPTS_LOG_PATH/$(echo $SCRIPT | sed 's/^\.\///; s/\//\%/g').log"
 }
 
 #####################################################################
