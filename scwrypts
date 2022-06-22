@@ -53,8 +53,6 @@ __RUN() {
 	local RUN_STRING=$(__GET_RUN_STRING $SCRIPT $ENV_NAME)
 	[ ! $RUN_STRING ] && exit 3
 
-	[ -f $_VIRTUALENV ] && source $_VIRTUALENV
-
 	##########################################
 
 	local LOGFILE=$(__GET_LOGFILE $SCRIPT)
