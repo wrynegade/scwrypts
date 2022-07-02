@@ -5,6 +5,7 @@ _REQUIRED_ENV+=()    # (extensible) list of required environment variables
 
 #####################################################################
 
+source ${0:a:h}/colors.zsh
 source ${0:a:h}/io.zsh
 source ${0:a:h}/os.zsh
 source ${0:a:h}/credits.zsh

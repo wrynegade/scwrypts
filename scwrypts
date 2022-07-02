@@ -12,7 +12,7 @@ __RUN() {
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
-			-e|--env )
+			-e | --env )
 				[ $ENV_NAME ] && __WARNING 'overwriting session environment'
 				ENV_NAME="$2"
 				__STATUS "using CLI environment '$ENV_NAME'"
@@ -196,8 +196,7 @@ __VALIDATE_UPSTREAM_TIMELINE() {
 __GET_LOGFILE() {
 	local SCRIPT="$1"
 
-	[ $CI ] \
-		|| [ $SUBSCWRYPT ] \
+	[ $SUBSCWRYPT ] \
 		|| [[ $SCRIPT =~ scwrypts/logs ]] \
 		|| [[ $SCRIPT =~ interactive ]] \
 		&& return 0

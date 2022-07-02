@@ -19,6 +19,7 @@ _EFS_CONNECT() {
 	[ ! $FS_ID ] && __ABORT
 
 	local MOUNT_POINT="$AWS__EFS__LOCAL_MOUNT_POINT/$FS_ID"
+	[ -d "$MOUNT_POINT" ] && sudo rmdir "$MOUNT_POINT" >/dev/null 2>&1
 	[ -d "$MOUNT_POINT" ] && {
 		__STATUS "$FS_ID is already mounted"
 		exit 0

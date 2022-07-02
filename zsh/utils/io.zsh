@@ -1,13 +1,27 @@
-__ERROR()    { echo "\\033[1;31mERROR    ✖ : $@\\033[0m" >&2; }
-__SUCCESS()  { echo "\\033[1;32mSUCCESS  ✔ : $@\\033[0m" >&2; }
-__WARNING()  { echo "\\033[1;33mWARNING   : $@\\033[0m" >&2; }
-__STATUS()   { echo "\\033[1;34mSTATUS     : $@\\033[0m" >&2; }
-__REMINDER() { echo "\\033[1;35mREMINDER  : $@\\033[0m" >&2; }
+__PRINT() {
+	local COLOR="$1"
+	local MESSAGE="$2"
+
+	local LINE_END
+	[ $3 ] && LINE_END='' || LINE_END='\n'
+
+	printf "${COLOR}${MESSAGE}${__COLOR_RESET}${LINE_END}"
+}
+
+__ERROR()    { __PRINT $__RED    "ERROR    ✖ : $@" >&2; }
+__SUCCESS()  { __PRINT $__GREEN  "SUCCESS  ✔ : $@" >&2; }
+__WARNING()  { __PRINT $__ORANGE "WARNING   : $@" >&2; }
+__STATUS()   { __PRINT $__BLUE   "STATUS     : $@" >&2; }
+__REMINDER() { __PRINT $__PURPLE "REMINDER  : $@" >&2; }
+__INFO()     { __PRINT $__WHITE  "INFO      : $@" >&2; }
 
 __PROMPT() {
-	echo   "\\033[1;36mPROMPT    : $@\\033[0m" >&2
-	printf "\\033[1;36mUSER      : \\033[0m" >&2
+	__PRINT $__CYAN "PROMPT    : $@" >&2
+	__PRINT $__CYAN "USER      : " --no-end >&2
 }
+
+__FAIL()  { __ERROR "${@:2}"; exit $1; }
+__ABORT() { __FAIL 69 'user abort'; }
 
 __Yn() {
 	__PROMPT "$@ [Yn]"
@@ -24,10 +38,6 @@ __yN() {
 	local yN; __READ -k yN; echo
 	[[ $yN =~ [yY] ]] && return 0 || return 1
 }
-
-__FAIL()  { __ERROR "${@:2}"; exit $1; }
-
-__ABORT() { __FAIL 69 'user abort'; }
 
 #####################################################################
 
