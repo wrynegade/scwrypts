@@ -38,10 +38,10 @@ __CONNECT_TO_RDS() {
 		secretsmanager )
 			CREDENTIALS=$(__GET_SECRETSMANAGER_CREDENTIALS)
 			echo $CREDENTIALS | jq -e '.pass' >/dev/null 2>&1 \
-				&& DB_AUTH=$(echo $CREDENTIALS | jq -r '.pass')
+				&& DB_AUTH="'$(echo $CREDENTIALS | jq -r '.pass' | sed "s/'/'\"'\"'/g")'"
 
 			echo $CREDENTIALS | jq -e '.password' >/dev/null 2>&1 \
-				&& DB_AUTH=$(echo $CREDENTIALS | jq -r '.password')
+				&& DB_AUTH="'$(echo $CREDENTIALS | jq -r '.password' | sed "s/'/'\"'\"'/g")'"
 
 			echo $CREDENTIALS | jq -e '.user' >/dev/null 2>&1 \
 				&& DB_USER=$(echo $CREDENTIALS | jq -r '.user')
