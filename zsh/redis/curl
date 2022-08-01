@@ -1,0 +1,48 @@
+#!/bin/zsh
+_DEPENDENCIES+=()
+_REQUIRED_ENV+=()
+source ${0:a:h}/common.zsh
+#####################################################################
+
+CURL_WITH_CACHE() {
+	[ ! $TTL ] && TTL=10
+	[[ $CACHE_ENABLED -eq 0 ]] && {
+		curl $@
+		return $?
+	}
+
+	local ARGS=()
+	local URL
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			--   ) shift 1 ;;
+			--*= ) ARGS+=($1); shift 1 ;;
+			--*  ) ARGS+=($1 $2); shift 2 ;;
+			-*   ) ARGS+=($1); shift 1 ;;
+			* ) URL=$1; break ;;
+		esac
+	done
+
+	local KEY=$(GET_URL_KEY $URL)
+	local OUTPUT=$(_REDIS get $KEY 2>&1)
+	[ $OUTPUT ] && {
+		[[ ${#ARGS[@]} -gt 0 ]] && __WARN "cache hit found; ignoring arguments ($ARGS)"
+		echo $OUTPUT
+		return
+	}
+
+	local OUTPUT=$(curl -s $@)
+	[ ! $OUTPUT ] && return 1
+
+	_REDIS set $KEY "$OUTPUT" >/dev/null
+	_REDIS expire $KEY $TTL >/dev/null
+
+	echo $OUTPUT
+}
+
+GET_URL_KEY() { echo "scwrypts:curl:$1" | sed 's/\s\+/+/g'; }
+
+#####################################################################
+CURL_WITH_CACHE $@

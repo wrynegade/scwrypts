@@ -1,0 +1,44 @@
+#!/bin/zsh
+_DEPENDENCIES+=(
+	pg_dump
+)
+_REQUIRED_ENV+=()
+source ${0:a:h}/common.zsh
+#####################################################################
+
+BACKUP_POSTGRES() {
+	local _HOST _NAME _PASS _PORT _USER
+	GET_POSTGRES_LOGIN_ARGS $@
+
+	local DATA_DIR="$SCWRYPTS_DATA_PATH/db/$_HOST/$_NAME/pg_dump"
+	[ ! -d $DATA_DIR ] && mkdir -p $DATA_DIR
+	cd $DATA_DIR
+
+	local OUTPUT_FILE="$DATA_DIR/$_NAME.dump"
+	[ -f $OUTPUT_FILE ] && {
+		local BACKUP_COUNT=$(ls "$DATA_DIR/$_NAME."*".dump" | wc -l)
+		ls "$DATA_DIR/$_NAME."*".dump"
+
+		__INFO "discovered previous dump for '$_HOST/$_NAME'"
+		__INFO "backing up previous dump to '$_NAME.$BACKUP_COUNT.dump'"
+
+		mv "$OUTPUT_FILE" "$DATA_DIR/$_NAME.$BACKUP_COUNT.dump"
+	}
+
+	__STATUS "making backup of  : $_USER@$_HOST:$_PORT/$_NAME"
+	__STATUS "output file       : $OUTPUT_FILE"
+
+	PGPASSWORD="$_PASS" pg_dump \
+		--verbose \
+		--format custom \
+		--host "$_HOST" \
+		--port "$_PORT" \
+		--username "$_USER" \
+		--dbname "$_NAME" \
+		--file "$OUTPUT_FILE" \
+		&& { __SUCCESS "finished backup of '$_HOST/$_NAME'"; __SUCCESS "saved to '$OUTPUT_FILE'"; } \
+		|| { __ERROR "error creating backup for '$_HOST/$_NAME' (see above)"; return 1; }
+}
+
+#####################################################################
+BACKUP_POSTGRES $@

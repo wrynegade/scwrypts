@@ -1,0 +1,25 @@
+#!/bin/zsh
+_DEPENDENCIES+=()
+_REQUIRED_ENV+=()
+source ${0:a:h}/common.zsh
+#####################################################################
+
+DOWNLOAD_VIDEO() {
+	local URLS=($@)
+
+	[[ ${#URLS[@]} -eq 0 ]] && URLS=($(echo '' | __FZF_HEAD 'enter URL'))
+	[[ ${#URLS[@]} -eq 0 ]] && __ABORT
+
+	local FILENAME=$(YT__GET_FILENAME $URLS)
+	[ ! $FILENAME ] && __ERROR "unable to download '$URLS'"
+
+	__SUCCESS "Found '$FILENAME'"
+	__Yn "Proceed with download?" || return 1
+
+	YT__DOWNLOAD $URLS \
+		&& __SUCCESS "downloaded to '$YT__OUTPUT_DIR/$FILENAME'" \
+		|| { __ERROR "failed to download '$FILENAME'"; return 2; }
+}
+
+#####################################################################
+DOWNLOAD_VIDEO $@
