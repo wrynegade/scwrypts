@@ -13,7 +13,7 @@ source ${0:a:h}/common.zsh
 		echo '#'
 		echo '# configuration for scwrypts'
 		echo '#'
-		sed -n '1d; /^###/q; p' $SCWRYPTS_ROOT/.config | sed '$d'
+		sed -n '1d; /^###/q; p' $SCWRYPTS_ROOT/global/config.zsh | sed '$d'
 	} > $SCWRYPTS_CONFIG_PATH/config
 
 	__EDIT $SCWRYPTS_CONFIG_PATH/config

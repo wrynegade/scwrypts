@@ -8,7 +8,7 @@ class RedisClient(StrictRedis):
         super().__init__(
                 host = getenv('REDIS_HOST'),
                 port = getenv('REDIS_PORT'),
-                password = getenv('REDIS_AUTH'),
+                password = getenv('REDIS_AUTH', required=False),
                 decode_responses = True,
                 )
 
