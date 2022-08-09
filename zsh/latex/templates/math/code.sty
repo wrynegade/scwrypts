@@ -1,0 +1,11 @@
+\ProvidesPackage{code}
+% ---------------------------------------------------------------------
+
+\newcommand{\clispsnippet}[2]{%
+	\lstinputlisting[%
+		caption=#1,
+		language=Lisp,
+		showstringspaces=false,
+		numbers=left,
+	]{#2}
+}

@@ -1,0 +1,63 @@
+#!/bin/zsh
+_DEPENDENCIES+=(
+	pdflatex
+	rg
+)
+_REQUIRED_ENV+=()
+
+TEMPLATE_DIR="${0:a:h}/templates"
+
+source ${0:a:h}/common.zsh
+#####################################################################
+
+CREATE_NEW_LATEX_DOCUMENT_FROM_TEMPLATE() {
+	local DOCUMENT_DIR="$EXECUTION_DIR"
+	local TEMPLATE=$(GET_TEMPLATES | __FZF 'select a template')
+	[ ! $TEMPLATE ] && __ABORT
+	__SUCCESS "selected template '$TEMPLATE'"
+
+	__INPUT DOC_TITLE 'document title' || __ABORT
+
+	local DOCUMENT_FILE="$DOCUMENT_DIR/$(SLUGIFY_TITLE).tex"
+	[ -f "$DOCUMENT_FILE" ] && __FAIL 1 "'$(basename $DOCUMENT_FILE)' already exists"
+
+	__INPUT DOC_ID    'document id/subtitle'
+	__INPUT AUTHOR    'author name'
+	__INPUT AUTHOR_ID 'author id/title'
+
+	{
+		PRINT_TITLE_INFO 
+		cat "$TEMPLATE_DIR/$TEMPLATE/template.tex"
+	} > "$DOCUMENT_FILE"
+	cp "$TEMPLATE_DIR/gitignore" "$DOCUMENT_DIR/.gitignore"
+	for FILE in $(find "$TEMPLATE_DIR/$TEMPLATE" -type f | grep -v '/template.tex$')
+	do
+		cp "$FILE" "$DOCUMENT_DIR/" || return 2
+	done
+	[[ ! $TEMPLATE =~ ^basic$ ]] \
+		&& mkdir "$DOCUMENT_DIR/sections" "$DOCUMENT_DIR/graphics"
+
+	__SUCCESS "finished generating '$(basename $DOCUMENT_FILE)' from '$TEMPLATE'"
+}
+
+GET_TEMPLATES() {
+	find "$TEMPLATE_DIR" -type d | sed "s^$TEMPLATE_DIR/*^^; /^$/d"
+}
+
+PRINT_TITLE_INFO() {
+	local DATESTRING=$(date '+%B %_d, %Y' | sed 's/ \{1,\}/ /g')
+	sed "
+		s^LATEX-DOC-TITLE^$DOC_TITLE^
+		s^LATEX-DOC-DATE^$DATESTRING^
+		s^LATEX-DOC-ID^$DOC_ID^
+		s^LATEX-AUTHOR-NAME^$AUTHOR^
+		s^LATEX-AUTHOR-ID^$AUTHOR_ID^
+	" "$TEMPLATE_DIR/main.tex"
+}
+
+SLUGIFY_TITLE() {
+	echo $DOC_TITLE | sed "s^['\"\\/,\!@#\$%^&*()]*^^g; s^\s\+^-^g;"
+}
+
+#####################################################################
+CREATE_NEW_LATEX_DOCUMENT_FROM_TEMPLATE $@

@@ -17,7 +17,7 @@ __CHECK_DEPENDENCY() {
 }
 
 __CHECK_COREUTILS() {
-	local COREUTILS=(awk find grep sed)
+	local COREUTILS=(awk find grep sed readlink)
 	local MISSING_DEPENDENCY_COUNT=0
 	local NON_GNU_DEPENDENCY_COUNT=0
 

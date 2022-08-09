@@ -1,0 +1,31 @@
+#!/bin/zsh
+_DEPENDENCIES+=(
+	pdflatex
+	rg
+)
+_REQUIRED_ENV+=()
+source ${0:a:h}/common.zsh
+#####################################################################
+
+PDFLATEX() {
+	[ ! $1 ] && __FAIL 1 'must provide filename'
+	local FILENAME=$(GET_MAIN_LATEX_FILENAME "$1")
+
+	local ARGS=(-interaction=nonstopmode)
+	ARGS+=("$FILENAME")
+
+	cd "$(dirname $FILENAME)"
+
+	__STATUS 'running compile (1/2)'
+	pdflatex ${ARGS[@]} \
+		|| __FAIL 2 'first compile failed (see above)'
+
+	__STATUS 'running compile (2/2)'
+	pdflatex ${ARGS[@]} >/dev/null 2>&1 \
+		|| __FAIL 3 'second compile failed :c'
+
+	__SUCCESS "created '$(echo $FILENAME | sed 's/\.[^.]*$/.pdf/')'"
+}
+
+#####################################################################
+PDFLATEX $@

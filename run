@@ -1,4 +1,6 @@
 #!/bin/zsh
+export EXECUTION_DIR=$(pwd)
+
 SCWRYPTS_ROOT="${0:a:h}"
 source "$SCWRYPTS_ROOT/zsh/common.zsh" || exit 42
 #####################################################################
@@ -14,7 +16,6 @@ OPTIONS
 
   -h, --help             display this message and exit
 '
-
 	cd "$SCWRYPTS_ROOT"
 
 	local ENV_NAME="$SCWRYPTS_ENV"
@@ -103,7 +104,7 @@ OPTIONS
 
 	[ ! $LOGFILE ] && {
 		[ $HEADER ] && echo $HEADER
-		[[ $SUBSCWRYPT -eq 0 ]] && {
+		[ $SUBSCWRYPT ] && {
 			eval $RUN_STRING $@
 			exit $?
 		} || {

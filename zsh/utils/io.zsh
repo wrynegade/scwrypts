@@ -23,6 +23,13 @@ __PROMPT() {
 __FAIL()  { __ERROR "${@:2}"; exit $1; }
 __ABORT() { __FAIL 69 'user abort'; }
 
+__INPUT() {
+	__PROMPT "${@:2}"
+	__READ $1
+	local VALUE=$(eval echo '$'$1)
+	[ $VALUE ]
+}
+
 __Yn() {
 	__PROMPT "$@ [Yn]"
 	[ $CI ] && { echo y; return 0; }

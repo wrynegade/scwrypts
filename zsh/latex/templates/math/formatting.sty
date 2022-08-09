@@ -1,0 +1,46 @@
+\ProvidesPackage{formatting}
+% ---------------------------------------------------------------------
+
+\newcommand{\headerLeft}   {\documentTitle: \documentDate}
+\newcommand{\headerCenter} {\documentId}
+\newcommand{\headerRight}  {\authorName\ (\authorId)}
+\newcommand{\pageOfTotal}  {\thepage\ of~\pageref{LastPage}}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+
+\RequirePackage[margin=1in,bottom=.5in,includefoot]{geometry}
+\RequirePackage{lastpage}
+\RequirePackage{fancyhdr}
+
+% ---------------------------------------------------------------------
+% Page 1
+
+\pagestyle{fancy}
+\fancypagestyle{plain}{%
+	\fancyhf{}
+	\fancyhead[L]{\headerLeft}
+	\fancyhead[R]{\headerRight}
+	\fancyhead[C]{\headerCenter}
+	\fancyfoot[C]{\pageOfTotal}
+}
+
+\renewcommand{\baselinestretch}{1}
+\setlength{\parskip}{0em}
+\setlength{\parindent}{0em}
+
+% ---------------------------------------------------------------------
+% Pages 2+
+
+\fancyhf{}
+\fancyhead[L]{\headerLeft}
+\fancyhead[R]{\headerRight}
+\fancyhead[C]{\headerCenter}
+\fancyfoot[C]{\pageOfTotal}
+
+% ---------------------------------------------------------------------
+
+\title{\documentTitle}
+\author{\authorName\ \\ \authorId}
+\date{\documentDate}

@@ -1,0 +1,15 @@
+#!/bin/zsh
+_DEPENDENCIES+=()
+_REQUIRED_ENV+=()
+source ${0:a:h}/common.zsh
+#####################################################################
+
+OPEN_PDF() {
+	local PDF=$(__RUN_SCWRYPT latex/get-pdf -n -- $1)
+	[ ! $PDF ] && return 1
+
+	__OPEN "$PDF"
+}
+
+#####################################################################
+OPEN_PDF $@

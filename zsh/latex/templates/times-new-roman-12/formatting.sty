@@ -1,0 +1,31 @@
+\ProvidesPackage{formatting}
+% ---------------------------------------------------------------------
+
+\newcommand{\horizontalHeader} {%
+	\authorName\hfill
+	\authorId\hfill
+	\documentId\hfill
+	\documentDate%
+}
+
+\RequirePackage[margin=1in]{geometry}
+\RequirePackage{fancyhdr}
+
+% ---------------------------------------------------------------------
+
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[C]{\horizontalHeader}
+\fancyfoot[C]{\thepage}
+
+\renewcommand{\baselinestretch}{1}
+\setlength{\parskip}{1em}
+\setlength{\parindent}{0em}
+\raggedright%
+
+% ---------------------------------------------------------------------
+
+\newcommand{\insertTitle} {%
+	\centerline{\begin{large}\textbf{\documentTitle}\end{large}}
+}
+

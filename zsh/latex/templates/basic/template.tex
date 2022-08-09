@@ -1,0 +1,37 @@
+\usepackage[margin=.75in,bottom=0.5in,top=1.0in]{geometry}
+
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{lastpage}
+
+\newcommand{\headerL}     {\documentTitle: \documentDate}
+\newcommand{\headerC}     {\documentId}
+\newcommand{\headerR}     {\authorName\ (\authorId)}
+\newcommand{\pageOfTotal} {\thepage\ of~\pageref{LastPage}}
+
+\pagestyle{fancy}
+\fancypagestyle{plain}{%
+	\fancyhf{}
+	\fancyhead[L]{\headerL}\fancyhead[R]{\headerR}\fancyhead[C]{\headerC}
+	\fancyfoot[C]{\pageOfTotal}
+}
+
+\renewcommand{\baselinestretch}{1}
+\setlength{\parskip}{0em}
+\hyphenpenalty=5000%
+
+\fancyhf{}
+\fancyhead[L]{\headerL}\fancyhead[R]{\headerR}\fancyhead[C]{\headerC}
+\fancyfoot[C]{\pageOfTotal}
+
+\title{\documentTitle}
+\author{\authorName\ \\ \authorId}
+\date{\documentDate}
+
+\begin{document}
+\maketitle%
+% ---------------------------------------------------------------------
+
+% ---------------------------------------------------------------------
+\end{document}
