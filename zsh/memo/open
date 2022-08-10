@@ -1,0 +1,32 @@
+#!/bin/zsh
+_DEPENDENCIES+=()
+_REQUIRED_ENV+=()
+source ${0:a:h}/common.zsh
+#####################################################################
+
+OPEN_MEMO() {
+	local MEMO_NAME=$(LIST_MEMOS | __FZF_TAIL 'select/create a memo')
+	[ ! "$MEMO_NAME" ] && __ABORT
+
+	MEMO_FILE="$MEMO__DIR/$MEMO_NAME.$MEMO__FILETYPE"
+
+	[ ! -f $MEMO_FILE ] && {
+		__STATUS "creating memo '$MEMO_NAME'"
+		echo "# $MEMO_NAME" > "$MEMO_FILE" \
+			&& __SUCCESS "created memo '$MEMO_NAME'" \
+			|| __FAIL 1 "failed to create '$MEMO_FILE'" \
+			;
+	}
+
+	DATESTRING="## $(date '+%A, %B %-d, %Y')"
+	grep -q "$DATESTRING" "$MEMO_FILE" || echo "$DATESTRING" >> "$MEMO_FILE"
+
+	__STATUS "opening memo '$MEMO_NAME' for editing"
+	__EDIT "$MEMO_FILE"
+	__SUCCESS "finished editing memo '$MEMO_NAME'"
+}
+
+
+
+#####################################################################
+OPEN_MEMO $@
