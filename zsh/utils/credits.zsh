@@ -3,6 +3,7 @@ __CREDITS() {
 	[ ! $SCWRYPTS_ROOT ] && return 0
 
 	local COMMAND="$1"
+	[[ $COMMAND =~ - ]] && COMMAND=$(echo $COMMAND | sed 's/-/--/g')
 	cd $SCWRYPTS_ROOT
 	cat ./**/README.md \
 		| grep 'Generic Badge' \
