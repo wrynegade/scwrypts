@@ -17,16 +17,14 @@ ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
 [ ! -f $ENV_FILE ] && {
 	__STATUS "Creating '$ENV_NAME'..." \
 		&& cp $__ENV_TEMPLATE $ENV_FILE \
-		&& __SUCCESS 'created!' \
+		&& __RUN_SCWRYPT zsh/scwrypts/environment/synchronize -- --no-prompt \
+		&& __SUCCESS "created '$ENV_NAME'" \
 		|| { __ERROR "failed to create '$ENV_FILE'"; exit 1; }
 }
 
-__STATUS "opening '$ENV_NAME' for editing..."
 __EDIT $ENV_FILE
-sed -i "s/^[A-Z]/export &/; s/^[^#=]\\+$/&=/" $ENV_FILE
-LC_COLLATE=C sort -uo $ENV_FILE $ENV_FILE
+_SORT_ENV $ENV_FILE
 
-__STATUS "finished editing; looking for new environment variables"
 while read line
 do
 	ENV_VAR=$(echo "$line" | sed 's/=.*$//; s/^export //')

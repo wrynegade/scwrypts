@@ -1,0 +1,88 @@
+#!/bin/zsh
+_DEPENDENCIES+=()
+_REQUIRED_ENV+=()
+source ${0:a:h}/common.zsh
+#####################################################################
+
+INSTALL() {
+	local USAGE="
+		usage: [...options...]
+
+		options
+		  -t, --target-url <string>   target URL; required for first-time download
+		  -n, --local-name <string>   local name for package (optional)
+
+		  -u, --update                if package exists, update without prompt
+		  -b, --only-build            if package exists, skip update step and only build
+		  -p, --only-pull             skip the automated build step
+		  -c, --clean                 for make, run make clean before build
+
+		  -h, --help                  print this message and exit
+	"
+	local NAME
+	local TARGET
+
+	local SKIP_BUILD=0
+	local SKIP_PULL=0
+	local UPDATE=0
+	local CLEAN=0
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			-t | --target-url ) TARGET="$2"; shift 1 ;;
+			-n | --local-name ) NAME="$2"; shift 1 ;;
+
+			-u | --update     ) UPDATE=1 ;;
+			-b | --only-build ) SKIP_PULL=1 ;;
+			-p | --only-pull  ) SKIP_BUILD=1 ;;
+			-c | --clean      ) CLEAN=1 ;;
+
+			-h | --help ) __USAGE; exit 0 ;;
+
+			-* ) __ERROR "unknown argument '$1'" ;;
+
+			* ) [ ! $TARGET ] && TARGET="$1" \
+					|| __ERROR "extra positional argument '$1'" \
+					;
+				;;
+		esac
+		shift 1
+	done
+
+	[[ $SKIP_PULL -eq 1 ]] && [[ $SKIP_BUILD -eq 1 ]] && __ERROR 'only one of [-b | -p] can be specified'
+
+	[ ! $TARGET ] && [ ! $NAME ] && {
+		[[ $SKIP_BUILD -eq 1 ]] && {
+			__ERROR 'cannot skip build without specifying package local-name'
+		} || {
+			UPDATE=1
+			NAME=$(ls "$PACKAGE_INSTALL_DIR" | __FZF 'select a package to update')
+			[ ! $NAME ] && __ERROR 'target-url required'
+		}
+	}
+
+	__ERROR_CHECK
+
+	####################################################
+
+	[ ! $NAME ] && {
+		NAME=$(echo $TARGET | sed 's/.*\///; s/\.git$//')
+		__INFO "using default name '$NAME'"
+	}
+
+	[ -d "$PACKAGE_INSTALL_DIR/$NAME" ] && [[ $SKIP_PULL -eq 0 ]] && {
+		[[ $UPDATE -eq 0 ]] && __Yn "package '$NAME' already exists; update now?" && UPDATE=1
+		[[ $UPDATE -eq 1 ]] && PULL || return 1
+	}
+
+	[ ! -d "$PACKAGE_INSTALL_DIR/$NAME" ] && {
+		CLONE || return 2
+	}
+
+	[[ $SKIP_BUILD -eq 1 ]] && return 0
+	BUILD
+}
+
+#####################################################################
+INSTALL $@

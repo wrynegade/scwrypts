@@ -7,27 +7,27 @@ source "$SCWRYPTS_ROOT/zsh/common.zsh" || exit 42
 
 __RUN() {
 	local USAGE='
-Usage : scwrypts [OPTIONS ...] SCRIPT -- [SCRIPT OPTIONS ...]
+		usage: scwrypts [OPTIONS ...] SCRIPT -- [SCRIPT OPTIONS ...]
 
-OPTIONS
-  -e, --env <env-name>   set environment; overwrites SCWRYPTS_ENV
-  -n, --no-log           skip logging (useful when calling scwrypts as an api)
-  -l, --list             print out command list and exit
+		OPTIONS
+		  -e, --env <env-name>   set environment; overwrites SCWRYPTS_ENV
+		  -n, --no-log           skip logging (useful when calling scwrypts as an api)
+		  -l, --list             print out command list and exit
 
-  -h, --help             display this message and exit
-'
+		  -h, --help             display this message and exit
+	'
 	cd "$SCWRYPTS_ROOT"
 
 	local ENV_NAME="$SCWRYPTS_ENV"
 	local SEARCH_PATTERNS=()
 
-	local ARGS_ERROR=0
+	local ERROR=0
 
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
 			-h | --help )
-				echo $USAGE
+				__USAGE
 				return 0
 				;;
 			-n | --no-log )
@@ -50,7 +50,6 @@ OPTIONS
 				;;
 			-* )
 				__ERROR "unrecognized argument '$1'"
-				((ARGS_ERROR+=1))
 				shift 1
 				;;
 			* )
@@ -60,15 +59,13 @@ OPTIONS
 		esac
 	done
 
-	[[ $ARGS_ERROR -gt 0 ]] && {
-		echo $USAGE
-		return 1
-	}
+	__ERROR_CHECK
 
 	##########################################
 
 	local SCRIPT=$(__SELECT_SCRIPT $SEARCH_PATTERNS)
 	[ ! $SCRIPT ] && exit 2
+	export SCWRYPT_NAME=$SCRIPT
 
 	local ENV_REQUIRED=$(__CHECK_ENV_REQUIRED && echo 1 || echo 0)
 

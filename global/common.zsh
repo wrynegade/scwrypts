@@ -28,14 +28,14 @@ __GET_PATH_TO_RELATIVE_ARGUMENT() {
 __RUN_SCWRYPT() {
 	((SUBSCWRYPT+=1))
 	{ printf ' '; printf '--%.0s' {1..$SUBSCWRYPT}; printf " ($SUBSCWRYPT) "; } >&2
-	echo "  BEGIN SUBSCWRYPT : $(basename $1)" >&2
+	echo "  BEGIN SUBSCWRYPT : $@" >&2
 
 	SUBSCWRYPT=$SUBSCWRYPT SCWRYPTS_ENV=$ENV_NAME \
 		"$SCWRYPTS_ROOT/scwrypts" $@
 	EXIT_CODE=$?
 
 	{ printf ' '; printf '--%.0s' {1..$SUBSCWRYPT}; printf " ($SUBSCWRYPT) "; } >&2
-	echo "  END SUBSCWRYPT   : $(basename $1)" >&2
+	echo "  END SUBSCWRYPT   : $1" >&2
 	((SUBSCWRYPT-=1))
 
 	return $EXIT_CODE

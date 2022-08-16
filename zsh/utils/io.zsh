@@ -8,7 +8,7 @@ __PRINT() {
 	printf "${COLOR}${MESSAGE}${__COLOR_RESET}${LINE_END}"
 }
 
-__ERROR()    { __PRINT $__RED    "ERROR    ✖ : $@" >&2; }
+__ERROR()    { __PRINT $__RED    "ERROR    ✖ : $@" >&2; ((ERRORS+=1)); }
 __SUCCESS()  { __PRINT $__GREEN  "SUCCESS  ✔ : $@" >&2; }
 __WARNING()  { __PRINT $__ORANGE "WARNING   : $@" >&2; }
 __STATUS()   { __PRINT $__BLUE   "STATUS     : $@" >&2; }
@@ -22,6 +22,28 @@ __PROMPT() {
 
 __FAIL()  { __ERROR "${@:2}"; exit $1; }
 __ABORT() { __FAIL 69 'user abort'; }
+
+
+__ERROR_CHECK() {
+	[ ! $ERRORS ] && ERRORS=0
+	[[ $ERRORS -ne 0 ]] && __USAGE
+	[[ $ERRORS -eq 0 ]] || exit $ERRORS
+}
+
+__USAGE() {
+	[ ! $USAGE ] && return 0
+	USAGE=$(echo $USAGE | sed "s/^\t\+//; s/\s\+$//")
+
+	local USAGE_LINE=$(\
+		echo $USAGE \
+			| grep -i '^ *usage *:' \
+			| sed "s;^[^:]*:;& scwrypts -- $SCWRYPT_NAME;" \
+			| sed 's/ \{2,\}/ /g; s/scwrypts -- scwrypts/scwrypts/' \
+		)
+	local THE_REST=$(echo $USAGE | grep -vi '^ *usage *:' | sed 'N;/^\n$/D;P;D;')
+
+	{ echo; __PRINT $__DARK_BLUE "$USAGE_LINE"; echo $THE_REST; echo } >&2
+}
 
 __INPUT() {
 	__PROMPT "${@:2}"
@@ -81,5 +103,8 @@ __EDIT() {
 		__ERROR 'currently in CI, but __EDIT explicitly requires terminal input'
 		return 1
 	}
+
+	__STATUS "opening '$1' for editing"
 	$EDITOR $@ </dev/tty >/dev/tty
+	__SUCCESS "finished editing '$1'!"
 }

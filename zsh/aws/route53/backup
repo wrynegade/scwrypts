@@ -13,7 +13,7 @@ _ROUTE53_BACKUP() {
 	for DOMAIN in $(_ROUTE53_GET_DOMAINS)
 	do
 		( __STATUS "creating '$BACKUP_PATH/$DOMAIN.txt'" \
-			&& cli53 export --profile $_AWS_PROFILE $DOMAIN > "$BACKUP_PATH/$DOMAIN.txt" \
+			&& cli53 export --profile $AWS_PROFILE $DOMAIN > "$BACKUP_PATH/$DOMAIN.txt" \
 			&& __SUCCESS "backed up '$DOMAIN'" \
 			|| __ERROR "failed to back up '$DOMAIN'" \
 		) &
@@ -25,7 +25,7 @@ _ROUTE53_BACKUP() {
 }
 
 _ROUTE53_GET_DOMAINS() {
-	cli53 list --profile $_AWS_PROFILE \
+	cli53 list --profile $AWS_PROFILE \
 		| awk '{print $2;}' \
 		| sed '1d; s/\.$//'\
 		;

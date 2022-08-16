@@ -45,7 +45,6 @@ After determining which script to run, if no environment has been specified, Scw
 Set environment variable `CI=true` (and use the no install method) to run in an automated pipeline.
 There are a few notable changes to this runtime:
 - **The Scwrypts sandbox environment will not load.** All variables will be read from context.
-	- The underscore-prefixed `_AWS_(PROFILE|REGION|ACCOUNT)` variables will be read from the standard `AWS_` variables
 - User yes/no prompts will **always be YES**
 - Other user input will default to an empty string
 - Logs will not be captured

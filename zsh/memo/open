@@ -21,9 +21,7 @@ OPEN_MEMO() {
 	DATESTRING="## $(date '+%A, %B %-d, %Y')"
 	grep -q "$DATESTRING" "$MEMO_FILE" || echo "$DATESTRING" >> "$MEMO_FILE"
 
-	__STATUS "opening memo '$MEMO_NAME' for editing"
 	__EDIT "$MEMO_FILE"
-	__SUCCESS "finished editing memo '$MEMO_NAME'"
 }
 
 

@@ -27,6 +27,7 @@ _SYNCHRONIZE() {
 	_INSERT_NEW_VARIABLES
 	_REMOVE_OLD_VARIABLES
 	_SORT_AND_CASCADE
+	_ADD_DESCRIPTIONS
 
 	__SUCCESS 'finished sync!'
 }
@@ -124,6 +125,28 @@ _CASCADE_ENVIRONMENT() {
 	done < <(sed -n '/^[^#][^=]*=[^#]\+$/p' "$PARENT_FILE")
 
 	__SUCCESS "finished '$PARENT_NAME' propagation"
+}
+
+_ADD_DESCRIPTIONS() {
+	__STATUS 'updating descriptions'
+	while read DESCRIPTION_LINE
+	do
+		ENV_VAR=$(echo $DESCRIPTION_LINE | sed 's/ \+| .*$//')
+		DESCRIPTION=$(echo $DESCRIPTION_LINE | sed 's/^.* | //')
+		for ENV_NAME in $(echo $ENVIRONMENTS)
+		do
+			sed -i "/^export $ENV_VAR=/i # $DESCRIPTION" "$(__GET_ENV_FILE $ENV_NAME)"
+		done
+	done < <(sed -n '/^[^ ]\+ \+| /p' "$__ENV_TEMPLATE.descriptions")
+
+	while read ENV_VAR
+	do
+		for ENV_NAME in $(echo $ENVIRONMENTS)
+		do
+			sed -i "/^export $ENV_VAR=/a \ " "$(__GET_ENV_FILE $ENV_NAME)"
+			sed -i "s/^ $//" "$(__GET_ENV_FILE $ENV_NAME)"
+		done
+	done < <(grep -B1 '^$' "$__ENV_TEMPLATE.descriptions" | grep '|' | awk '{print $1;}')
 }
 
 #####################################################################

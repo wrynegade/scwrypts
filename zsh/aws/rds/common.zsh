@@ -5,7 +5,7 @@ source ${0:a:h}/../common.zsh
 
 GET_DATABASE_CREDENTIALS() {
 	local PRINT_PASSWORD=0
-	local ARGS_ERRORS=0
+	local ERRORS=0
 
 	while [[ $# -gt 0 ]]
 	do
@@ -13,12 +13,13 @@ GET_DATABASE_CREDENTIALS() {
 			--print-password ) PRINT_PASSWORD=1 ;;
 			* )
 				__WARNING "unrecognized argument $1"
-				ARGS_ERRORS+=1
+				ERRORS+=1
 				;;
 		esac
 		shift 1
 	done
-	[[ $ARGS_ERRORS -ne 0 ]] && return 1
+
+	__ERROR_CHECK
 
 	##########################################
 

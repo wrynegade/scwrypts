@@ -1,0 +1,36 @@
+#!/bin/zsh
+_DEPENDENCIES+=()
+_REQUIRED_ENV+=()
+source ${0:a:h}/common.zsh
+#####################################################################
+
+SETUP_SYMLINKS() {
+	while read SYMLINK
+	do
+		SETUP_SYMLINK $(echo $SYMLINK | awk '{print $1;}') $(echo $SYMLINK | awk '{print $2}')
+	done < <(echo $SYMLINKS | sed -n '/^[^#]/p')
+}
+
+SETUP_SYMLINK() {
+	[ ! $2 ] && __FAIL 1 'must provide SOURCE_CONFIG and TARGET_CONFIG'
+
+	local SOURCE_CONFIG="$1"
+	[ ! -f "$SOURCE_CONFIG" ] && __FAIL 2 "no such file '$SOURCE_CONFIG'"
+
+	local TARGET_CONFIG="$HOME/.config/$2"
+
+	[ ! -d $(dirname "$TARGET_CONFIG") ] && mkdir -p $(dirname "$TARGET_CONFIG")
+
+	[ -f "$TARGET_CONFIG" ] && {
+		[[ $SAFE_SYMLINKS -eq 1 ]] && mv "$TARGET_CONFIG" "$TARGET_CONFIG.bak"
+		[[ $SAFE_SYMLINKS -eq 0 ]] && rm "$TARGET_CONFIG"
+	}
+
+	ln -s "$SOURCE_CONFIG" "$TARGET_CONFIG" \
+		&& __SUCCESS "successfully linked '$(basename $(dirname $TARGET_CONFIG))/$(basename $TARGET_CONFIG)'" \
+		|| __FAIL 3 "failed to create link '$TARGET_CONFIG'" \
+		;
+}
+
+#####################################################################
+SETUP_SYMLINKS $@

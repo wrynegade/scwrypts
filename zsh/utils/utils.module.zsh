@@ -14,12 +14,6 @@ source ${0:a:h}/credits.zsh
 
 IMPORT_ERROR=0
 
-[ $CI ] && {
-	export _AWS_PROFILE="$AWS_PROFILE"
-	export _AWS_ACCOUNT="$AWS_ACCOUNT"
-	export _AWS_REGION="$AWS_REGION"
-}
-
 source ${0:a:h}/dependencies.zsh
 _DEP_ERROR=0
 _DEPENDENCIES=($(echo $_DEPENDENCIES | sort -u))
