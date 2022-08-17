@@ -23,3 +23,22 @@ __WHITE='\033[1;37m'
 __LIGHT_GRAY='\033[0;37m'
 
 __COLOR_RESET='\033[0m'
+
+__GET_RANDOM_COLOR() {
+	local COLORS=(
+		$__RED
+		$__LIGHT_RED
+		$__GREEN
+		$__LIGHT_GREEN
+		$__ORANGE
+		$__YELLOW
+		$__BLUE
+		$__DARK_BLUE
+		$__PURPLE
+		$__DARK_PURPLE
+		$__CYAN
+		$__DARK_CYAN
+		$__WHITE
+	)
+	print "$__COLOR_RESET${COLORS[$(shuf -i 1-${#COLORS[@]} -n 1)]}"
+}
