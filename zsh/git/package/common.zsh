@@ -4,6 +4,7 @@ source ${0:a:h}/../common.zsh
 #####################################################################
 
 PACKAGE_INSTALL_DIR="$HOME/.local/share/source-packages"
+[ ! -d "$PACKAGE_INSTALL_DIR" ] && mkdir -p "$PACKAGE_INSTALL_DIR"
 
 #####################################################################
 
