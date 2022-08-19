@@ -92,16 +92,16 @@ __FZF_TAIL() { __FZF $@ --print-query | sed '/^$/d' | tail -n1; } # prefer selec
 
 __READ()  {
 	[ $CI ] && {
-		__ERROR 'currently in CI, but __READ explicitly requires terminal input'
-		return 1
+		__INFO 'currently in CI, skipping __READ'
+		return 0
 	}
 	read $@ </dev/tty
 }
 
 __EDIT() {
 	[ $CI ] && {
-		__ERROR 'currently in CI, but __EDIT explicitly requires terminal input'
-		return 1
+		__INFO 'currently in CI, skipping __EDIT'
+		return 0
 	}
 
 	__STATUS "opening '$1' for editing"
