@@ -1,0 +1,113 @@
+#!/bin/zsh
+_DEPENDENCIES+=(
+	xdotool
+	xrandr
+	i3-msg
+)
+_REQUIRED_ENV+=()
+source ${0:a:h}/common.zsh
+#####################################################################
+
+LAUNCH_OR_SHOW() {
+	local USAGE="
+		usage: <path-executable> [client-class] [...options...]
+
+		options
+		  -c, --client <string>   if different from the executable name, xprop CLIENT_CLASS
+
+		  -s, --scale <value>     (default: 0.8 or 0.5 if screen width >3000px)
+		  -x, --x-offset <value>  (default: 0.0)
+		  -y, --y-offset <value>  (default: 0.0)
+
+		  -a, --always-launch     invoke executable even if client-class exists
+		  -n, --no-resize         don't resize the window (ignores -sxy flags)
+
+		  -h, --help              print this message and exit
+
+		Makes it easy to bind appications to key shortcuts without having to
+		spin up redundant instances or cycle through the scratchpad queue.
+
+		Depending on state, performs one of three useful functions
+		  1) starts application
+		  2) adds application window to the scratchpad
+		  3) pulls applciation from scratchpad to foreground on active screen
+	"
+	local APPLICATION CLIENT_CLASS
+
+	local XFFSET=0.0
+	local YFFSET=0.0
+	local SCALE=0.8
+	[[ $(xrandr | grep primary | awk '{print $4;}' | sed 's/x.*//') -gt 3000 ]] \
+		&& SCALE=0.5
+
+	local ALWAYS_LAUNCH=0
+	local RESIZE=1
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in 
+			-c | --client   ) CLIENT_CLASS="$2"; shift 1 ;;
+			-x | --x-offset ) XFFSET=$2; shift 1 ;;
+			-y | --y-offset ) YFFSET=$2; shift 1 ;;
+			-s | --scale    ) SCALE=$2;  shift 1 ;;
+
+			-a | --always-launch ) ALWAYS_LAUNCH=1 ;;
+			-n | --no-resize     ) RESIZE=0 ;;
+
+			-h | --help ) __USAGE; exit 0 ;;
+
+			* )
+				[ ! $APPLICATION  ] && APPLICATION="$1" \
+					|| __ERROR "extra positional argument '$1'"
+		esac
+		shift 1
+	done
+
+	[ ! $APPLICATION  ] && __ERROR 'path-executable required'
+	[ ! $CLIENT_CLASS ] && CLIENT_CLASS=$APPLICATION
+
+	[ $APPLICATION ] && {
+		__CHECK_DEPENDENCY $APPLICATION || {
+			__ERROR "$APPLICATION is not installed"
+			_NOTIFY "ERROR: $APPLICATION not found"
+		}
+	}
+
+	__ERROR_CHECK
+
+	local LAUNCH_APP=$ALWAYS_LAUNCH
+	__STATUS "looking for window process ids"
+	xdotool search --class $CLIENT_CLASS || LAUNCH_APP=1
+
+	[[ $LAUNCH_APP -eq 1 ]] && {
+		__STATUS 'launching application'
+		i3-msg "exec --no-startup-id $APPLICATION;"
+		sleep .5
+	}
+
+	__STATUS 'getting target window size'
+	WINDOW_SIZE=$(\
+		xrandr \
+			| grep 'connected primary' \
+			| sed 's/.*connected primary \([^x]*\)x\([^+]*\).*/\1 \2/' \
+			| awk -v f=$SCALE -v x=$XFFSET -v y=$YFFSET \
+				'{print int($1*f+x)," ",int($2*f+y);}'\
+	)
+	__INFO "window size: $WINDOW_SIZE"
+
+	__STATUS 'moving window to scratchpad'
+	i3-msg "[class=$CLIENT_CLASS] move scratchpad"
+
+	[[ $RESIZE -eq 1 ]] \
+		&& __STATUS 'resizing window' \
+		&& i3-msg "[class=$CLIENT_CLASS] resize set $WINDOW_SIZE"
+
+	__STATUS 'pulling window from scratchpad to foreground'
+	i3-msg "[class=$CLIENT_CLASS] scratchpad show"
+
+	__STATUS 'moving window to center of current screen'
+	i3-msg "[class=$CLIENT_CLASS] move position center"
+}
+
+#####################################################################
+LAUNCH_OR_SHOW $@

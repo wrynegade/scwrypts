@@ -15,16 +15,16 @@ SETUP_SYMLINK() {
 	[ ! $2 ] && __FAIL 1 'must provide SOURCE_CONFIG and TARGET_CONFIG'
 
 	local SOURCE_CONFIG="$1"
-	[ ! -f "$SOURCE_CONFIG" ] && __FAIL 2 "no such file '$SOURCE_CONFIG'"
+	[ ! -f "$SOURCE_CONFIG" ] && [ ! -d "$SOURCE_CONFIG" ] && __FAIL 2 "no such file or directory '$SOURCE_CONFIG'"
 
 	local TARGET_CONFIG="$HOME/.config/$2"
 
 	[ ! -d $(dirname "$TARGET_CONFIG") ] && mkdir -p $(dirname "$TARGET_CONFIG")
 
-	[ -f "$TARGET_CONFIG" ] && {
-		[[ $SAFE_SYMLINKS -eq 1 ]] && mv "$TARGET_CONFIG" "$TARGET_CONFIG.bak"
-		[[ $SAFE_SYMLINKS -eq 0 ]] && rm "$TARGET_CONFIG"
-	}
+	[[ $SAFE_SYMLINKS -eq 1 ]] \
+		&& mv "$TARGET_CONFIG" "$TARGET_CONFIG.bak" >/dev/null 2>&1
+
+	rm "$TARGET_CONFIG" >/dev/null 2>&1
 
 	ln -s "$SOURCE_CONFIG" "$TARGET_CONFIG" \
 		&& __SUCCESS "successfully linked '$(basename $(dirname $TARGET_CONFIG))/$(basename $TARGET_CONFIG)'" \

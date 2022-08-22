@@ -37,7 +37,7 @@ __USAGE() {
 	local USAGE_LINE=$(\
 		echo $USAGE \
 			| grep -i '^ *usage *:' \
-			| sed "s;^[^:]*:;& scwrypts -- $SCWRYPT_NAME;" \
+			| sed "s;^[^:]*:;& scwrypts $SCWRYPT_NAME --;" \
 			| sed 's/ \{2,\}/ /g; s/scwrypts -- scwrypts/scwrypts/' \
 		)
 	local THE_REST=$(echo $USAGE | grep -vi '^ *usage *:' | sed 'N;/^\n$/D;P;D;')
@@ -85,7 +85,10 @@ __FZF()      {
 		exit 1
 	}
 
-	fzf -i --height=30% --layout=reverse --prompt "$1 : " ${@:2}
+	local SELECTION=$(fzf -i --height=30% --layout=reverse --prompt "$1 : " ${@:2})
+	__PROMPT "$1"
+	echo $SELECTION >&2
+	echo $SELECTION
 }
 __FZF_HEAD() { __FZF $@ --print-query | sed '/^$/d' | head -n1; } # prefer user input over selected
 __FZF_TAIL() { __FZF $@ --print-query | sed '/^$/d' | tail -n1; } # prefer selected over user input

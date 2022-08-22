@@ -31,6 +31,26 @@ Inherited values are denoted by `# inherited from <parent-name>` in the environm
 
 Nested children will inherit values from all parents.
 
+### Special Environment Variable Syntax
+
+All environment variables which end in `__[a-z_]+` are ignored by the template file.
+These environment variables *will propagate to children*, but will not be removed nor staged into the `.env.template`.
+
+#### `__select` Environment Variables
+Omit any variable, but provide a comma-separated list with the `__select` suffix, and the user will be prompted to select a value from the provided options.
+
+In the following configuration, the user will be prompted to select an `AWS_REGION` once at the beginning of scwrypt execution:
+
+```zsh
+export AWS_REGION=
+export AWS_REGION__select=us-east-1,us-east-2,us-west-1,us-west-2
+```
+
+Setting the `AWS_REGION` variable will cause scwrypts to ignore the `__select` syntax.
+
+CI will fail on select, because CI fails on any FZF prompt.
+
+
 ## Logs
 Quickly view or clear Scwrypts logs.
 

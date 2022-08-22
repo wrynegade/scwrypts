@@ -14,6 +14,12 @@ __CHECK_ENV_VAR() {
 	local VALUE=$(eval echo '$'$NAME)
 	[ $VALUE ] && return 0
 
+	local SELECTION_VALUES=$(eval echo '$'$NAME'__select' | sed 's/,/\n/g')
+	[ $SELECTION_VALUES ] && {
+		local SELECTION=$(echo $SELECTION_VALUES | __FZF "select a value for '$NAME'")
+		[ $SELECTION ] && export VALUE=$SELECTION
+	}
+	[ $VALUE ] && return 0
 
 	[ $__SCWRYPT ] && {
 		# scwrypts exclusive (missing vars staged in env.template)

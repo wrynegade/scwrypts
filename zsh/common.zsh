@@ -6,7 +6,7 @@ source ${0:a:h}/utils/utils.module.zsh \
 
 #####################################################################
 
-__GET_ENV_FILES() { find $SCWRYPTS_CONFIG_PATH/env -maxdepth 1 -type f | sort -r }
+__GET_ENV_FILES() { ls $SCWRYPTS_CONFIG_PATH/env | sort -r }
 [ ! "$(__GET_ENV_FILES)" ] && {
 	cp $__ENV_TEMPLATE "$SCWRYPTS_CONFIG_PATH/env/dev"
 	cp $__ENV_TEMPLATE "$SCWRYPTS_CONFIG_PATH/env/local"

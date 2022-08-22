@@ -17,9 +17,11 @@ _SYNCHRONIZE() {
 
 	[ ! $SLIENT ] && {
 		__yN 'change the template before sync?' && __EDIT $__ENV_TEMPLATE
-		_SORT_ENV "$__ENV_TEMPLATE"
-		git add $__ENV_TEMPLATE >/dev/null 2>&1
 	}
+
+	_SORT_ENV "$__ENV_TEMPLATE"
+	sed -i '/__[a-z_]\+=$/d' "$__ENV_TEMPLATE"
+	git add $__ENV_TEMPLATE >/dev/null 2>&1
 
 	ENVIRONMENTS=$(__GET_ENV_NAMES | sort -r)
 
@@ -68,6 +70,8 @@ _REMOVE_OLD_VARIABLES() {
 	    while read line
 	    do
 	        ENV_VAR=$(echo "$line" | sed 's/=.*/=/')
+			echo $ENV_VAR | grep -q '__[a-z_]\+=' && continue
+
 	        grep -q "$ENV_VAR" "$__ENV_TEMPLATE" || {
 	            sed -i "\\%$ENV_VAR%d" "$ENV_FILE"
 	            echo "$ENV_VAR" | grep -qv '^#' \
@@ -139,14 +143,11 @@ _ADD_DESCRIPTIONS() {
 		done
 	done < <(sed -n '/^[^ ]\+ \+| /p' "$__ENV_TEMPLATE.descriptions")
 
-	while read ENV_VAR
+	for ENV_NAME in $(echo $ENVIRONMENTS)
 	do
-		for ENV_NAME in $(echo $ENVIRONMENTS)
-		do
-			sed -i "/^export $ENV_VAR=/a \ " "$(__GET_ENV_FILE $ENV_NAME)"
-			sed -i "s/^ $//" "$(__GET_ENV_FILE $ENV_NAME)"
-		done
-	done < <(grep -B1 '^$' "$__ENV_TEMPLATE.descriptions" | grep '|' | awk '{print $1;}')
+		sed -i "/^# /i \ " "$(__GET_ENV_FILE $ENV_NAME)"
+		sed -i "s/^ $//" "$(__GET_ENV_FILE $ENV_NAME)"
+	done
 }
 
 #####################################################################

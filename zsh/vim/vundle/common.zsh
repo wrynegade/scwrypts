@@ -4,7 +4,7 @@ source ${0:a:h}/../common.zsh
 #####################################################################
 
 VUNDLE_PLUGIN_DIR="$HOME/.vim/bundle"
-VUNDLE_BUILD_DEFINITIONS="$VUNDLE_PLUGIN_DIR/build.zsh"
+VUNDLE_BUILD_DEFINITIONS="$SCWRYPTS_CONFIG_PATH/vundle.zsh"
 
 [ ! -f $VUNDLE_BUILD_DEFINITIONS ] && {
 	{
