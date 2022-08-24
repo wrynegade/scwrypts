@@ -69,13 +69,13 @@ INSTALL() {
 	[ -f "$CONFIG_FILE" ] && mv "$CONFIG_FILE" "$CONFIG_FILE.bak"
 
 	[ $I3__GLOBAL_FONT_SIZE ] && {
-		__STATUS "setting global font size to '$I3__DMENU_FONT_SIZE'"
+		__STATUS "setting global font size to '$I3__GLOBAL_FONT_SIZE'"
 		CONFIG=$(echo $CONFIG | sed "s/$REGEX_FONT/\\1$I3__GLOBAL_FONT_SIZE/")
 	}
 
 	[ $I3__DMENU_FONT_SIZE ] && {
 		__STATUS "setting dmenu font size to '$I3__DMENU_FONT_SIZE'"
-		CONFIG=$(echo $CONFIG | sed "s/$REGEX_DMENU/\\1$I3__DMENU_FONT_SIZE/")
+		CONFIG=$(echo $CONFIG | sed "s/$REGEX_DMENU/\\1$I3__DMENU_FONT_SIZE'/")
 	}
 
 	[ $I3__BORDER_PIXEL_SIZE ] && {
