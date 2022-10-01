@@ -8,6 +8,7 @@ __PRINT() {
 	printf "${COLOR}${MESSAGE}${__COLOR_RESET}${LINE_END}"
 }
 
+[ ! $ERRORS ] && export ERRORS=0
 __ERROR()    { __PRINT $__RED    "ERROR    ✖ : $@" >&2; ((ERRORS+=1)); }
 __SUCCESS()  { __PRINT $__GREEN  "SUCCESS  ✔ : $@" >&2; }
 __WARNING()  { __PRINT $__ORANGE "WARNING   : $@" >&2; }

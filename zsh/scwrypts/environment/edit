@@ -27,7 +27,7 @@ _SORT_ENV $ENV_FILE
 
 while read line
 do
-	ENV_VAR=$(echo "$line" | sed 's/=.*$//; s/^export //')
+	ENV_VAR=$(echo "$line" | _SED 's/=.*$//; s/^export //')
 	grep -q "$ENV_VAR" $__ENV_TEMPLATE || {
 		((NEW_VAR+=1))
 		echo "export $ENV_VAR=" >> $__ENV_TEMPLATE

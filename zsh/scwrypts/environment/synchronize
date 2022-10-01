@@ -20,7 +20,7 @@ _SYNCHRONIZE() {
 	}
 
 	_SORT_ENV "$__ENV_TEMPLATE"
-	sed -i '/__[a-z_]\+=$/d' "$__ENV_TEMPLATE"
+	_SED -i '/__[a-z_]\+=$/d' "$__ENV_TEMPLATE"
 	git add $__ENV_TEMPLATE >/dev/null 2>&1
 
 	ENVIRONMENTS=$(__GET_ENV_NAMES | sort -r)
@@ -40,7 +40,7 @@ _CLEAR_INHERITED_VARIABLES() {
 	for ENV_NAME in $(echo $ENVIRONMENTS)
 	do
 		ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
-		sed -i 's/ # inherited from.*//' "$ENV_FILE"
+		_SED -i 's/ # inherited from.*//' "$ENV_FILE"
 	done
 }
 
@@ -57,7 +57,7 @@ _INSERT_NEW_VARIABLES() {
 	            echo $line >> $ENV_FILE && __STATUS "added '$line' to '$ENV_NAME'"
 	        }
 	    done
-	done < <(sed -n '/^./p' "$__ENV_TEMPLATE")
+	done < <(_SED -n '/^./p' "$__ENV_TEMPLATE")
 }
 
 _REMOVE_OLD_VARIABLES() {
@@ -69,11 +69,11 @@ _REMOVE_OLD_VARIABLES() {
 		ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
 	    while read line
 	    do
-	        ENV_VAR=$(echo "$line" | sed 's/=.*/=/')
+	        ENV_VAR=$(echo "$line" | _SED 's/=.*/=/')
 			echo $ENV_VAR | grep -q '__[a-z_]\+=' && continue
 
 	        grep -q "$ENV_VAR" "$__ENV_TEMPLATE" || {
-	            sed -i "\\%$ENV_VAR%d" "$ENV_FILE"
+	            _SED -i "\\%$ENV_VAR%d" "$ENV_FILE"
 	            echo "$ENV_VAR" | grep -qv '^#' \
 					&& __WARNING "removed unwanted '$ENV_VAR' from '$ENV_NAME'"
 	        }
@@ -114,8 +114,8 @@ _CASCADE_ENVIRONMENT() {
 
 	while read PARENT_VAR
 	do
-		VAR_PATTERN=$(echo "$PARENT_VAR" | sed 's/=.*/=/; s/\//\/\//g')
-		__STATUS "propagating '$(echo $VAR_PATTERN | sed 's/^export \([^=]*\)=/\1/')' to children"
+		VAR_PATTERN=$(echo "$PARENT_VAR" | _SED 's/=.*/=/; s/\//\/\//g')
+		__STATUS "propagating '$(echo $VAR_PATTERN | _SED 's/^export \([^=]*\)=/\1/')' to children"
 
 		PARENT_VAR+=" # inherited from $PARENT_NAME"
 
@@ -123,10 +123,10 @@ _CASCADE_ENVIRONMENT() {
 		do
 			CHILD_FILE=$(__GET_ENV_FILE $CHILD_NAME)
 
-			sed -i "/^$VAR_PATTERN/d" "$CHILD_FILE"
+			_SED -i "/^$VAR_PATTERN/d" "$CHILD_FILE"
 			echo $PARENT_VAR >> "$CHILD_FILE"
 		done
-	done < <(sed -n '/^[^#][^=]*=[^#]\+$/p' "$PARENT_FILE")
+	done < <(_SED -n '/^[^#][^=]*=[^#]\+$/p' "$PARENT_FILE")
 
 	__SUCCESS "finished '$PARENT_NAME' propagation"
 }
@@ -135,18 +135,18 @@ _ADD_DESCRIPTIONS() {
 	__STATUS 'updating descriptions'
 	while read DESCRIPTION_LINE
 	do
-		ENV_VAR=$(echo $DESCRIPTION_LINE | sed 's/ \+| .*$//')
-		DESCRIPTION=$(echo $DESCRIPTION_LINE | sed 's/^.* | //')
+		ENV_VAR=$(echo $DESCRIPTION_LINE | _SED 's/ \+| .*$//')
+		DESCRIPTION=$(echo $DESCRIPTION_LINE | _SED 's/^.* | //')
 		for ENV_NAME in $(echo $ENVIRONMENTS)
 		do
-			sed -i "/^export $ENV_VAR=/i # $DESCRIPTION" "$(__GET_ENV_FILE $ENV_NAME)"
+			_SED -i "/^export $ENV_VAR=/i # $DESCRIPTION" "$(__GET_ENV_FILE $ENV_NAME)"
 		done
-	done < <(sed -n '/^[^ ]\+ \+| /p' "$__ENV_TEMPLATE.descriptions")
+	done < <(_SED -n '/^[^ ]\+ \+| /p' "$__ENV_TEMPLATE.descriptions")
 
 	for ENV_NAME in $(echo $ENVIRONMENTS)
 	do
-		sed -i "/^# /i \ " "$(__GET_ENV_FILE $ENV_NAME)"
-		sed -i "s/^ $//" "$(__GET_ENV_FILE $ENV_NAME)"
+		_SED -i "/^# /i \ " "$(__GET_ENV_FILE $ENV_NAME)"
+		_SED -i "s/^ $//" "$(__GET_ENV_FILE $ENV_NAME)"
 	done
 }
 

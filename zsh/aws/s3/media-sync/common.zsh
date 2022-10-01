@@ -24,7 +24,7 @@ __SYNC_MEDIA() {
 	local FLAGS=(${@:3})
 
 	__STATUS "${ACTION}ing $2"
-	_AWS s3 sync $REMOTE_TARGET $LOCAL_TARGET $FLAGS \
+	_AWS s3 sync $A $B $FLAGS \
 		&& __SUCCESS "$2 up-to-date" \
 		|| { __ERROR "unable to sync $2 (see above)"; return 1; }
 }

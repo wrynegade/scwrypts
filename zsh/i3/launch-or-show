@@ -9,6 +9,7 @@ source ${0:a:h}/common.zsh
 #####################################################################
 
 LAUNCH_OR_SHOW() {
+	__INFO $@
 	local USAGE="
 		usage: <path-executable> [client-class] [...options...]
 
@@ -30,7 +31,7 @@ LAUNCH_OR_SHOW() {
 		Depending on state, performs one of three useful functions
 		  1) starts application
 		  2) adds application window to the scratchpad
-		  3) pulls applciation from scratchpad to foreground on active screen
+		  3) pulls application from scratchpad to foreground on active screen
 	"
 	local APPLICATION CLIENT_CLASS
 

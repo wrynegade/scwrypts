@@ -25,7 +25,7 @@ cp "$TEMPLATE_ENV_FILE" "$ENV_FILE" \
 	|| __FAIL 3 "unable to create '$ENV_NAME'"
 
 __STATUS 'stripping inherited values'
-sed -i 's/ # inherited from.*$//' "$ENV_FILE" 2>/dev/null
+_SED -i 's/ # inherited from.*$//' "$ENV_FILE" 2>/dev/null
 
 __RUN_SCWRYPT zsh/scwrypts/environment/synchronize -- --no-prompt \
 	|| __FAIL 4 'failed to run environment sync'
