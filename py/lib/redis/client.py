@@ -1,6 +1,6 @@
 from redis import StrictRedis
 
-from py.scwrypts import getenv
+from py.lib.scwrypts import getenv
 
 
 class RedisClient(StrictRedis):

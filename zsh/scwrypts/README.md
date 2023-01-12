@@ -50,6 +50,14 @@ Setting the `AWS_REGION` variable will cause scwrypts to ignore the `__select` s
 
 CI will fail on select, because CI fails on any FZF prompt.
 
+#### `__override` Environment Variables
+Override any variable with the indicated value.
+This will take precedence over existing values *and* any other special environment variable types.
+
+Examples of use:
+- temporarily changing a single value in your current session (e.g. `export VARIABLE__override=value`)
+- overriding a variable for a one-time command (e.g. `VARIABLE__override=value scwrypts ...`)
+
 
 ## Logs
 Quickly view or clear Scwrypts logs.

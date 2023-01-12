@@ -1,7 +1,7 @@
 from os import getenv as os_getenv
 
-from py.scwrypts.exceptions import MissingVariableError
-from py.scwrypts.run import run
+from py.lib.scwrypts.exceptions import MissingVariableError
+from py.lib.scwrypts.run import run
 
 
 def getenv(name, required=True):

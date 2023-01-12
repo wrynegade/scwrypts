@@ -8,6 +8,9 @@ __CHECK_ENV_VAR() {
 	local NAME="$1"
 	[ ! $NAME ] && return 1
 
+	local OVERRIDE_VALUE=$(eval echo '$'$NAME'__override')
+	[ $OVERRIDE_VALUE ] && export $NAME=$OVERRIDE_VALUE && return 0
+
 	local OPTIONAL="$2"
 	local DEFAULT_VALUE="$3"
 
