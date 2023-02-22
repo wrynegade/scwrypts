@@ -1,0 +1,37 @@
+#!/bin/zsh
+DEPENDENCIES+=(jq)
+REQUIRED_ENV+=(AWS__EFS__LOCAL_MOUNT_POINT)
+
+use cloud/aws/cli
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+EFS_DISCONNECT() {
+	[ ! -d "$AWS__EFS__LOCAL_MOUNT_POINT" ] && {
+		STATUS 'no efs currently mounted'
+		exit 0
+	}
+
+	local MOUNTED=$(ls "$AWS__EFS__LOCAL_MOUNT_POINT")
+	[ ! $MOUNTED ] && {
+		STATUS 'no efs currently mounted'
+		exit 0
+	}
+
+	GETSUDO || exit 1
+
+
+	local SELECTED=$(echo $MOUNTED | FZF 'select a file system to unmount')
+	[ ! $SELECTED ] && ABORT
+
+	local EFS="$AWS__EFS__LOCAL_MOUNT_POINT/$SELECTED"
+	STATUS "unmounting '$SELECTED'"
+	sudo umount $EFS >/dev/null 2>&1
+	sudo rmdir $EFS \
+		&& SUCCESS "done" \
+		|| FAIL 2 "failed to unmount '$EFS'"
+}
+
+#####################################################################
+EFS_DISCONNECT $@

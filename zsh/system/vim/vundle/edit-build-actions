@@ -1,0 +1,9 @@
+#!/bin/zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use system/vim/vundle
+
+CHECK_ENVIRONMENT
+#####################################################################
+EDIT "$VUNDLE__BUILD_DEFINITIONS"

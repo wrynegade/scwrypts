@@ -1,21 +1,24 @@
 #!/usr/bin/env python
-from argparse import ArgumentParser
-
-from py.lib.data.io import add_io_arguments
 from py.lib.data.converter import convert
+from py.lib.scwrypts import execute
+
+from py.lib.scwrypts.exceptions import ImportedExecutableError
 
 if __name__ != '__main__':
-    raise Exception('executable only; must run through scwrypts')
+    raise ImportedExecutableError()
 
+#####################################################################
 
-parser = ArgumentParser(description = 'converts json into yaml')
-add_io_arguments(parser)
+def main(_args, stream):
+    return convert(
+            input_stream = stream.input,
+            input_type   = 'json',
+            output_stream = stream.output,
+            output_type   = 'yaml',
+            )
 
-args = parser.parse_args()
-
-convert(
-        input_file  = args.input_file,
-        input_type  = 'json',
-        output_file = args.output_file,
-        output_type = 'yaml',
+#####################################################################
+execute(main,
+        description = 'convert json into yaml',
+        parse_args = [],
         )

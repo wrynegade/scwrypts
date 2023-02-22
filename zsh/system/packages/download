@@ -1,0 +1,9 @@
+#!/bin/zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use scwrypts/meta
+
+CHECK_ENVIRONMENT
+#####################################################################
+SCWRYPTS__RUN --name system/packages/install --group scwrypts --type zsh -- --only-pull $@

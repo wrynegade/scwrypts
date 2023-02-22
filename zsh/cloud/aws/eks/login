@@ -1,0 +1,10 @@
+#!/bin/zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use cloud/aws/eks
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+EKS_CLUSTER_LOGIN $@

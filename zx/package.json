@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "zx scripts for scwrypts",
   "main": "index.js",
+	"type": "module",
   "scripts": {
     "test": "",
 		"preinstall": "npm i -g zx"

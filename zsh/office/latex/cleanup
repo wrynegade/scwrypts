@@ -1,0 +1,23 @@
+#!/bin/zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use office/latex
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+CLEAN_LATEX_LOGFILES() {
+	local DIRECTORY=$(SCWRYPTS__GET_PATH_TO_RELATIVE_ARGUMENT ".")
+	[ $1 ] && DIRECTORY="$(dirname "$(LATEX__GET_MAIN_FILENAME "$1")")"
+	[ $DIRECTORY ] && [ -d $DIRECTORY ] \
+		|| FAIL 1 'unable to parse valid directory'
+
+	cd $DIRECTORY
+	rm $(ls | grep '\.\(aux\)\|\(log\)\|\(pdf\)\|\(out\)\|\(dvi\)$')
+
+	SUCCESS "cleaned up latex artifacts in '$DIRECTORY'"
+}
+
+#####################################################################
+CLEAN_LATEX_LOGFILES $@

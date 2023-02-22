@@ -2,14 +2,18 @@ from redis import StrictRedis
 
 from py.lib.scwrypts import getenv
 
+CLIENT = None
 
-class RedisClient(StrictRedis):
-    def __init__(self):
-        super().__init__(
+def get_client():
+    global CLIENT # pylint: disable=global-statement
+
+    if CLIENT is None:
+        print('getting redis client')
+        CLIENT = StrictRedis(
                 host = getenv('REDIS_HOST'),
                 port = getenv('REDIS_PORT'),
                 password = getenv('REDIS_AUTH', required=False),
                 decode_responses = True,
                 )
 
-Client = RedisClient()
+    return CLIENT

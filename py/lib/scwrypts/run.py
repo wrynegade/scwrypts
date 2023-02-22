@@ -7,8 +7,9 @@ def run(scwrypt_name, *args):
     DEPTH = int(getenv('SUBSCWRYPT', '0'))
     DEPTH += 1
 
-    SCWRYPTS_EXE = Path(__file__).parents[2] / 'scwrypts'
+    SCWRYPTS_EXE = Path(__file__).parents[3] / 'scwrypts'
     ARGS = ' '.join([str(x) for x in args])
+    print(f'SUBSCWRYPT={DEPTH} {SCWRYPTS_EXE} {scwrypt_name} -- {ARGS}')
 
     print(f'\n {"--"*DEPTH} ({DEPTH}) BEGIN SUBSCWRYPT : {Path(scwrypt_name).name}')
     subprocess_run(

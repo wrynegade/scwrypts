@@ -1,12 +1,16 @@
 #!/bin/zsh
-_DEPENDENCIES+=()
-_REQUIRED_ENV+=()
-source ${0:a:h}/common.zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use redis
+
+CHECK_ENVIRONMENT
 #####################################################################
 
 CURL_WITH_CACHE() {
 	[ ! $TTL ] && TTL=10
-	[[ $CACHE_ENABLED -eq 0 ]] && {
+
+	[[ $(REDIS__ENABLED) -eq 0 ]] && {
 		curl $@
 		return $?
 	}
@@ -26,7 +30,7 @@ CURL_WITH_CACHE() {
 	done
 
 	local KEY=$(GET_URL_KEY $URL)
-	local OUTPUT=$(_REDIS get $KEY 2>&1)
+	local OUTPUT=$(REDIS get $KEY 2>&1)
 	[ $OUTPUT ] && {
 		[[ ${#ARGS[@]} -gt 0 ]] && __WARN "cache hit found; ignoring arguments ($ARGS)"
 		echo $OUTPUT
@@ -36,8 +40,8 @@ CURL_WITH_CACHE() {
 	local OUTPUT=$(curl -s $@)
 	[ ! $OUTPUT ] && return 1
 
-	_REDIS set $KEY "$OUTPUT" >/dev/null
-	_REDIS expire $KEY $TTL >/dev/null
+	REDIS set $KEY "$OUTPUT" >/dev/null
+	REDIS expire $KEY $TTL >/dev/null
 
 	echo $OUTPUT
 }

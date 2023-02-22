@@ -1,0 +1,51 @@
+#!/bin/zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use db/postgres
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+RUN_SQL_POSTGRES() {
+	local _PASS _ARGS=()
+	POSTGRES__SET_LOGIN_ARGS $@
+
+	local INPUT_FILE="$FILENAME"
+
+	local SQL_DIR="$SCWRYPTS_DATA_PATH/sql"
+	[ ! -d $SQL_DIR ] && mkdir -p $SQL_DIR
+
+	cd $SQL_DIR
+
+	[[ $(ls "*.sql" 2>&1 | wc -l) -eq 0 ]] && {
+		ERROR "you haven't made any SQL commands yet"
+		REMINDER "add '.sql' files here: '$SQL_DIR/'"
+		return 1
+	}
+
+	[ ! $INPUT_FILE ] && INPUT_FILE=$(FZF 'select a sql file to run')
+	[ ! $INPUT_FILE ] && ABORT
+
+	[ ! -f "$INPUT_FILE" ] && FAIL 2 "no such sql file '$SQL_DIR/$INPUT_FILE'"
+
+	STATUS "loading '$INPUT_FILE' preview..."
+	LESS "$INPUT_FILE"
+
+	STATUS "login   : $_USER@$_HOST:$_PORT/$_NAME"
+	STATUS "command : '$INPUT_FILE'"
+
+	yN 'run this command?' || ABORT
+
+	STATUS "running '$INPUT_FILE'"
+
+	PSQL < $INPUT_FILE \
+		&& SUCCESS "finished running '$INPUT_FILE'" \
+		|| FAIL 3 "something went wrong running '$INPUT_FILE' (see above)"
+}
+
+#####################################################################
+WARNING
+WARNING 'this function is in a beta state'
+WARNING
+RUN_SQL_POSTGRES $@

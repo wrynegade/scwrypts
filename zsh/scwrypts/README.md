@@ -27,7 +27,7 @@ Command           | Description
 You can make a child environment by naming an environment `<parent-name>.<child-name>`.
 Children inherit all parent-set values, and **parent-set values overwrite child-set values**.
 Remember that synchronize runs *every time you edit an environment*, so changes propagate to children immediately.
-Inherited values are denoted by `# inherited from <parent-name>` in the environment file.
+Inherited values are denoted by `# from <parent-name>` in the environment file.
 
 Nested children will inherit values from all parents.
 

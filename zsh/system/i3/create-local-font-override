@@ -1,0 +1,102 @@
+#!/bin/zsh
+DEPENDENCIES+=(
+	diff
+)
+REQUIRED_ENV+=(
+	I3__MODEL_CONFIG
+)
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+REGEX_FONT='^\(font [^0-9]*\)\(.*\)'
+REGEX_DMENU="^\\(.*dmenu_run .*-fn '[^0-9]*\\)\\([0-9]*\\)'"
+REGEX_BORDER='^\(for_window.*border pixel \)\(.*\)'
+
+INSTALL() {
+	local USAGE="
+		usage: [...options...]
+
+		options
+		  -f, --force             force replacement of existing i3config
+		  -n, --no-link           if output config and template are the same, don't create link
+
+		  -h, --help              print this message and exit
+
+		environment
+		  I3__MODEL_CONFIG        fully-qualified path to sourced i3config
+		  I3__GLOBAL_FONT_SIZE    global font size
+		  I3__DMENU_FONT_SIZE     (optional) font size for 'dmenu' command
+		  I3__BORDER_PIXEL_SIZE   (optional) pixel-width of window borders
+
+		I3 provides no way to include dynamic variables in your config.
+		The main difference I want between my i3 configurations is font-size
+		to match the current monitor. Since i3-msg provides no way to change
+		font size, I run this command to update those variables on a local
+		copy of my sourced config
+	"
+	local FORCE=0
+	local AUTOLINK=1
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in 
+			-f | --force ) FORCE=1 ;;
+			-n | --no-link ) AUTOLINK=0 ;;
+			-h | --help ) USAGE; exit 0 ;;
+		esac
+		shift 1
+	done
+
+	STATUS 'reading local i3config'
+	[[ ^$I3__MODEL_CONFIG$ =~ ^$HOME/.config/i3/config$ ]] && {
+		STATUS "model configuration is default configuration"
+		I3__MODEL_CONFIG="$I3__MODEL_CONFIG.template"
+		[ ! -f "$I3__MODEL_CONFIG" ] && {
+			STATUS "creating template"
+			cp "$HOME/.config/i3/config" "$I3__MODEL_CONFIG.template"
+		}
+		STATUS "referring to '$I3__MODEL_CONFIG'"
+	}
+	local CONFIG=$(cat "$I3__MODEL_CONFIG")
+	[ ! $CONFIG ] && FAIL 1 "failed to read config at '$I3__MODEL_CONFIG'"
+
+	local CONFIG_FILE="$HOME/.config/i3/config"
+	[ ! -d $(dirname "$CONFIG_FILE") ] && mkdir -p "$(dirname "$CONFIG_FILE")"
+
+	[ -f "$CONFIG_FILE" ] && mv "$CONFIG_FILE" "$CONFIG_FILE.bak"
+
+	[ $I3__GLOBAL_FONT_SIZE ] && {
+		STATUS "setting global font size to '$I3__GLOBAL_FONT_SIZE'"
+		CONFIG=$(echo $CONFIG | sed "s/$REGEX_FONT/\\1$I3__GLOBAL_FONT_SIZE/")
+	}
+
+	[ $I3__DMENU_FONT_SIZE ] && {
+		STATUS "setting dmenu font size to '$I3__DMENU_FONT_SIZE'"
+		CONFIG=$(echo $CONFIG | sed "s/$REGEX_DMENU/\\1$I3__DMENU_FONT_SIZE'/")
+	}
+
+	[ $I3__BORDER_PIXEL_SIZE ] && {
+		STATUS "setting border pixel size to '$I3__BORDER_PIXEL_SIZE'"
+		CONFIG=$(echo $CONFIG | sed "s/$REGEX_BORDER/\\1$I3__BORDER_PIXEL_SIZE/")
+	}
+
+	echo $CONFIG > "$CONFIG_FILE"
+	[ -f "$CONFIG_FILE.bak" ] \
+		&& diff "$CONFIG_FILE" "$CONFIG_FILE.bak" -q >/dev/null \
+		&& mv "$CONFIG_FILE.bak" "$CONFIG_FILE" \
+		&& INFO "no changes were made" \
+		;
+
+	[[ $AUTOLINK -eq 1 ]] \
+		&& diff "$CONFIG_FILE" "$I3__MODEL_CONFIG" -q >/dev/null \
+		&& rm "$CONFIG_FILE" \
+		&& ln -s "$I3__MODEL_CONFIG" "$CONFIG_FILE" \
+		&& INFO "output is the same as model, i3config has been linked to model" \
+		;
+
+	[[ $FORCE -eq 1 ]] && rm "$CONFIG.bak" >/dev/null 2>&1
+	return 0
+}
+
+#####################################################################
+INSTALL $@

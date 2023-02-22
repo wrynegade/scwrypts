@@ -1,0 +1,10 @@
+#!/bin/zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use cloud/aws/ecr
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+ECR_LOGIN $@

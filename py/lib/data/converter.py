@@ -2,18 +2,13 @@ import csv
 import json
 import yaml
 
-from py.lib.data.io import get_stream
 
-
-def convert(input_file, input_type, output_file, output_type):
+def convert(input_stream, input_type, output_stream, output_type):
     if input_type == output_type:
         raise ValueError('input type and output type are the same')
 
-    with get_stream(input_file) as input_stream:
-        data = convert_input(input_stream, input_type)
-
-    with get_stream(output_file, 'w+') as output_stream:
-        _write_output(output_stream, output_type, data)
+    data = convert_input(input_stream, input_type)
+    write_output(output_stream, output_type, data)
 
 
 def convert_input(stream, input_type):
@@ -28,7 +23,8 @@ def convert_input(stream, input_type):
             'yaml': _read_yaml,
             }[input_type](stream)
 
-def _write_output(stream, output_type, data):
+
+def write_output(stream, output_type, data):
     supported_output_types = {'csv', 'json', 'yaml'}
 
     if output_type not in supported_output_types:
@@ -39,6 +35,7 @@ def _write_output(stream, output_type, data):
             'json': _write_json,
             'yaml': _write_yaml,
             }[output_type](stream, data)
+
 
 #####################################################################
 

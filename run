@@ -1,8 +1,7 @@
 #!/bin/zsh
 export EXECUTION_DIR=$(pwd)
+source "${0:a:h}/zsh/lib/import.driver.zsh" || exit 42
 
-SCWRYPTS_ROOT="${0:a:h}"
-source "$SCWRYPTS_ROOT/zsh/common.zsh" || exit 42
 #####################################################################
 
 __RUN() {
@@ -10,24 +9,54 @@ __RUN() {
 		usage: scwrypts [OPTIONS ...] SCRIPT -- [SCRIPT OPTIONS ...]
 
 		OPTIONS
-		  -e, --env <env-name>   set environment; overwrites SCWRYPTS_ENV
-		  -n, --no-log           skip logging (useful when calling scwrypts as an api)
-		  -l, --list             print out command list and exit
+		  -g, --group <group-name>    only use scripts from the indicated group
+		  -t, --type <type-name>      only use scripts of the indicated type
+		  -m, --name <scwrypt-name>   only run the script if there is an exact match 
+		                                (requires type and group)
 
-		  -h, --help             display this message and exit
+		  -e, --env <env-name>   set environment; overwrites SCWRYPTS_ENV
+		  -n, --no-log           skip logging and run in quiet mode
+
+		  --update   update scwrypts library to latest version
+
+		  -v, --version   print out scwrypts version and exit
+		  -l, --list      print out command list and exit
+		  -h, --help      display this message and exit
 	'
 	cd "$SCWRYPTS_ROOT"
 
 	local ENV_NAME="$SCWRYPTS_ENV"
 	local SEARCH_PATTERNS=()
 
+	local VARSPLIT SEARCH_GROUP SEARCH_TYPE SEARCH_NAME
+
 	local ERROR=0
 
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
+			-t | --type )
+				[ ! $2 ] && ERROR "missing value for argument $1" && break
+				SEARCH_TYPE=$2
+				shift 2
+				;;
+			-g | --group )
+				[ ! $2 ] && ERROR "missing value for argument $1" && break
+				SEARCH_GROUP=$2
+				shift 2
+				;;
+			-m | --name )
+				[ ! $2 ] && ERROR "missing value for argument $1" && break
+				SEARCH_NAME=$2
+				shift 2
+				;;
+
+			-[a-z][a-z]* )
+				VARSPLIT=$(echo "$1 " | sed 's/^\(-.\)\(.*\) /\1 -\2/')
+				set -- $(echo " $VARSPLIT ") ${@:2}
+				;;
 			-h | --help )
-				__USAGE
+				USAGE
 				return 0
 				;;
 			-n | --no-log )
@@ -35,55 +64,168 @@ __RUN() {
 				shift 1
 				;;
 			-e | --env )
-				[ $ENV_NAME ] && __WARNING 'overwriting session environment'
+				[ ! $2 ] && ERROR "missing value for argument $1" && break
+				[ ! $SUBSCWRYPTS ] \
+					&& [ $ENV_NAME ] \
+					&& WARNING 'overwriting session environment' \
+					;
+
 				ENV_NAME="$2"
-				__STATUS "using CLI environment '$ENV_NAME'"
+				STATUS "using CLI environment '$ENV_NAME'"
 				shift 2
 				;;
 			-l | --list )
-				__OUTPUT_COMMAND_LIST
+				SCWRYPTS__GET_AVAILABLE_SCWRYPTS
+				return 0
+				;;
+			-v | --version )
+				echo scwrypts $(cd "$SCWRYPTS__ROOT__scwrypts"; git describe --tags)
+				return 0
+				;;
+			--update )
+				cd "$SCWRYPTS__ROOT__scwrypts"
+				git fetch --quiet origin main
+				local SYNC_STATUS=$?
+
+				git diff --exit-code origin/main -- . >&2
+				local DIFF_STATUS=$?
+
+				[[ $SYNC_STATUS -eq 0 ]] && [[ $DIFF_STATUS -eq 0 ]] && {
+					SUCCESS 'already up-to-date with origin/main'
+				} || {
+					git rebase --autostash origin/main \
+						&& SUCCESS 'up-to-date with origin/main' \
+						|| {
+							git rebase --abort
+							ERROR 'unable to update scwrypts; please try manual upgrade'
+							REMINDER "installation in '$(pwd)'"
+						}
+				}
 				return 0
 				;;
 			-- )
 				shift 1
 				break # pass arguments after '--' to the scwrypt
 				;;
-			-* )
-				__ERROR "unrecognized argument '$1'"
+			--* )
+				ERROR "unrecognized argument '$1'"
 				shift 1
 				;;
 			* )
-				SEARCH_PATTERNS+=$1
+				SEARCH_PATTERNS+=($1)
 				shift 1
 				;;
 		esac
 	done
 
-	__ERROR_CHECK
+	[ $SEARCH_NAME ] && {
+		[ ! $SEARCH_TYPE  ] && ERROR '--name requires --type argument'
+		[ ! $SEARCH_GROUP ] && ERROR '--name requires --group argument'
+	}
+
+	CHECK_ERRORS
 
 	##########################################
 
-	local SCRIPT=$(__SELECT_SCRIPT $SEARCH_PATTERNS)
-	[ ! $SCRIPT ] && exit 2
-	export SCWRYPT_NAME=$SCRIPT
+	local SCWRYPTS_AVAILABLE
+	local POTENTIAL_ERROR="no such scwrypt exists:"
+	
+	SCWRYPTS_AVAILABLE=$(SCWRYPTS__GET_AVAILABLE_SCWRYPTS)
+
+	[ $SEARCH_NAME ] && {
+		POTENTIAL_ERROR+="\n   NAME     : '$SEARCH_NAME'"
+		POTENTIAL_ERROR+="\n   TYPE     : '$SEARCH_TYPE'"
+		POTENTIAL_ERROR+="\n   GROUP    : '$SEARCH_GROUP'"
+		SCWRYPTS_AVAILABLE=$({
+			echo $SCWRYPTS_AVAILABLE | head -n1
+			echo $SCWRYPTS_AVAILABLE | sed -e 's/\x1b\[[0-9;]*m//g' | grep "^$SEARCH_NAME *$SEARCH_TYPE *$SEARCH_GROUP\$"
+		})
+	}
+
+	[ ! $SEARCH_NAME ] && {
+		[ $SEARCH_TYPE ] && {
+			POTENTIAL_ERROR+="\n   TYPE     : '$SEARCH_TYPE'"
+			SCWRYPTS_AVAILABLE=$(\
+				{
+					echo $SCWRYPTS_AVAILABLE | head -n1
+					echo $SCWRYPTS_AVAILABLE | grep ' [^/]*'$SEARCH_TYPE'[^/]* '
+				} \
+				| awk '{$2=""; print $0;}' \
+				| sed 's/ \+$/'$(printf $__COLOR_RESET)'/; s/ \+/^/g'  \
+				| column -ts '^'
+			)
+		}
+
+		[ $SEARCH_GROUP ] && {
+			POTENTIAL_ERROR+="\n   GROUP    : '$SEARCH_GROUP'"
+			SCWRYPTS_AVAILABLE=$(
+				{
+					echo $SCWRYPTS_AVAILABLE | head -n1
+					echo $SCWRYPTS_AVAILABLE | grep "$SEARCH_GROUP"'[^/]*$'
+				} \
+				| awk '{$NF=""; print $0;}' \
+				| sed 's/ \+$/'$(printf $__COLOR_RESET)'/; s/ \+/^/g'  \
+				| column -ts '^'
+			)
+		}
+
+		[[ ${#SEARCH_PATTERNS[@]} -gt 0 ]] && {
+			POTENTIAL_ERROR+="\n   PATTERNS : $SEARCH_PATTERNS"
+			local P
+			for P in ${SEARCH_PATTERNS[@]}
+			do
+				SCWRYPTS_AVAILABLE=$(
+					{
+						echo $SCWRYPTS_AVAILABLE | head -n1
+						echo $SCWRYPTS_AVAILABLE | grep $P
+					}
+				)
+			done
+		}
+	}
+
+	[[ $(echo $SCWRYPTS_AVAILABLE | wc -l) -lt 2 ]] && ERROR "$POTENTIAL_ERROR"
+
+	CHECK_ERRORS
+
+	##########################################
+
+	local NAME="$SEARCH_NAME"
+	local TYPE="$SEARCH_TYPE"
+	local GROUP="$SEARCH_GROUP"
+
+	[[ $(echo $SCWRYPTS_AVAILABLE | wc -l) -eq 2 ]] \
+		&& SCWRYPT_SELECTION=$(echo $SCWRYPTS_AVAILABLE | tail -n1) \
+		|| SCWRYPT_SELECTION=$(echo $SCWRYPTS_AVAILABLE | FZF "select a script to run" --header-lines 1)
+	[ $SCWRYPT_SELECTION ] || exit 2
+
+	SCWRYPTS__SEPARATE_SCWRYPT_SELECTION $SCWRYPT_SELECTION
+
+	export SCWRYPT_NAME=$NAME
+	export SCWRYPT_TYPE=$TYPE
+	export SCWRYPT_GROUP=$GROUP
+
+	##########################################
 
 	local ENV_REQUIRED=$(__CHECK_ENV_REQUIRED && echo 1 || echo 0)
 
 	[[ $ENV_REQUIRED -eq 1 ]] && {
-		[ ! $ENV_NAME ] && ENV_NAME=$(__SELECT_ENV)
-		local ENV_FILE=$(__GET_ENV_FILE $ENV_NAME)
-
-		[ -f "$ENV_FILE" ] && source "$ENV_FILE" \
-			|| __FAIL 5 "missing or invalid environment '$ENV_NAME'"
+		[ ! $ENV_NAME ] && ENV_NAME=$(SCWRYPTS__SELECT_ENV)
+		local ENV_FILE=$(SCWRYPTS__GET_ENV_FILE "$ENV_NAME")
+		source "$ENV_FILE" || FAIL 5 "missing or invalid environment '$ENV_NAME'"
 
 		export ENV_NAME
 	}
 
+	##########################################
+
 	[ ! $SUBSCWRYPT ] \
 		&& [[ $ENV_NAME =~ prod ]] \
-		&& { __VALIDATE_UPSTREAM_TIMELINE || __ABORT; }
+		&& { __VALIDATE_UPSTREAM_TIMELINE || ABORT; }
 
-	local RUN_STRING=$(__GET_RUN_STRING $SCRIPT $ENV_NAME)
+	##########################################
+
+	local RUN_STRING=$(SCWRYPTS__GET_RUNSTRING $SCWRYPT_NAME $SCWRYPT_TYPE $SCWRYPT_GROUP)
 	[ ! $RUN_STRING ] && exit 3
 
 	##########################################
@@ -93,7 +235,7 @@ __RUN() {
 	local HEADER=$(
 		[ $SUBSCWRYPT ] && return 0
 		echo '====================================================================='
-		echo "script : $SCRIPT"
+		echo "script : $SCWRYPT_GROUP $SCWRYPT_TYPE $SCWRYPT_NAME"
 		echo "run at : $(date)"
 		echo "config : $ENV_NAME"
 		[ ! $LOGFILE ] && echo '\033[1;33m------------------------------------------\033[0m'
@@ -130,111 +272,17 @@ __RUN() {
 
 #####################################################################
 
-__OUTPUT_COMMAND_LIST() {
-	local LAST_TYPE LAST_SUBSET
-	for SCRIPT in $(__GET_AVAILABLE_SCRIPTS)
-	do
-		TYPE=$(echo $SCRIPT | sed 's/\/.*//')
-		SUBSET=$(echo $SCRIPT | sed 's/.*\/\(.*\)\/[^\/]*$/\1/')
-		[[ ! $LAST_TYPE =~ $TYPE ]] && {
-			echo >&2
-			echo "\\033[1;32m$TYPE scwrypts\\033[0m" >&2
-			LAST_SUBSET=''
-		}
-		[ $LAST_SUBSET ] && [[ ! $LAST_SUBSET =~ $SUBSET ]] && {
-			echo >&2
-		}
-		printf '  - ' >&2
-		echo $SCRIPT
-		LAST_TYPE=$TYPE
-		LAST_SUBSET=$SUBSET
-	done
-}
-
-#####################################################################
-
-__SELECT_SCRIPT() {
-	local SCRIPT
-	local SCRIPTS=$(__GET_AVAILABLE_SCRIPTS)
-	local SEARCH=($@)
-
-	[[ ${#SEARCH[@]} -eq 0 ]] && {
-		SCRIPT=$(echo $SCRIPTS | __FZF 'select a script')
-	}
-
-	[[ ${#SEARCH[@]} -eq 1 ]] && [ -f ./$SEARCH ] && {
-		SCRIPT=$SEARCH
-	}
-
-	[ ! $SCRIPT ] && [[ ${#SEARCH[@]} -gt 0 ]] && {
-		SCRIPT=$SCRIPTS
-		for PATTERN in $SEARCH
-		do
-			SCRIPT=$(echo $SCRIPT | grep $PATTERN)
-		done
-
-		[ ! $SCRIPT ] && __FAIL 2 "no script found by name '$@'"
-
-		[[ $(echo $SCRIPT | wc -l) -gt 1 ]] && {
-			__STATUS "more than one script matched '$@'"
-			SCRIPT=$(echo $SCRIPT | __FZF 'select a script')
-		}
-	}
-
-	echo $SCRIPT
-}
-
-__GET_RUN_STRING() {
-	local SCRIPT="$1"
-	local ENV_NAME="$2"
-	local TYPE=$(echo $SCRIPT | sed 's/\/.*$//')
-
-	local RUN_STRING
-
-	local _VIRTUALENV="$SCWRYPTS_VIRTUALENV_PATH/$TYPE/bin/activate"
-	[ -f $_VIRTUALENV ] && source $_VIRTUALENV
-
-	case $TYPE in
-		py ) __CHECK_DEPENDENCY python || return 1
-			RUN_STRING="python -m $(echo $SCRIPT | sed 's/\//./g; s/\.py$//; s/\.\.//')"
-
-			CURRENT_PYTHON_VERSION=$(python --version | sed 's/^[^0-9]*\(3\.[^.]*\).*$/\1/')
-
-			echo $__PREFERRED_PYTHON_VERSIONS | grep -q $CURRENT_PYTHON_VERSION || {
-				__WARNING "only tested on the following python versions: $(printf ', %s.x' ${__PREFERRED_PYTHON_VERSIONS[@]} | sed 's/^, //')"
-				__WARNING 'compatibility may vary'
-			}
-			;;
-
-		zsh ) __CHECK_DEPENDENCY zsh || return 1
-			RUN_STRING="noglob ./$SCRIPT"
-			;;
-
-		zx ) __CHECK_DEPENDENCY zx || return 1
-			RUN_STRING="FORCE_COLOR=3 ./$SCRIPT.mjs"
-			;;
-
-		* ) __ERROR "unsupported script type '$SCRIPT_TYPE'"
-			return 2
-			;;
-	esac
-
-	RUN_STRING="SCWRYPTS_ENV='$ENV_NAME' $RUN_STRING"
-	[ -f $_VIRTUALENV ] && RUN_STRING="source '$_VIRTUALENV'; $RUN_STRING"
-
-	echo $RUN_STRING
-}
-
 __CHECK_ENV_REQUIRED() {
 	[ $CI ] && return 1
 
-	echo $SCRIPT | grep -q 'zsh/scwrypts/logs' && return 1
+	echo $SCWRYPT_NAME | grep -q 'scwrypts/logs/' && return 1
+	echo $SCWRYPT_NAME | grep -q 'scwrypts/environment/' && return 1
 
 	return 0
 }
 
 __VALIDATE_UPSTREAM_TIMELINE() {
-	__STATUS "on '$ENV_NAME'; checking diff against origin/main"
+	STATUS "on '$ENV_NAME'; checking diff against origin/main"
 
 	git fetch --quiet origin main
 	local SYNC_STATUS=$?
@@ -243,14 +291,14 @@ __VALIDATE_UPSTREAM_TIMELINE() {
 	local DIFF_STATUS=$?
 
 	[[ $SYNC_STATUS -eq 0 ]] && [[ $DIFF_STATUS -eq 0 ]] && {
-		__SUCCESS 'up-to-date with origin/main'
+		SUCCESS 'up-to-date with origin/main'
 	} || {
-		__WARNING
-		[[ $SYNC_STATUS -ne 0 ]] && __WARNING 'unable to synchronize with origin/main'
-		[[ $DIFF_STATUS -ne 0 ]] && __WARNING 'your branch differs from origin/main (diff listed above)'
-		__WARNING
+		WARNING
+		[[ $SYNC_STATUS -ne 0 ]] && WARNING 'unable to synchronize with origin/main'
+		[[ $DIFF_STATUS -ne 0 ]] && WARNING 'your branch differs from origin/main (diff listed above)'
+		WARNING
 
-		__yN 'continue?' || return 1
+		yN 'continue?' || return 1
 	}
 }
 
@@ -262,7 +310,7 @@ __GET_LOGFILE() {
 		|| [[ $SCRIPT =~ interactive ]] \
 		&& return 0
 
-	echo "$SCWRYPTS_LOG_PATH/$(echo $SCRIPT | sed 's/^\.\///; s/\//\%/g').log"
+	echo "$SCWRYPTS_LOG_PATH/$(echo $GROUP/$TYPE/$NAME | sed 's/^\.\///; s/\//\%/g').log"
 }
 
 #####################################################################

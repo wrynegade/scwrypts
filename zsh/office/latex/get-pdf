@@ -1,0 +1,10 @@
+#!/bin/zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use office/latex
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+LATEX__GET_PDF $@

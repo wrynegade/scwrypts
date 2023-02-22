@@ -1,0 +1,36 @@
+#!/bin/zsh
+DEPENDENCIES+=(cli53)
+REQUIRED_ENV+=(AWS_PROFILE)
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+ROUTE53_BACKUP() {
+	local BACKUP_PATH="$SCWRYPTS_OUTPUT_PATH/$ENV_NAME/aws-dns-backup/$(date '+%Y-%m-%d')"
+	mkdir -p $BACKUP_PATH >/dev/null 2>&1
+
+	local DOMAIN
+	local JOBS=()
+	for DOMAIN in $(ROUTE53_GET_DOMAINS)
+	do
+		( STATUS "creating '$BACKUP_PATH/$DOMAIN.txt'" \
+			&& cli53 export --profile $AWS_PROFILE $DOMAIN > "$BACKUP_PATH/$DOMAIN.txt" \
+			&& SUCCESS "backed up '$DOMAIN'" \
+			|| ERROR "failed to back up '$DOMAIN'" \
+		) &
+		JOBS+=$!
+	done
+
+	local P
+	for P in ${JOBS[@]}; do wait $P >/dev/null 2>&1; done
+}
+
+ROUTE53_GET_DOMAINS() {
+	cli53 list --profile $AWS_PROFILE \
+		| awk '{print $2;}' \
+		| sed '1d; s/\.$//'\
+		;
+}
+
+#####################################################################
+ROUTE53_BACKUP

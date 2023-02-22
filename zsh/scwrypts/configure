@@ -1,37 +1,36 @@
 #!/bin/zsh               
-_DEPENDENCIES+=()
-_REQUIRED_ENV+=()
-source ${0:a:h}/common.zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use scwrypts/meta
+
+CHECK_ENVIRONMENT
 #####################################################################
 
-[ ! -f $SCWRYPTS_CONFIG_PATH/config ] && {
-	__STATUS 'first-time setup detected; creating local configuration override...'
-	touch $SCWRYPTS_CONFIG_PATH/config \
-		&& __SUCCESS 'created!' \
-		|| __FAIL 1 "unable to create config at '$SCWRYPTS_CONFIG_PATH/config'"
-	{
-		echo '#'
-		echo '# configuration for scwrypts'
-		echo '#'
-		sed -n '1d; /^###/q; p' $SCWRYPTS_ROOT/global/config.zsh | sed '$d'
-	} > $SCWRYPTS_CONFIG_PATH/config
+USER_CONFIG_OVERRIDES="$SCWRYPTS_CONFIG_PATH/config.zsh"
 
-	__EDIT $SCWRYPTS_CONFIG_PATH/config
+[ ! -f "$USER_CONFIG_OVERRIDES" ] && {
+	STATUS 'first-time setup detected; creating local configuration override...'
+	cp "$DEFAULT_CONFIG" "$USER_CONFIG_OVERRIDES"
 
-	__STATUS 'attempting to build virtual environments'
-	__RUN_SCWRYPT zsh/scwrypts/virtualenv/update-all \
-		&& __SUCCESS 'finished updating virtualenvs' \
-		|| __WARNING 'unable to create one or more virtualenv (see above)' \
+	EDIT $USER_CONFIG_OVERRIDES
+
+	STATUS 'attempting first-time build for virtual environments'
+	SCWRYPTS__RUN --name scwrypts/virtualenv/update-all --group scwrypts --type zsh \
+		&& SUCCESS 'finished updating virtualenvs' \
+		|| WARNING 'unable to create one or more virtualenv (see above)' \
 		;
 
-	__REMINDER
-	__REMINDER 'use "zsh/scwrypts/virtualenv/update-all" to update environments'
-	__REMINDER '(equivalent to "npm install" or "pip install -r requirements.txt")'
-	__REMINDER
+	REMINDER '
+		in the future, you can use the following scwrypt to update required virtual
+		environments (equivalent to "npm install" or "pip install -r requirements"):
+	
+		scwrypts --name scwrypts/virtualenv/update-all --group scwrypts --type zsh
+	'
 } || {
-	__EDIT $SCWRYPTS_CONFIG_PATH/config
+	EDIT "$USER_CONFIG_OVERRIDES"
 }
 
 
-__SUCCESS 'saved new configuration'
-__REMINDER 'changes which affect the hot-key plugin will require a ZSHRC reload'
+SUCCESS 'saved new configuration'
+REMINDER 'changes which affect the hot-key plugin will require a ZSHRC reload'

@@ -1,0 +1,16 @@
+#!/bin/zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use system/vim/vundle
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+PLUGIN_INSTALL() {
+	VUNDLE__PLUGIN_INSTALL || return 1
+	VUNDLE__REBUILD_PLUGINS || return 2
+}
+
+#####################################################################
+PLUGIN_INSTALL $@

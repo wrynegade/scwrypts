@@ -1,0 +1,18 @@
+#!/bin/zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use office/latex
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+OPEN_PDF() {
+	local PDF=$(LATEX__GET_PDF $@)
+	[ ! $PDF ] && return 1
+
+	OPEN "$PDF"
+}
+
+#####################################################################
+OPEN_PDF $@

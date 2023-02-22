@@ -1,11 +1,22 @@
 from bpython import embed
 
 
-def interactive(function):
-    def main(*args, **kwargs):
-        print('preparing interactive environment...')
-        local_vars = function(*args, **kwargs)
-        print('environment ready; user, GO! :)')
-        embed(local_vars)
+def interactive(variable_descriptions):
+    def outer(function):
 
-    return main
+        def inner(*args, **kwargs):
+
+            print('\npreparing interactive environment...\n')
+
+            local_vars = function(*args, **kwargs)
+
+            print('\n\n'.join([
+                f'>>> {x}' for x in variable_descriptions
+                ]))
+            print('\nenvironment ready; user, GO! :)\n')
+
+            embed(local_vars)
+
+        return inner
+
+    return outer

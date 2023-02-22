@@ -1,0 +1,9 @@
+#!/bin/zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use system/config
+
+CHECK_ENVIRONMENT
+#####################################################################
+EDIT "$CONFIG__USER_SETTINGS"

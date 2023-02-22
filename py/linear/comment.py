@@ -1,47 +1,45 @@
 #!/usr/bin/env python
-from argparse import ArgumentParser
+from py.lib.http.linear import graphql
+from py.lib.scwrypts import execute
 
-from py.lib.data.io import get_stream, add_io_arguments
-from py.lib.linear import graphql
+from py.lib.scwrypts.exceptions import ImportedExecutableError
 
 if __name__ != '__main__':
-    raise Exception('executable only; must run through scwrypts')
+    raise ImportedExecutableError()
+
+#####################################################################
 
 
-parser = ArgumentParser(description = 'comment on an issue in linear.app')
+def get_query(args):
+    body = f'"""from wrobot:\n```\n{args.message}\n```\n"""'
+    return f'''
+        mutation CommentCreate {{
+            commentCreate(
+                input: {{
+                    issueId: "{args.issue_id}"
+                    body:    {body}
+                }}
+            ) {{ success }}
+        }}'''
 
-parser.add_argument(
-        '-i', '--issue',
-        dest     = 'issue_id',
-        help     = 'issue short-code (e.g. CLOUD-319)',
-        required = True,
+def main(args, stream):
+    response = graphql(get_query(args))
+    stream.writeline(response)
+
+
+#####################################################################
+execute(main,
+        description = 'comment on an inssue in linear.app',
+        parse_args = [
+            ( ['-d', '--issue-id'], {
+                'dest'     : 'issue_id',
+                'help'     : 'issue short-code (e.g. CLOUD-319)',
+                'required' : True,
+                }),
+            ( ['-m', '--message'], {
+                'dest'     : 'message',
+                'help'     : 'comment to post to the target issue',
+                'required' : True,
+                }),
+            ]
         )
-
-parser.add_argument(
-        '-m', '--message',
-        dest     = 'message',
-        help     = 'comment to post to the target issue',
-        required = True,
-        )
-
-add_io_arguments(parser, toggle_input=False)
-
-args = parser.parse_args()
-
-query = f'''
-mutation CommentCreate {{
-    commentCreate(
-        input: {{
-            issueId: "{args.issue_id}"
-            body:    """from wrobot:
-```
-{args.message.strip()}
-```"""
-        }}
-    ) {{ success }}
-}}
-'''
-
-response = graphql(query)
-with get_stream(args.output_file, 'w+') as output:
-    output.write(response.text)

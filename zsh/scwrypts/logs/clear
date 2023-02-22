@@ -1,21 +1,22 @@
 #!/bin/zsh               
-_DEPENDENCIES+=()
-_REQUIRED_ENV+=()
-source ${0:a:h}/common.zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+CHECK_ENVIRONMENT
 #####################################################################
 
 cd $SCWRYPTS_ROOT
 
-__STATUS "Found $(ls $SCWRYPTS_LOG_PATH | wc -l) log files"
-__WARNING
-__WARNING 'this will permanently clear all local cloud script logs found in'
-__WARNING "'$SCWRYPTS_LOG_PATH'"
-__WARNING
+STATUS "Found $(ls $SCWRYPTS_LOG_PATH | wc -l) log files"
+WARNING "
+	this will permanently clear all local cloud script logs found in
+	'$SCWRYPTS_LOG_PATH'
+"
 
-__yN 'continue?' || __ABORT
+yN 'continue?' || ABORT
 
-__STATUS 'removing logfiles'
+STATUS 'removing logfiles'
 rm -rf $SCWRYPTS_LOG_PATH/* \
-	&& __SUCCESS 'done' \
-	|| { __ERROR 'failed :c'; exit 2; }\
+	&& SUCCESS 'done' \
+	|| { ERROR 'failed :c'; exit 2; }\
 	;

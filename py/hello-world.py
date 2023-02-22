@@ -1,19 +1,27 @@
 #!/usr/bin/env python
-from argparse import ArgumentParser
+from py.lib.scwrypts import execute
+
+from py.lib.scwrypts.exceptions import ImportedExecutableError
 
 if __name__ != '__main__':
-    raise Exception('executable only; must run through scwrypts')
+    raise ImportedExecutableError()
+
+#####################################################################
 
 
-parser = ArgumentParser(description = 'a simple "Hello, World!" program')
-parser.add_argument(
-        '-m', '--message',
-        dest     = 'message',
-        default  = 'HELLO WORLD',
-        help     = 'message to print to stdout',
-        required = False,
+def main(args, stream):
+    stream.writeline(args.message)
+
+
+#####################################################################
+execute(main,
+        description = 'a simple "Hello, World!" program',
+        parse_args = [
+            ( ['-m', '--message'], {
+                'dest'     : 'message',
+                'default'  : 'HELLO WORLD',
+                'help'     : 'message to print',
+                'required' : False,
+                }),
+            ],
         )
-
-args = parser.parse_args()
-
-print(args.message)

@@ -1,18 +1,30 @@
 #!/bin/zsh
-_DEPENDENCIES+=()
-_REQUIRED_ENV+=()
-source ${0:a:h}/common.zsh
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use scwrypts/virtualenv
+
+CHECK_ENVIRONMENT
 #####################################################################
 
-ENV_TYPE=$(echo $__AVAILABLE_VIRTUALENVS | sed 's/ \+/\n/' | __FZF 'select an environment to refresh')
-[ ! $ENV_TYPE ] && __ABORT
+while [[ $# -gt 0 ]]
+do
+	case $1 in
+		-g | --group ) ENV_GROUP="$2"; shift 1 ;; 
+	esac
+	shift 1
+done
 
-__REMINDER
-__REMINDER "this will permanently remove all artifacts for the scwrypts $ENV_TYPE environment"
-__REMINDER "(safe unless you have put something important in $(__GET_VIRTUALENV_PATH $ENV_TYPE))"
-__REMINDER
+[ ! $ENV_GROUP ] && ENV_GROUP=scwrypts
 
+ENV_TYPE=$(echo $AVAILABLE_VIRTUALENVS | sed 's/ \+/\n/' | FZF 'select an environment to refresh')
+[ ! $ENV_TYPE ] && ABORT
 
-__Yn "drop and recreate $ENV_TYPE virtual environment?" || __ABORT
+REMINDER "
+	this will permanently remove all artifacts for the scwrypts $ENV_TYPE environment
+	(safe unless you have put something important in $(GET_VIRTUALENV_PATH $ENV_GROUP $ENV_TYPE))
+	"
 
-__REFRESH_VIRTUALENV $ENV_TYPE
+Yn "drop and recreate $ENV_TYPE virtual environment?" || ABORT
+
+REFRESH_VIRTUALENV $ENV_GROUP $ENV_TYPE

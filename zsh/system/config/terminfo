@@ -1,0 +1,27 @@
+#!/bin/zsh
+DEPENDENCIES+=(tic)
+REQUIRED_ENV+=()
+
+use system/config
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+SETUP_TERMINFO() {
+	[ ! $TERMINFO_PATH ] && return 0
+	[ ! -d $TERMINFO_PATH ] && FAIL 1 "TERMINFO_PATH='$TERMINFO_PATH' does not exist"
+
+	local ERRORS=0
+	for TERMINFO in $(find $TERMINFO_PATH -type f)
+	do
+		tic -x $TERMINFO >/dev/null 2>&1 \
+			&& SUCCESS "added '$(basename $TERMINFO)'" \
+			|| ERROR "failed to add '$(basename $TERMINFO)'" \
+			;
+	done
+
+	CHECK_ERRORS
+}
+
+#####################################################################
+SETUP_TERMINFO $@
