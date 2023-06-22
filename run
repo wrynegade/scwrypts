@@ -235,7 +235,7 @@ __RUN() {
 
 	##########################################
 
-	local LOGFILE=$(__GET_LOGFILE $SCRIPT)
+	local LOGFILE=$(__GET_LOGFILE)
 
 	local HEADER=$(
 		[ $SUBSCWRYPT ] && return 0
@@ -308,12 +308,12 @@ __VALIDATE_UPSTREAM_TIMELINE() {
 }
 
 __GET_LOGFILE() {
-	local SCRIPT="$1"
-
 	[ $SUBSCWRYPT ] \
-		|| [[ $SCRIPT =~ scwrypts/logs ]] \
-		|| [[ $SCRIPT =~ interactive ]] \
+		|| [[ $SCWRYPT_NAME =~ scwrypts/logs ]] \
+		|| [[ $SCWRYPT_NAME =~ interactive ]] \
 		&& return 0
+
+	echo 'gets a logfile' >&2
 
 	echo "$SCWRYPTS_LOG_PATH/$(echo $GROUP/$TYPE/$NAME | sed 's/^\.\///; s/\//\%/g').log"
 }

@@ -116,5 +116,5 @@ SCWRYPTS__GET_RUNSTRING__py() {
 SCWRYPTS__GET_RUNSTRING__zx() {
 	__CHECK_DEPENDENCY zx || return 1
 
-	echo "FORCE_COLOR=3; cd $GROUP_PATH; ./$TYPE/$NAME.js"
+	echo "export FORCE_COLOR=3; cd $GROUP_PATH; ./$TYPE/$NAME.js"
 }

@@ -49,7 +49,7 @@ UPDATE_VIRTUALENV() {
 	cd $SCWRYPTS_ROOT
 	local UPDATE_CODE=0
 	case $TYPE in
-		py ) cd py; pip install -r requirements.txt; UPDATE_CODE=$? ;;
+		py ) cd py; pip install --no-cache-dir -r requirements.txt; UPDATE_CODE=$? ;;
 		zx ) cd zx; npm install ;;
 	esac
 	UPDATE_CODE=$?
@@ -83,7 +83,11 @@ DELETE_VIRTUALENV() {
 GET_VIRTUALENV_PATH() {
 	local GROUP="$1"
 	local TYPE="$2"
-	eval echo '$SCWRYPTS_VIRTUALENV_PATH__'$GROUP/$TYPE
+
+	local ENV_PATH="$(eval echo '$SCWRYPTS_VIRTUALENV_PATH__'$GROUP 2>/dev/null)"
+	[ ! $ENV_PATH ] && ENV_PATH="$SCWRYPTS_VIRTUALENV_PATH__scwrypts"
+
+	echo $ENV_PATH/$TYPE
 }
 
 #####################################################################
