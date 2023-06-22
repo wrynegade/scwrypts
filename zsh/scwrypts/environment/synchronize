@@ -119,7 +119,7 @@ ADD_LINES() {
 	do
 		VARIABLE=$(echo $LINE | sed 's/=.*$//')
 		echo $CONTENT | grep -qi "^$VARIABLE" || {
-			echo $LINE | grep -qi '__[a-z_]\+=' || {
+			echo $LINE | grep -q '__[a-z_]\+=' || {
 				WARNING "skipping variable $(echo $LINE | sed 's/^export //; s/=.*//')
 					(must be included in a template before it can be added)"
 				continue
@@ -142,6 +142,7 @@ READ_POPULATED_VARIABLES() {
 		| awk '/^[^=]+$/{printf "%s_____",$0;next}7' \
 		| sed 's/\(_____\)\(export\)/\1\n\2/; s/\(_____\)$/\1\n/' \
 		| sed 's/^.*_____.*$/_____&/' \
+		| sed 's/^_____export/export/' \
 		| sed -z 's/[\n] *_____/_____/g' \
 		| grep -v '^$' \
 		;

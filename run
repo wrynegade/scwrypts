@@ -217,6 +217,11 @@ __RUN() {
 		export ENV_NAME
 	}
 
+	for f in $(eval 'echo $SCWRYPTS_STATIC_CONFIG__'$SCWRYPT_GROUP)
+	do
+		source "$f" || FAIL 5 "invalid static config '$f'"
+	done
+
 	##########################################
 
 	[ ! $SUBSCWRYPT ] \
