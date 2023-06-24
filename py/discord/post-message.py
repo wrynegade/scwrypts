@@ -13,19 +13,14 @@ if __name__ != '__main__':
 #####################################################################
 
 def main(args, stream):
-    if args.body is None:
+    if args.content is None:
         print(f'reading input from {stream.input.name}', file=stderr)
-        args.body = ''.join(stream.readlines()).strip()
+        args.content = ''.join(stream.readlines()).strip()
 
-    if len(args.body) == 0:
-        args.body = 'PING'
+    if len(args.content) == 0:
+        args.content = 'PING'
 
-    response = discord.send_message(
-            content = args.body,
-            channel_id = args.channel_id,
-            webhook = args.webhook,
-            avatar_url = args.avatar_url,
-            )
+    response = discord.send_message(**vars(args))
 
     stream.writeline(dumps({
         **(response.json() if response.text != '' else {'message': 'OK'}),
@@ -38,23 +33,28 @@ execute(main,
         description = 'post a message to the indicated discord channel',
         parse_args = [
             ( ['-b', '--body'], {
-                'dest'     : 'body',
+                'dest'     : 'content',
                 'help'     : 'message body',
                 'required' : False,
                 }),
             ( ['-c', '--channel-id'], {
                 'dest'     : 'channel_id',
-                'help'     : 'target channel id',
+                'help'     : 'override default target channel id',
                 'required' : False,
                 }),
             ( ['-w', '--webhook'], {
                 'dest'     : 'webhook',
-                'help'     : 'target webhook (takes precedence over -c)',
+                'help'     : 'override default target webhook (takes precedence over -c)',
                 'required' : False,
                 }),
             ( ['--avatar-url'], {
                 'dest'     : 'avatar_url',
-                'help'     : 'replace default avatar_url',
+                'help'     : 'override default avatar_url',
+                'required' : False,
+                }),
+            ( ['--username'], {
+                'dest'     : 'username',
+                'help'     : 'override default username',
                 'required' : False,
                 }),
             ]
