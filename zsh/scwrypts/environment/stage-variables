@@ -1,8 +1,0 @@
-#!/bin/zsh               
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
-CHECK_ENVIRONMENT
-#####################################################################
-
-__CHECK_REQUIRED_ENV $@

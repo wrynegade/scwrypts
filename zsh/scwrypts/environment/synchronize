@@ -49,39 +49,47 @@ SYNCHRONIZE() {
 	local ENVIRONMENTS ENVIRONMENT_FILES
 	local FILE NAME ENVIRONMENT_FILE
 
-	ENVIRONMENTS=($(SCWRYPTS__GET_ENV_NAMES | sort -r))
-	ENVIRONMENT_FILES=($(
+	GROUP_PIDS=()
+	for GROUP in ${SCWRYPTS_GROUPS}
+	do
+		{
+		ENVIRONMENTS=($(SCWRYPTS__GET_ENV_NAMES | sort -r))
+		ENVIRONMENT_FILES=($(
+			for NAME in ${ENVIRONMENTS[@]}
+			do
+				SCWRYPTS__GET_ENV_FILE $NAME $GROUP
+			done
+		))
+
+		STATUS 'generating working environment files...'
+		for FILE in ${ENVIRONMENT_FILES[@]}
+		do
+			GENERATE_TEMP_ENVIRONMENT_FILE "$FILE"
+		done
+
+		STATUS 'cascading environment values to children...'
 		for NAME in ${ENVIRONMENTS[@]}
 		do
-			SCWRYPTS__GET_ENV_FILE $NAME
+			CASCADE_ENVIRONMENT $NAME
 		done
-	))
 
-	STATUS 'generating working environment files...'
-	for FILE in ${ENVIRONMENT_FILES[@]}
-	do
-		GENERATE_TEMP_ENVIRONMENT_FILE "$FILE"
+		STATUS 'cleaning up working space...'
+		for FILE in ${ENVIRONMENT_FILES[@]}
+		do
+			CLEANUP_ENVIRONMENT_FILE "$FILE"
+		done
+		SUCCESS 'finished sync!'
+		} &
+		GROUP_PIDS+=$!
 	done
-
-	STATUS 'cascading environment values to children...'
-	for NAME in ${ENVIRONMENTS[@]}
-	do
-		CASCADE_ENVIRONMENT $NAME
-	done
-
-	STATUS 'cleaning up working space...'
-	for FILE in ${ENVIRONMENT_FILES[@]}
-	do
-		CLEANUP_ENVIRONMENT_FILE "$FILE"
-	done
-	SUCCESS 'finished sync!'
+	for P in ${GROUP_PIDS[@]}; do wait $P; done
 }
 
 #####################################################################
 
 CASCADE_ENVIRONMENT() {
 	local PARENT_NAME="$1"
-	local PARENT_FILE="$(SCWRYPTS__GET_ENV_FILE $PARENT_NAME).temp"
+	local PARENT_FILE="$(SCWRYPTS__GET_ENV_FILE $PARENT_NAME $GROUP).temp"
 
 	local CHILD_NAMES=($(echo $ENVIRONMENTS | sed 's/ \+/\n/g' |grep "^$PARENT_NAME\\."))
 	[[ ${#CHILD_NAMES[@]} -eq 0 ]] && return 0
@@ -93,7 +101,7 @@ CASCADE_ENVIRONMENT() {
 	for CHILD_NAME in ${CHILD_NAMES[@]}
 	do
 		STATUS "propagating environment '$PARENT_NAME' to child '$CHILD_NAME'"
-		CHILD_FILE="$(SCWRYPTS__GET_ENV_FILE $CHILD_NAME).temp"
+		CHILD_FILE="$(SCWRYPTS__GET_ENV_FILE $CHILD_NAME $GROUP).temp"
 		CONTENT=$(cat "$CHILD_FILE")
 		echo "$PARENT_VARIABLES" | ADD_LINES
 		echo "$CONTENT" > "$CHILD_FILE"

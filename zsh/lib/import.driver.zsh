@@ -118,7 +118,16 @@ use() {
 }
 
 GET_SCWRYPTS_LIBRARY_ROOT() {
-	eval echo '$SCWRYPTS_LIBRARY_ROOT__'$SCWRYPTS_LIBRARY_GROUP
+	local ROOT
+
+	ROOT=$(eval echo '$SCWRYPTS_LIBRARY_ROOT__'$SCWRYPTS_LIBRARY_GROUP)
+	[ $ROOT ] && echo $ROOT && return 0
+
+	[[ $(eval echo '$SCWRYPTS_TYPE__'$SCWRYPTS_LIBRARY_GROUP) =~ zsh ]] \
+		&& ROOT=$(eval echo '$SCWRYPTS_ROOT__'$SCWRYPTS_LIBRARY_GROUP/lib) \
+		|| ROOT=$(eval echo '$SCWRYPTS_ROOT__'$SCWRYPTS_LIBRARY_GROUP/zsh/lib) \
+		;
+	[ $ROOT ] && echo $ROOT && return 0
 }
 
 IS_LOADED() {

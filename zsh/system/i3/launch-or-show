@@ -25,6 +25,9 @@ LAUNCH_OR_SHOW() {
 
 		  -a, --always-launch     invoke executable even if client-class exists
 		  -n, --no-resize         don't resize the window (ignores -sxy flags)
+		  -l, --no-center         leave the window wherever it was last positioned
+
+		  --has-statusbar-icon    (default: false) use if program has a statusbar icon
 
 		  -h, --help              print this message and exit
 
@@ -47,6 +50,8 @@ LAUNCH_OR_SHOW() {
 
 	local ALWAYS_LAUNCH=0
 	local RESIZE=1
+	local MOVE=1
+	local MIN_ACTIVE=1
 
 	while [[ $# -gt 0 ]]
 	do
@@ -58,6 +63,9 @@ LAUNCH_OR_SHOW() {
 
 			-a | --always-launch ) ALWAYS_LAUNCH=1 ;;
 			-n | --no-resize     ) RESIZE=0 ;;
+			-l | --no-center     ) MOVE=0 ;;
+
+			--has-statusbar-icon ) MIN_ACTIVE=2 ;;
 
 			-h | --help ) USAGE; exit 0 ;;
 
@@ -78,7 +86,13 @@ LAUNCH_OR_SHOW() {
 		}
 	}
 
-	ERROR_CHECK
+	CHECK_ERRORS
+
+	xrandr | grep primary | awk '{print $4;}' | grep -q '^[0-9]\+$' || {
+		xrandr --output $(xrandr | grep ' connected' | awk '{print $1;}' | head -n1) --primary
+	}
+
+	local CURRENTLY_ACTIVE=$(xdotool search --onlyvisible --classname $CLIENT_CLASS 2>/dev/null | wc -l)
 
 	local LAUNCH_APP=$ALWAYS_LAUNCH
 	STATUS "looking for window process ids"
@@ -107,11 +121,15 @@ LAUNCH_OR_SHOW() {
 		&& STATUS 'resizing window' \
 		&& i3-msg "[class=$CLIENT_CLASS] resize set $WINDOW_SIZE"
 
-	STATUS 'pulling window from scratchpad to foreground'
-	i3-msg "[class=$CLIENT_CLASS] scratchpad show"
+	[[ $CURRENTLY_ACTIVE -lt $MIN_ACTIVE ]] && {
+		STATUS 'pulling window from scratchpad to foreground'
+		i3-msg "[class=$CLIENT_CLASS] scratchpad show"
+	}
 
 	STATUS 'moving window to center of current screen'
-	i3-msg "[class=$CLIENT_CLASS] move position center"
+	[[ $MOVE -eq 1 ]] && i3-msg "[class=$CLIENT_CLASS] move position center"
+
+	return 0
 }
 
 #####################################################################

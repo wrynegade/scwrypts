@@ -15,20 +15,43 @@ SCWRYPTS__SELECT_OR_CREATE_ENV() {
 	SCWRYPTS__GET_ENV_NAMES | FZF_TAIL 'select / create an environment'
 }
 
-SCWRYPTS__GET_ENV_FILE() {
+SCWRYPTS__GET_ENV_FILES() {
 	local NAME="$1"
 
-	echo "$SCWRYPTS_ENV_PATH/$NAME"
+	local FILENAMES=$(
+	for GROUP in ${SCWRYPTS_GROUPS[@]}
+	do
+		echo "$SCWRYPTS_ENV_PATH/$GROUP/$NAME"
+	done
+	)
+
+	echo $FILENAMES | grep 'environments/scwrypts/'
+	echo $FILENAMES | grep -v 'environments/scwrypts/' | sort
 
 	SCWRYPTS__GET_ENV_NAMES | grep -q $NAME \
 		|| { ERROR "no environment '$NAME' exists"; return 1; }
+}
+
+SCWRYPTS__GET_ENV_FILE() {
+	local NAME="$1"
+	local GROUP="$2"
+
+	[ ! $GROUP ] && { ERROR 'must provide group'; return 1; }
+
+	echo "$SCWRYPTS_ENV_PATH/$GROUP/$NAME"
+
+	SCWRYPTS__GET_ENV_NAMES | grep -q $NAME \
+		|| { ERROR "no environment '$NAME' exists"; return 1; }
+
+	[ -f "$SCWRYPTS_ENV_PATH/$GROUP/$NAME" ] \
+		|| { ERROR "missing environment file for '$GROUP/$NAME'"; return 2; }
 }
 
 SCWRYPTS__GET_ENV_TEMPLATE_FILES() {
 	local GROUP
 	for GROUP in ${SCWRYPTS_GROUPS[@]}
 	do
-		eval echo '$SCWRYPTS_ENV_TEMPLATE__'$GROUP
+		eval echo '$SCWRYPTS_ROOT__'$GROUP/.config/env.template
 	done
 }
 
@@ -37,7 +60,7 @@ SCWRYPTS__GET_ENV_NAMES() {
 		ERROR 'environment initialization error'
 		return 1
 	}
-	ls "$SCWRYPTS_ENV_PATH" | sort -r
+	ls "$SCWRYPTS_ENV_PATH/scwrypts" | sort -r
 }
 
 SCWRYPTS__INIT_ENVIRONMENTS() {
@@ -49,7 +72,11 @@ SCWRYPTS__INIT_ENVIRONMENTS() {
 	local BASIC_ENV
 	for BASIC_ENV in local dev prod
 	do
-		GENERATE_TEMPLATE > "$SCWRYPTS_ENV_PATH/$BASIC_ENV"
+		for GROUP in ${SCWRYPTS_GROUPS[@]}
+		do
+			mkdir -p "$SCWRYPTS_ENV_PATH/$GROUP"
+			GENERATE_TEMPLATE > "$SCWRYPTS_ENV_PATH/$GROUP/$BASIC_ENV"
+		done
 	done
 }
 
@@ -58,30 +85,28 @@ SCWRYPTS__INIT_ENVIRONMENTS() {
 _SED() { sed --follow-symlinks $@; }
 
 GENERATE_TEMPLATE() {
-	echo "#!/bin/zsh"
-	echo '#####################################################################'
-	echo "### scwrypts runtime configuration ##################################"
-	echo '#####################################################################'
-	local FILE GROUP CONTENT
-	local VARIABLE DESCRIPTION
-	for GROUP in ${SCWRYPTS_GROUPS[@]}
-	do
-		FILE=$(eval echo '$SCWRYPTS_ENV_TEMPLATE__'$GROUP)
+    [ ! $GROUP ] && { ERROR 'must provide GROUP'; return 1; }
+    DIVIDER='#####################################################################'
+    HEADER='### scwrypts runtime configuration '
+    [[ GROUP =~ ^scwrypts$ ]] || HEADER="${HEADER}(group '$GROUP') "
+    printf "#!/bin/zsh\n$DIVIDER\n$HEADER%s\n$DIVIDER\n" "${DIVIDER:${#$(echo "$HEADER")}}"
 
-		CONTENT=$(GET_VARIABLE_NAMES "$FILE" | sed 's/^/export /; s/$/=/')
+    local FILE CONTENT
+    local VARIABLE DESCRIPTION
+    FILE=$(eval echo '$SCWRYPTS_ROOT__'$GROUP/.config/env.template)
 
-		while read DESCRIPTION_LINE
-		do
-			VARIABLE=$(echo $DESCRIPTION_LINE | sed 's/ \+| .*$//')
-			DESCRIPTION=$(echo $DESCRIPTION_LINE | sed 's/^.* | //')
-			[ ! $DESCRIPTION ] && continue
+    CONTENT=$(GET_VARIABLE_NAMES "$FILE" | sed 's/^/export /; s/$/=/')
 
-			CONTENT=$(echo "$CONTENT" | sed "/^export $VARIABLE=/i #" | sed "/^export $VARIABLE=/i # $DESCRIPTION")
-		done < <(_SED -n '/^[^ ]\+ \+| /p' "$FILE.descriptions")
+    while read DESCRIPTION_LINE
+    do
+        VARIABLE=$(echo $DESCRIPTION_LINE | sed 's/ \+| .*$//')
+        DESCRIPTION=$(echo $DESCRIPTION_LINE | sed 's/^.* | //')
+        [ ! $DESCRIPTION ] && continue
 
-		echo "$CONTENT" | sed 's/^#$//'
-		echo '\n#####################################################################'
-	done
+        CONTENT=$(echo "$CONTENT" | sed "/^export $VARIABLE=/i #" | sed "/^export $VARIABLE=/i # $DESCRIPTION")
+    done < <(_SED -n '/^[^ ]\+ \+| /p' "$FILE.descriptions")
+
+    echo "$CONTENT" | sed 's/^#$//'
 }
 
 GET_VARIABLE_NAMES() {
@@ -91,4 +116,3 @@ GET_VARIABLE_NAMES() {
 		| grep -v '__[a-z]\+$' \
 		;
 }
-

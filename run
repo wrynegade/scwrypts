@@ -211,8 +211,11 @@ __RUN() {
 
 	[[ $ENV_REQUIRED -eq 1 ]] && {
 		[ ! $ENV_NAME ] && ENV_NAME=$(SCWRYPTS__SELECT_ENV)
-		local ENV_FILE=$(SCWRYPTS__GET_ENV_FILE "$ENV_NAME")
-		source "$ENV_FILE" || FAIL 5 "missing or invalid environment '$ENV_NAME'"
+		for GROUP in ${SCWRYPTS_GROUPS[@]}
+		do
+			local ENV_FILE=$(SCWRYPTS__GET_ENV_FILE "$ENV_NAME" "$GROUP")
+			source "$ENV_FILE" || FAIL 5 "missing or invalid environment '$GROUP/$ENV_NAME'"
+		done
 
 		export ENV_NAME
 	}

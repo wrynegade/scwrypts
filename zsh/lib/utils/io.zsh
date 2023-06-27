@@ -16,7 +16,9 @@ PRINT() {
 		shift 1
 	done
 
-	local STYLED_MESSAGE="${COLOR}$({
+	MESSAGE="$(echo "$MESSAGE" | sed 's/%/%%/g')"
+
+	local STYLED_MESSAGE="$({
 		printf "${COLOR}"
 		while IFS='' read line
 		do
@@ -26,7 +28,9 @@ PRINT() {
 
 			PREFIX=$(echo $PREFIX | sed 's/./ /g')
 		done <<< $MESSAGE
-	})${__COLOR_RESET}${LAST_LINE_END}"
+	})"
+	STYLED_MESSAGE="${COLOR}$(echo "$STYLED_MESSAGE" | sed 's/%/%%/g')${__COLOR_RESET}${LAST_LINE_END}"
+
 	[[ $STDERR -eq 1 ]] && printf $STYLED_MESSAGE >&2
 	[[ $STDOUT -eq 1 ]] && printf $STYLED_MESSAGE
 

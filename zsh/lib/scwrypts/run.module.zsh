@@ -16,12 +16,16 @@ SCWRYPTS__GET_AVAILABLE_SCWRYPTS() {
 	do
 		GROUP_PATH=$(eval echo '$SCWRYPTS_ROOT__'$GROUP)
 		GROUP_COLOR=$(eval echo '$SCWRYPTS_COLOR__'$GROUP)
+
+		GROUP_TYPE=$(eval echo '$SCWRYPTS_TYPE__'$GROUP)
+		[ $GROUP_TYPE ] && MINDEPTH=1 && GROUP_TYPE="$GROUP_TYPE\\/" || MINDEPTH=2
+
 		{
 		cd "$GROUP_PATH"
-		find . -mindepth 2 -type f -executable \
+		find . -mindepth $MINDEPTH -type f -executable \
 			| grep -v '\.git' \
 			| grep -v 'node_modules' \
-			| sed "s/^\\.\\///; s/\\.[^.]*$//" \
+			| sed "s/^\\.\\///; s/\\.[^.]*$//; s/^/$GROUP_TYPE/" \
 			| sed "s|\\([^/]*\\)/\(.*\)$|$(printf $__COLOR_RESET)\\2^$(printf $TYPE_COLOR)\\1^$(printf $GROUP_COLOR)$GROUP$(printf $__COLOR_RESET)|" \
 			;
 		} &
@@ -43,53 +47,50 @@ SCWRYPTS__SEPARATE_SCWRYPT_SELECTION() {
 }
 
 SCWRYPTS__GET_RUNSTRING() {
-	# accepts a selected line from SCWRYPTS__GET_AVAILABLE_SCWRYPTS
-	local NAME="$1"
-	local TYPE="$2"
-	local GROUP="$3"
-	local GROUP_PATH=$(eval echo '$SCWRYPTS_ROOT__'$GROUP)
+	local GROUP_PATH=$(eval echo '$SCWRYPTS_ROOT__'$SCWRYPT_GROUP)
 	local RUNSTRING
 
-	[ $NAME ] && [ $TYPE ] && [ $GROUP ] || {
+	[ $SCWRYPT_NAME ] && [ $SCWRYPT_TYPE ] && [ $SCWRYPT_GROUP ] || {
 		ERROR 'missing required information to get runstring'
 		return 1
 	}
+
 	[ $ENV_REQUIRED ] && [[ $ENV_REQUIRED -eq 1 ]] && [ ! $ENV_NAME ] && {
 		ERROR 'missing required information to get runstring'
 		return 1
 	}
 
-	typeset -f SCWRYPTS__GET_RUNSTRING__${GROUP}__${TYPE} >/dev/null 2>&1 && {
-		RUNSTRING=$(SCWRYPTS__GET_RUNSTRING__${GROUP}__${TYPE})
+	typeset -f SCWRYPTS__GET_RUNSTRING__${SCWRYPT_GROUP}__${SCWRYPT_TYPE} >/dev/null 2>&1 && {
+		RUNSTRING=$(SCWRYPTS__GET_RUNSTRING__${SCWRYPT_GROUP}__${SCWRYPT_TYPE})
 		[ ! $RUNSTRING ] && {
-			ERROR "SCWRYPTS__GET_RUNSTRING__${GROUP}__${TYPE} error"
+			ERROR "SCWRYPTS__GET_RUNSTRING__${SCWRYPT_GROUP}__${SCWRYPT_TYPE} error"
 			return 2
 		}
 	}
 
-	typeset -f SCWRYPTS__GET_RUNSTRING__${TYPE} >/dev/null 2>&1 && {
-		RUNSTRING=$(SCWRYPTS__GET_RUNSTRING__${TYPE})
+	typeset -f SCWRYPTS__GET_RUNSTRING__${SCWRYPT_TYPE} >/dev/null 2>&1 && {
+		RUNSTRING=$(SCWRYPTS__GET_RUNSTRING__${SCWRYPT_TYPE})
 		[ ! $RUNSTRING ] && {
-			ERROR "SCWRYPTS__GET_RUNSTRING__${TYPE} error"
+			ERROR "SCWRYPTS__GET_RUNSTRING__${SCWRYPT_TYPE} error"
 			return 3
 		}
 	}
 
 	[ ! $RUNSTRING ] && {
-		ERROR "type ${TYPE} (group ${GROUP}) has no supported runstring generator"
+		ERROR "type ${SCWRYPT_TYPE} (group ${SCWRYPT_GROUP}) has no supported runstring generator"
 		return 4
 	}
 
 	RUNSTRING="SCWRYPTS_ENV=$ENV_NAME; $RUNSTRING"
 	RUNSTRING="source $SCWRYPTS_ROOT/zsh/lib/import.driver.zsh; $RUNSTRING"
 
-	local _VIRTUALENV=$(eval echo '$SCWRYPTS_VIRTUALENV_PATH__'$GROUP'/$TYPE/bin/activate')
+	local _VIRTUALENV=$(eval echo '$SCWRYPTS_VIRTUALENV_PATH__'$SCWRYPT_GROUP'/$SCWRYPT_TYPE/bin/activate')
 	[ -f $_VIRTUALENV ] && RUNSTRING="source $_VIRTUALENV; $RUNSTRING"
 
 	local G SCWRYPTSENV
 	for G in ${SCWRYPTS__GROUPS[@]}
 	do
-		SCWRYPTSENV=$(eval echo '$SCWRYPTS_ENV_PATH__'$GROUP'/$ENV_NAME')
+		SCWRYPTSENV="$SCWRYPTS_ENV_PATH/$G/$ENV_NAME"
 		[ -f $SCWRYPTSENV ] && RUNSTRING="source $SCWRYPTSENV; $RUNSTRING"
 	done
 
@@ -99,7 +100,12 @@ SCWRYPTS__GET_RUNSTRING() {
 SCWRYPTS__GET_RUNSTRING__zsh() {
 	__CHECK_DEPENDENCY zsh || return 1
 
-	echo "source $GROUP_PATH/$TYPE/$NAME"
+	[ $(eval echo '$SCWRYPTS_TYPE__'$SCWRYPT_GROUP) ] \
+		&& echo "source $GROUP_PATH/$SCWRYPT_NAME" \
+		|| echo "source $GROUP_PATH/$SCWRYPT_TYPE/$SCWRYPT_NAME" \
+		;
+
+	return 0
 }
 
 SCWRYPTS__GET_RUNSTRING__py() {
@@ -110,11 +116,11 @@ SCWRYPTS__GET_RUNSTRING__py() {
 		WARNING 'compatibility may vary'
 	}
 
-	echo "cd $GROUP_PATH; python -m $(echo $TYPE/$NAME | sed 's/\//./g; s/\.py$//; s/\.\.//')"
+	echo "cd $GROUP_PATH; python -m $(echo $SCWRYPT_TYPE/$SCWRYPT_NAME | sed 's/\//./g; s/\.py$//; s/\.\.//')"
 }
 
 SCWRYPTS__GET_RUNSTRING__zx() {
 	__CHECK_DEPENDENCY zx || return 1
 
-	echo "export FORCE_COLOR=3; cd $GROUP_PATH; ./$TYPE/$NAME.js"
+	echo "export FORCE_COLOR=3; cd $GROUP_PATH; ./$SCWRYPT_TYPE/$SCWRYPT_NAME.js"
 }
