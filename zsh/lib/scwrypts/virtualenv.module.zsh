@@ -37,7 +37,11 @@ UPDATE_VIRTUALENV() {
 
 	local VIRTUALENV_PATH=$(GET_VIRTUALENV_PATH $GROUP $TYPE)
 
-	[ ! -d $VIRTUALENV_PATH ] && CREATE_VIRTUALENV__${GROUP}__${TYPE} $VIRTUALENV_PATH
+	[ ! -d $VIRTUALENV_PATH ] && {
+		which CREATE_VIRTUALENV__${GROUP}__${TYPE} >/dev/null 2>&1 \
+			&& CREATE_VIRTUALENV__${GROUP}__${TYPE} $VIRTUALENV_PATH \
+			|| return 0
+	}
 
 	STATUS "updating $TYPE virtual environment"
 
@@ -125,7 +129,7 @@ CREATE_VIRTUALENV__scwrypts__zx() {
 	nodeenv $VIRTUALENV_PATH --node=$SCWRYPTS_NODE_VERSION__scwrypts \
 		&& SUCCESS 'node virtualenv created' \
 		|| {
-			ERROR "unable to create '$VIRTUALENV_PATH' with '$SCWRYPTS__NODE_VERSION'"
+			ERROR "unable to create '$VIRTUALENV_PATH' with '$SCWRYPTS_NODE_VERSION__scwrypts'"
 			return 2
 		}
 }
