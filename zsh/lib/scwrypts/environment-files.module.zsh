@@ -43,6 +43,10 @@ SCWRYPTS__GET_ENV_FILE() {
 	SCWRYPTS__GET_ENV_NAMES | grep -q $NAME \
 		|| { ERROR "no environment '$NAME' exists"; return 1; }
 
+	[ -f "$SCWRYPTS_ENV_PATH/$GROUP/$NAME" ] || {
+		mkdir -p "$SCWRYPTS_ENV_PATH/$GROUP"
+		touch "$SCWRYPTS_ENV_PATH/$GROUP/$NAME"
+	}
 	[ -f "$SCWRYPTS_ENV_PATH/$GROUP/$NAME" ] \
 		|| { ERROR "missing environment file for '$GROUP/$NAME'"; return 2; }
 }
