@@ -20,14 +20,14 @@ SCWRYPTS__GET_AVAILABLE_SCWRYPTS() {
 		GROUP_TYPE=$(eval echo '$SCWRYPTS_TYPE__'$GROUP)
 		[ $GROUP_TYPE ] && MINDEPTH=1 && GROUP_TYPE="$GROUP_TYPE\\/" || MINDEPTH=2
 
-		{
-		cd "$GROUP_PATH"
-		find . -mindepth $MINDEPTH -type f -executable \
-			| grep -v '\.git' \
-			| grep -v 'node_modules' \
-			| sed "s/^\\.\\///; s/\\.[^.]*$//; s/^/$GROUP_TYPE/" \
-			| sed "s|\\([^/]*\\)/\(.*\)$|$(printf $__COLOR_RESET)\\2^$(printf $TYPE_COLOR)\\1^$(printf $GROUP_COLOR)$GROUP$(printf $__COLOR_RESET)|" \
+		command -v SCWRYPTS__LIST_AVAILABLE_SCWRYPTS__$GROUP >/dev/null 2>&1 \
+			&& LOOKUP=SCWRYPTS__LIST_AVAILABLE_SCWRYPTS__$GROUP \
+			|| LOOKUP=SCWRYPTS__LIST_AVAILABLE_SCWRYPTS__scwrypts \
 			;
+
+		{
+		$LOOKUP \
+			| sed "s|\\([^/]*\\)/\(.*\)$|$(printf $__COLOR_RESET)\\2^$(printf $TYPE_COLOR)\\1^$(printf $GROUP_COLOR)$GROUP$(printf $__COLOR_RESET)|" \
 		} &
 		LOOKUP_PIDS+=($!)
 	done
@@ -46,6 +46,17 @@ SCWRYPTS__SEPARATE_SCWRYPT_SELECTION() {
 	done
 }
 
+SCWRYPTS__LIST_AVAILABLE_SCWRYPTS__scwrypts() {
+	# implementation should output lines of the following format:
+	# "${SCWRYPT_TYPE}/${SCWRYPT_NAME}"
+	cd "$GROUP_PATH"
+	find . -mindepth $MINDEPTH -type f -executable \
+		| grep -v '\.git' \
+		| grep -v 'node_modules' \
+		| sed "s/^\\.\\///; s/\\.[^.]*$//; s/^/$GROUP_TYPE/" \
+		;
+}
+
 SCWRYPTS__GET_RUNSTRING() {
 	local GROUP_PATH=$(eval echo '$SCWRYPTS_ROOT__'$SCWRYPT_GROUP)
 	local RUNSTRING
@@ -60,7 +71,7 @@ SCWRYPTS__GET_RUNSTRING() {
 		return 1
 	}
 
-	typeset -f SCWRYPTS__GET_RUNSTRING__${SCWRYPT_GROUP}__${SCWRYPT_TYPE} >/dev/null 2>&1 && {
+	[ ! $RUNSTRING ] && typeset -f SCWRYPTS__GET_RUNSTRING__${SCWRYPT_GROUP}__${SCWRYPT_TYPE} >/dev/null 2>&1 && {
 		RUNSTRING=$(SCWRYPTS__GET_RUNSTRING__${SCWRYPT_GROUP}__${SCWRYPT_TYPE})
 		[ ! $RUNSTRING ] && {
 			ERROR "SCWRYPTS__GET_RUNSTRING__${SCWRYPT_GROUP}__${SCWRYPT_TYPE} error"
@@ -68,7 +79,7 @@ SCWRYPTS__GET_RUNSTRING() {
 		}
 	}
 
-	typeset -f SCWRYPTS__GET_RUNSTRING__${SCWRYPT_TYPE} >/dev/null 2>&1 && {
+	[ ! $RUNSTRING ] && typeset -f SCWRYPTS__GET_RUNSTRING__${SCWRYPT_TYPE} >/dev/null 2>&1 && {
 		RUNSTRING=$(SCWRYPTS__GET_RUNSTRING__${SCWRYPT_TYPE})
 		[ ! $RUNSTRING ] && {
 			ERROR "SCWRYPTS__GET_RUNSTRING__${SCWRYPT_TYPE} error"

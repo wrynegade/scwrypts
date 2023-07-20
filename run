@@ -316,8 +316,6 @@ __GET_LOGFILE() {
 		|| [[ $SCWRYPT_NAME =~ interactive ]] \
 		&& return 0
 
-	echo 'gets a logfile' >&2
-
 	echo "$SCWRYPTS_LOG_PATH/$(echo $GROUP/$TYPE/$NAME | sed 's/^\.\///; s/\//\%/g').log"
 }
 

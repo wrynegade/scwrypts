@@ -18,9 +18,17 @@ SETUP_SYMLINK() {
 	[ ! $2 ] && FAIL 1 'must provide SOURCE_CONFIG and TARGET_CONFIG'
 
 	local SOURCE_CONFIG="$1"
-	[ ! -f "$SOURCE_CONFIG" ] && [ ! -d "$SOURCE_CONFIG" ] && FAIL 2 "no such file or directory '$SOURCE_CONFIG'"
-
 	local TARGET_CONFIG="$HOME/.config/$2"
+
+	[ ! -f "$SOURCE_CONFIG" ] && [ ! -d "$SOURCE_CONFIG" ] && [ -f "$TARGET_CONFIG" ] && {
+		INFO 'SOURCE_CONFIG is not tracked; copying from TARGET_CONFIG'
+		mkdir -p "$(dirname "$SOURCE_CONFIG")"
+		cp "$TARGET_CONFIG" "$SOURCE_CONFIG"
+	}
+	[ ! -f "$SOURCE_CONFIG" ] && [ ! -d "$SOURCE_CONFIG" ] && {
+		WARNING "no such file or directory '$SOURCE_CONFIG'"
+		return 0
+	}
 
 	[ ! -d $(dirname "$TARGET_CONFIG") ] && mkdir -p $(dirname "$TARGET_CONFIG")
 

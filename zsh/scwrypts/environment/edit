@@ -21,6 +21,7 @@ for ENV_FILE in ${ENV_FILES[@]}
 do
 	[ ! -f "$ENV_FILE" ] && {
 		STATUS "Creating '$ENV_FILE'..." \
+			&& mkdir -p "$(dirname "$ENV_FILE")" \
 			&& touch "$ENV_FILE" \
 			&& ((CREATED+=1)) \
 			&& SUCCESS "created '$ENV_NAME'" \
