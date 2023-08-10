@@ -128,7 +128,15 @@ FZF()      {
 		exit 1
 	}
 
-	local SELECTION=$(fzf -i --height=30% --layout=reverse --prompt "$1 : " ${@:2})
+	local FZF_ARGS=()
+
+	FZF_ARGS+=(-i)
+	FZF_ARGS+=(--ansi)
+	FZF_ARGS+=(--bind=ctrl-c:cancel)
+	FZF_ARGS+=(--height=50%)
+	FZF_ARGS+=(--layout=reverse)
+
+	local SELECTION=$(fzf ${FZF_ARGS[@]} --layout=reverse --prompt "$1 : " ${@:2})
 	PROMPT "$1"
 	echo $SELECTION >&2
 	echo $SELECTION
