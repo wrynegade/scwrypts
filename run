@@ -215,15 +215,16 @@ __RUN() {
 		do
 			local ENV_FILE=$(SCWRYPTS__GET_ENV_FILE "$ENV_NAME" "$GROUP")
 			source "$ENV_FILE" || FAIL 5 "missing or invalid environment '$GROUP/$ENV_NAME'"
+
+			for f in $(eval 'echo $SCWRYPTS_STATIC_CONFIG__'$GROUP)
+			do
+				source "$f" || FAIL 5 "invalid static config '$f'"
+			done
 		done
 
 		export ENV_NAME
 	}
 
-	for f in $(eval 'echo $SCWRYPTS_STATIC_CONFIG__'$SCWRYPT_GROUP)
-	do
-		source "$f" || FAIL 5 "invalid static config '$f'"
-	done
 
 	##########################################
 
