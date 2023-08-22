@@ -64,7 +64,11 @@ SCWRYPTS__GET_ENV_NAMES() {
 		ERROR 'environment initialization error'
 		return 1
 	}
-	ls "$SCWRYPTS_ENV_PATH/scwrypts" | sort -r
+	[ $REQUIRED_ENVIRONMENT_REGEX ] && {
+		ls "$SCWRYPTS_ENV_PATH/scwrypts" | grep "$REQUIRED_ENVIRONMENT_REGEX" | sort -r
+	} || {
+		ls "$SCWRYPTS_ENV_PATH/scwrypts" | sort -r
+	}
 }
 
 SCWRYPTS__INIT_ENVIRONMENTS() {

@@ -208,6 +208,12 @@ __RUN() {
 	##########################################
 
 	local ENV_REQUIRED=$(__CHECK_ENV_REQUIRED && echo 1 || echo 0)
+	local REQUIRED_ENVIRONMENT_REGEX=$(eval echo '$SCWRYPTS_REQUIRED_ENVIRONMENT_REGEX__'$SCWRYPT_GROUP)
+
+	[ $REQUIRED_ENVIRONMENT_REGEX ] && {
+		[[ $ENV_NAME =~ $REQUIRED_ENVIRONMENT_REGEX ]] \
+			|| FAIL 5 "group '$SCWRYPT_GROUP' requires current environment to match '$REQUIRED_ENVIRONMENT_REGEX' (currently $ENV_NAME)"
+	}
 
 	[[ $ENV_REQUIRED -eq 1 ]] && {
 		[ ! $ENV_NAME ] && ENV_NAME=$(SCWRYPTS__SELECT_ENV)
@@ -225,6 +231,10 @@ __RUN() {
 		export ENV_NAME
 	}
 
+	[ $REQUIRED_ENVIRONMENT_REGEX ] && {
+		[[ $ENV_NAME =~ $REQUIRED_ENVIRONMENT_REGEX ]] \
+			|| FAIL 5 "group '$SCWRYPT_GROUP' requires current environment to match '$REQUIRED_ENVIRONMENT_REGEX' (currently $ENV_NAME)"
+	}
 
 	##########################################
 
