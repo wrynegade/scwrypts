@@ -32,7 +32,7 @@ __CHECK_ENV_VAR() {
 		[ $DEFAULT_VALUE ] && $NAME="$DEFAULT_VALUE"
 		return 0
 	} || {
-		 ERROR "'$NAME' required"
+		ERROR "variable '$NAME' required"
 		return 1
 	}
 }

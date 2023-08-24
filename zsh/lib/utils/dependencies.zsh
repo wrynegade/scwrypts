@@ -1,5 +1,6 @@
 __CHECK_DEPENDENCIES() {
 	local DEP ERROR=0
+	[ ! $E ] && E=ERROR
 
 	DEPENDENCIES=($(echo $DEPENDENCIES | sed 's/ \+/\n/g' | sort -u))
 
@@ -13,7 +14,7 @@ __CHECK_DEPENDENCY() {
 	local DEPENDENCY="$1"
 	[ ! $DEPENDENCY ] && return 1
 	command -v $DEPENDENCY >/dev/null 2>&1 || {
-		ERROR "'$1' required but not available on PATH $(__CREDITS $1)"
+		$E "application '$1' "$([[ $OPTIONAL -eq 1 ]] && echo preferred || echo required)" but not available on PATH $(__CREDITS $1)"
 		return 1
 	}
 }

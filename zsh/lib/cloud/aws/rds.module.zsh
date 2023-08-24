@@ -86,14 +86,9 @@ RDS__GET_DATABASE_CREDENTIALS() {
 		user-input     ) _RDS_AUTH__userinput ;;
 	esac
 
-	STATUS
-	STATUS "host     : $DB_HOST"
-	STATUS "type     : $DB_TYPE"
-	STATUS "port     : $DB_PORT"
-	STATUS "database : $DB_NAME"
-	STATUS "username : $DB_USER"
-	[[ $PRINT_PASSWORD -eq 1 ]] && STATUS "password : $DB_PASS"
-	STATUS
+	[[ $PRINT_PASSWORD -eq 1 ]] && INFO "password : $DB_PASS"
+
+	return 0
 }
 
 _RDS_AUTH__iam() {
@@ -108,10 +103,10 @@ _RDS_AUTH__iam() {
 _RDS_AUTH__secretsmanager() {
 	local CREDENTIALS=$(_RDS__GET_SECRETSMANAGER_CREDENTIALS)
 	echo $CREDENTIALS | jq -e '.pass' >/dev/null 2>&1 \
-		&& DB_PASS="'$(echo $CREDENTIALS | jq -r '.pass' | sed "s/'/'\"'\"'/g")'"
+		&& DB_PASS="$(echo $CREDENTIALS | jq -r '.pass')"
 	
 	echo $CREDENTIALS | jq -e '.password' >/dev/null 2>&1 \
-		&& DB_PASS="'$(echo $CREDENTIALS | jq -r '.password' | sed "s/'/'\"'\"'/g")'"
+		&& DB_PASS="$(echo $CREDENTIALS | jq -r '.password')"
 	
 	echo $CREDENTIALS | jq -e '.user' >/dev/null 2>&1 \
 		&& DB_USER=$(echo $CREDENTIALS | jq -r '.user')

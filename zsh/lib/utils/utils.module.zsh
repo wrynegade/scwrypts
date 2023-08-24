@@ -18,6 +18,12 @@ source ${0:a:h}/environment.zsh
 #####################################################################
 
 CHECK_ENVIRONMENT() {
+	local OPTIONAL=0
+	[[ $1 =~ --optional ]] && OPTIONAL=1
+
+	[[ $OPTIONAL -eq 1 ]] \
+		&& E=WARNING || E=ERROR
+
 	local ENVIRONMENT_STATUS=0
 
 	__CHECK_DEPENDENCIES $DEPENDENCIES
@@ -55,9 +61,9 @@ CHECK_ENVIRONMENT() {
 
 	##########################################
 
-	[[ ENVIRONMENT_STATUS -eq 0 ]] || {
+	[[ ENVIRONMENT_STATUS -ne 0 ]] && [[ $OPTIONAL -eq 0 ]] && {
 		ERROR_MESSAGE=$(echo $ERROR_MESSAGE | sed '1d; s/^/   /')
-		ERROR "environment errors found (see above)\n$ERROR_MESSAGE"
+		$E "environment errors found (see above)\n$ERROR_MESSAGE"
 	}
 
 	[[ $MISSING_ENVIRONMENT_VARIABLES -ne 0 ]] && {
@@ -67,10 +73,11 @@ CHECK_ENVIRONMENT() {
 		"
 	}
 
-	[[ $ENVIRONMENT_STATUS -eq 0 ]] || {
-		[[ $NO_EXIT -eq 1 ]] && return $ENVIRONMENT_STATUS
+	[[ $ENVIRONMENT_STATUS -ne 0 ]] && [[ $NO_EXIT -ne 1 ]] && [[ $OPTIONAL -eq 0 ]] && {
 		exit $ENVIRONMENT_STATUS
 	}
+
+	return $ENVIRONMENT_STATUS
 }
 
 CHECK_ENVIRONMENT

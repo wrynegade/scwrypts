@@ -85,6 +85,7 @@ __RUN() {
 			--update )
 				cd "$SCWRYPTS__ROOT__scwrypts"
 				git fetch --quiet origin main
+				git fetch --quiet origin main --tags
 				local SYNC_STATUS=$?
 
 				git diff --exit-code origin/main -- . >&2

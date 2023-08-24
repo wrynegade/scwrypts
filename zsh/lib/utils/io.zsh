@@ -99,7 +99,7 @@ Yn() {
 	PROMPT "$@ [Yn]"
 	[ $CI ] && { echo y; return 0; }
 
-	local Yn; READ -k Yn; echo
+	local Yn; READ -k Yn; echo >&2
 	[[ $Yn =~ [nN] ]] && return 1 || return 0
 }
 
@@ -107,7 +107,7 @@ yN() {
 	PROMPT "$@ [yN]"
 	[ $CI ] && { echo y; return 0; }
 
-	local yN; READ -k yN; echo
+	local yN; READ -k yN; echo >&2
 	[[ $yN =~ [yY] ]] && return 0 || return 1
 }
 
