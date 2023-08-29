@@ -1,0 +1,28 @@
+#!/bin/zsh
+#####################################################################
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use kubectl --group kubectl
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+MAIN() {
+	local USAGE="
+	usage: [context]
+
+	args:
+	  context   the full name of the kubeconfig context to set
+	"
+	local CONTEXT="$1"
+	[ $CONTEXT ] || $(KUBECTL__SELECT_CONTEXT)
+	[ $CONTEXT ] || ERROR 'must provide or select a valid kube context'
+
+	CHECK_ERRORS
+
+	KUBECTL__SET_CONTEXT $CONTEXT
+}
+
+#####################################################################
+MAIN $@

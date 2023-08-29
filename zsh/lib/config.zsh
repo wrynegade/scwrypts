@@ -39,4 +39,10 @@ source "$SCWRYPTS_ROOT/zsh/lib/config.group.zsh" \
 	|| FAIL 69 'failed to set up scwrypts group; aborting'
 
 #####################################################################
+
+[[ $SCWRYPTS_PLUGIN_ENABLED__kubectl -eq 1 ]] && {
+	source "$SCWRYPTS_ROOT/plugins/kubectl/kubectl.scwrypts.zsh"
+}
+
+#####################################################################
 __SCWRYPT=1 # arbitrary; indicates currently inside a scwrypt

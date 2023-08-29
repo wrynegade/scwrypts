@@ -1,0 +1,28 @@
+#!/bin/zsh
+#####################################################################
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use kubectl --group kubectl
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+MAIN() {
+	local USAGE="
+	usage: [namespace]
+
+	args:
+	  namespace   the full name of the namespace to set
+	"
+	local NAMESPACE="$1"
+	[ $NAMESPACE ] || $(KUBECTL__SELECT_NAMESPACE)
+	[ $NAMESPACE ] || ERROR 'must provide or select a valid namespace'
+
+	CHECK_ERRORS
+
+	KUBECTL__SET_NAMESPACE $NAMESPACE
+}
+
+#####################################################################
+MAIN $@

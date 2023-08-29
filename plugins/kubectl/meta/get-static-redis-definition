@@ -1,0 +1,11 @@
+#!/bin/zsh
+#####################################################################
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+
+use redis --group kubectl
+
+CHECK_ENVIRONMENT
+#####################################################################
+
+echo $(REDIS --get-static-definition)

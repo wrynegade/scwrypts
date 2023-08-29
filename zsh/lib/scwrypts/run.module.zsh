@@ -54,6 +54,7 @@ SCWRYPTS__LIST_AVAILABLE_SCWRYPTS__scwrypts() {
 		| grep -v '\.git' \
 		| grep -v 'node_modules' \
 		| sed "s/^\\.\\///; s/\\.[^.]*$//; s/^/$GROUP_TYPE/" \
+		| grep -v '^plugins/' \
 		;
 }
 
