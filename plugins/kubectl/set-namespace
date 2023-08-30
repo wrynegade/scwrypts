@@ -10,13 +10,31 @@ CHECK_ENVIRONMENT
 
 MAIN() {
 	local USAGE="
-	usage: [namespace]
+	usage: [namespace] [...options...]
 
 	args:
-	  namespace   the full name of the namespace to set
+	  namespace   (optional) the full name of the namespace context to set
+
+	options:
+	  --subsession   REDIS subsession (default 0)
 	"
-	local NAMESPACE="$1"
-	[ $NAMESPACE ] || $(KUBECTL__SELECT_NAMESPACE)
+	local NAMESPACE
+	local SUBSESSION=0
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			--subsession ) SUBSESSION=$2; shift 1 ;;
+
+			* )
+				[ $NAMESPACE ] && ERROR "unexpected argument '$2'"
+				NAMESPACE=$1
+				;;
+		esac
+		shift 1
+	done
+
+	[ $NAMESPACE ] || NAMESPACE=$(KUBECTL__SELECT_NAMESPACE)
 	[ $NAMESPACE ] || ERROR 'must provide or select a valid namespace'
 
 	CHECK_ERRORS

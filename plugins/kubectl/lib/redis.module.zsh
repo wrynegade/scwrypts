@@ -19,22 +19,29 @@ REDIS() {
 		usage: [...options...]
 
 		options:
+		  --subsession [0-9]   use a particular subsession
+
 		  -p, --prefix   apply dynamic prefix to the next command line argument
 
-		  --get-prefix              output key prefix for current session
+		  --get-prefix              output key prefix for current session+subsession
 		  --get-static-definition   output the static ZSH function definition for REDIS
 
-		  other arguments are passed through to redis-cli
+		  additional arguments and options are passed through to 'redis-cli'
 	"
-	local REDIS_ARGS=() USER_ARGS=()
-	local REDIS_PREFIX=$(eval echo '$SCWRYPTS_KUBECTL_REDIS_KEY_PREFIX__'$SCWRYPTS_KUBECTL_REDIS)
 
-	local ECHO_STATIC_DEFINITION=0
+	local REDIS_ARGS=() USER_ARGS=()
+
+	[ $SUBSESSION ] || local SUBSESSION=0
+
+	local REDIS_PREFIX=$(eval echo '$SCWRYPTS_KUBECTL_REDIS_KEY_PREFIX__'$SCWRYPTS_KUBECTL_REDIS)
+	[ $REDIS_PREFIX ] && REDIS_PREFIX+=':'
 
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in 
-			-p | --prefix ) USER_ARGS+=("${SCWRYPTS_ENV}:${REDIS_PREFIX}$2"); shift 1 ;;
+			-p | --prefix ) USER_ARGS+=("${REDIS_PREFIX}${SCWRYPTS_ENV}:${SUBSESSION}:$2"); shift 1 ;;
+
+			--subsession            ) SUBSESSION=$2; shift 1 ;;
 
 			--get-prefix            ) echo $REDIS_PREFIX; return 0 ;;
 			--get-static-definition ) ECHO_STATIC_DEFINITION=1 ;;
@@ -57,10 +64,11 @@ REDIS() {
 	[[ $ECHO_STATIC_DEFINITION -eq 1 ]] && {
 		echo "REDIS() {\
 			local USER_ARGS=(); \
+			[ ! \$SUBSESSION ] && local SUBSESSION=0 ;\
 			while [[ \$# -gt 0 ]]; \
 			do \
 				case \$1 in
-				-p | --prefix ) USER_ARGS+=(\"\${SCWRYPTS_ENV}:${REDIS_PREFIX}\$2\"); shift 1 ;; \
+				-p | --prefix ) USER_ARGS+=(\"${REDIS_PREFIX}\${SCWRYPTS_ENV}:\${SUBSESSION}:\$2\"); shift 1 ;; \
 				* ) USER_ARGS+=(\$1) ;; \
 				esac; \
 				shift 1; \
@@ -72,7 +80,6 @@ REDIS() {
 
 	redis-cli ${REDIS_ARGS[@]} ${USER_ARGS[@]}
 }
-
 
 REDIS ping | grep -qi pong || {
 	RPID=$(docker ps -a | grep scwrypts-kubectl-redis | awk '{print $1;}')

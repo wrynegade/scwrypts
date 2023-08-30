@@ -8,4 +8,4 @@ SCWRYPTS_STATIC_CONFIG__kubectl+=(
 	"$SCWRYPTS_ROOT__kubectl/.config/static/redis.zsh"
 )
 
-source "$SCWRYPTS_ROOT__kubectl/kubectl.driver.zsh"
+source "$SCWRYPTS_ROOT__kubectl/driver/kubectl.driver.zsh"

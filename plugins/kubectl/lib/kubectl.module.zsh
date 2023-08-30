@@ -30,17 +30,17 @@ KUBECTL__SET_CONTEXT() {
 	local CONTEXT=$1
 	[ ! $CONTEXT ] && return 1
 
-	[[ $CONTEXT =~ default ]] && {
+	[[ $CONTEXT =~ reset ]] && {
 		: \
 			&& REDIS del --prefix "current:context" \
-			&& KUBECTL__SET_NAMESPACE default \
+			&& KUBECTL__SET_NAMESPACE reset \
 			;
 		return $?
 	}
 
 	: \
 		&& REDIS set --prefix "current:context" "$CONTEXT" \
-		&& KUBECTL__SET_NAMESPACE default \
+		&& KUBECTL__SET_NAMESPACE reset \
 		;
 }
 
@@ -49,8 +49,17 @@ KUBECTL__SELECT_CONTEXT() {
 }
 
 KUBECTL__LIST_CONTEXTS() {
-	echo default
-	KUBECTL config get-contexts -o name | sort
+	echo reset
+	local ALL_CONTEXTS=$(KUBECTL config get-contexts -o name | sort)
+
+	echo $ALL_CONTEXTS | grep -v '^arn:aws:eks'
+
+	[[ $AWS_ACCOUNT ]] && {
+		echo $ALL_CONTEXTS | grep "^arn:aws:eks:.*:$AWS_ACCOUNT"
+		true
+	} || {
+		echo $ALL_CONTEXTS | grep '^arn:aws:eks'
+	}
 }
 
 #####################################################################
@@ -61,7 +70,7 @@ KUBECTL__SET_NAMESPACE() {
 	local NAMESPACE=$1
 	[ ! $NAMESPACE ] && return 1
 
-	[[ $NAMESPACE =~ default ]] && {
+	[[ $NAMESPACE =~ reset ]] && {
 		REDIS del --prefix "current:namespace"
 		return $?
 	}
@@ -74,6 +83,7 @@ KUBECTL__SELECT_NAMESPACE() {
 }
 
 KUBECTL__LIST_NAMESPACES() {
+	echo reset
 	echo default
 	KUBECTL get namespaces -o name | sed 's/^namespace\///' | sort
 }

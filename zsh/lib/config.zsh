@@ -45,4 +45,5 @@ source "$SCWRYPTS_ROOT/zsh/lib/config.group.zsh" \
 }
 
 #####################################################################
-__SCWRYPT=1 # arbitrary; indicates currently inside a scwrypt
+[ $NO_EXPORT_CONFIG ] || __SCWRYPT=1 # arbitrary; indicates currently inside a scwrypt
+true

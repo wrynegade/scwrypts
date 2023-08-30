@@ -10,13 +10,31 @@ CHECK_ENVIRONMENT
 
 MAIN() {
 	local USAGE="
-	usage: [context]
+	usage: [context] [...options...]
 
 	args:
-	  context   the full name of the kubeconfig context to set
+	  context   (optional) the full name of the kubeconfig context to set
+
+	options:
+	  --subsession   REDIS subsession (default 0)
 	"
-	local CONTEXT="$1"
-	[ $CONTEXT ] || $(KUBECTL__SELECT_CONTEXT)
+	local CONTEXT
+	local SUBSESSION=0
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			--subsession ) SUBSESSION=$2; shift 1 ;;
+
+			* )
+				[ $CONTEXT ] && ERROR "unexpected argument '$2'"
+				CONTEXT=$1
+				;;
+		esac
+		shift 1
+	done
+
+	[ $CONTEXT ] || CONTEXT=$(KUBECTL__SELECT_CONTEXT)
 	[ $CONTEXT ] || ERROR 'must provide or select a valid kube context'
 
 	CHECK_ERRORS

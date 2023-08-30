@@ -55,37 +55,81 @@ ABORT() { FAIL 69 'user abort'; }
 
 CHECK_ERRORS() {
 	local FAIL_OUT=1
+	local DISPLAY_USAGE=1
 
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
-			-n | --no-fail ) FAIL_OUT=0 ;;
+			--no-fail  ) FAIL_OUT=0 ;;
+			--no-usage ) DISPLAY_USAGE=0 ;;
 		esac
 		shift 1
 	done
 
 	[ ! $ERRORS ] && ERRORS=0
-	[[ $ERRORS -ne 0 ]] && USAGE
-	[[ $ERRORS -eq 0 ]] || {
-		[[ $FAIL_OUT -eq 1 ]] \
-			&& exit $ERRORS \
-			|| return $ERRORS
-	}
+	[[ $ERRORS -eq 0 ]] && return 0
+
+	[[ $DISPLAY_USAGE -eq 1 ]] && USAGE
+
+	[[ $FAIL_OUT -eq 1 ]] && exit $ERRORS
+
+	return $ERRORS
 }
 
-USAGE() {
+USAGE() { # formatter for USAGE variable
 	[ ! $USAGE ] && return 0
-	USAGE=$(echo $USAGE | sed "s/^\t\+//; s/\s\+$//")
+	local USAGE_LINE=$(echo $USAGE | grep -i '^[	]*usage *:' | sed 's/^[		]*//')
 
-	local USAGE_LINE=$(\
-		echo $USAGE \
-			| grep -i '^ *usage *:' \
-			| sed "s;^[^:]*:;& scwrypts $SCWRYPT_NAME --;" \
-			| sed 's/ \{2,\}/ /g; s/scwrypts -- scwrypts/scwrypts/' \
-		)
-	local THE_REST=$(echo $USAGE | grep -vi '^ *usage *:' | sed 'N;/^\n$/D;P;D;')
+	[ $USAGE__usage ] && echo $USAGE_LINE | grep -q 'usage: -' \
+		&& USAGE_LINE=$(echo $USAGE_LINE | sed "s/usage: -/usage: $USAGE__usage/")
 
-	{ echo; printf "$__DARK_BLUE $USAGE_LINE$__COLOR_RESET\n"; echo $THE_REST; echo } >&2
+	[ $__SCWRYPT ] \
+		&& USAGE_LINE=$(
+			echo $USAGE_LINE \
+				| sed "s;^[^:]*:;& scwrypts $SCWRYPT_NAME --;" \
+				| sed 's/ \{2,\}/ /g; s/scwrypts -- scwrypts/scwrypts/' \
+			)
+
+	local THE_REST=$(echo $USAGE | grep -vi '^[		]*usage *:' )
+
+	local DYNAMIC_USAGE_ELEMENT
+	#
+	# create dynamic usage elements (like 'args') by defining USAGE__<element>
+	# then using the syntax "<element>: -" in your USAGE variable
+	#
+	# e.g.
+	#
+	# USAGE__args="
+	#	subcommand arg 1   arg 1 description
+	#   subcommand arg 2   some other description
+	# "
+	#
+	# USAGE="
+	# usage: some-command [...args...]
+	#
+	# args: -
+	#   -h, --help   some arguments are applicable everywhere
+	# "
+	#
+	for DYNAMIC_USAGE_ELEMENT in $(echo $THE_REST | sed -n 's/^\([^:]*\): -$/\1/p')
+	do
+		DYNAMIC_USAGE_ELEMENT_TEXT=$(eval echo '$USAGE__'$DYNAMIC_USAGE_ELEMENT)
+
+		[[ ! $DYNAMIC_USAGE_ELEMENT =~ ^description$ ]] \
+			&& DYNAMIC_USAGE_ELEMENT_TEXT=$(echo $DYNAMIC_USAGE_ELEMENT_TEXT | sed 's/[^	]/  &/')
+
+		THE_REST=$(echo $THE_REST | perl -pe "s/$DYNAMIC_USAGE_ELEMENT: -/$DYNAMIC_USAGE_ELEMENT:\n$DYNAMIC_USAGE_ELEMENT_TEXT\n\n/")
+	done
+
+	# allow for dynamic 'description: -' but delete the 'description:' header line
+	THE_REST=$(echo $THE_REST | sed '/^[		]*description:$/d')
+
+	echo "$__DARK_BLUE$USAGE_LINE$__COLOR_RESET\n\n$THE_REST" \
+		| sed "s/^\t\+//; s/\s\+$//; s/^\\s*$//;" \
+		| sed '/./,$!d; :a; /^\n*$/{$d;N;ba;};' \
+		| perl -p0e 's/\n{2,}/\n\n/g' \
+		| perl -p0e 's/:\n{2,}/:\n/g' \
+		>&2
 }
 
 INPUT() {
