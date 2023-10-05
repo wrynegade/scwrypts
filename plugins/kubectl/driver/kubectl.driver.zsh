@@ -1,5 +1,6 @@
 [[ $SCWRYPTS_KUBECTL_DRIVER_READY -eq 1 ]] && return 0
 
+unalias k h
 k() { _SCWRYPTS_KUBECTL_DRIVER kubectl $@; }
 h() { _SCWRYPTS_KUBECTL_DRIVER helm $@; }
 
@@ -79,6 +80,8 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 	local HELP=0
 	local ERRORS=0
 
+	local COMMAND_SWITCH_CASE="@($(echo $CUSTOM_COMMANDS | sed 's/ /|/g'))"
+
 	[ ! $SUBSESSION ] && local SUBSESSION=0
 	[[ $1 =~ ^[0-9]$ ]] && SUBSESSION=$1 && shift 1
 
@@ -110,7 +113,18 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 
 			-- ) shift 1; break ;;
 
-			 * ) USER_ARGS+=($1) ;;
+			* )
+				[ ! $CUSTOM_COMMAND ] && {
+					for C in ${CUSTOM_COMMANDS[@]}
+					do
+						[[ $1 =~ ^$C$ ]] && {
+							SCWRYPTS_KUBECTL_CUSTOM_COMMAND_PARSE__$1 ${@:2}
+							break
+						}
+					done
+				}
+				USER_ARGS+=($1)
+				;;
 		esac
 		shift 1
 	done
