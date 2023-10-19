@@ -4,16 +4,15 @@ DEPENDENCIES+=(
 	docker
 )
 
-REQUIRED_ENV+=(
-	AWS_ACCOUNT
-	AWS_REGION
-)
+REQUIRED_ENV+=()
 
 use cloud/aws/cli
 
 #####################################################################
 
 ECR_LOGIN() {
+	REQUIRED_ENV=(AWS_REGION AWS_ACCOUNT) CHECK_ENVIRONMENT || return 1
+
 	STATUS "performing AWS ECR docker login"
 	AWS ecr get-login-password \
 		| docker login \
