@@ -275,7 +275,7 @@ __RUN() {
 	{
 		[ $HEADER ] && echo $HEADER
 		echo '\033[1;33m--- BEGIN OUTPUT -------------------------\033[0m'
-		eval "$RUN_STRING $(printf "%q " "$@")"
+		(eval "$RUN_STRING $(printf "%q " "$@")")
 		EXIT_CODE=$?
 		echo '\033[1;33m--- END OUTPUT ---------------------------\033[0m'
 
