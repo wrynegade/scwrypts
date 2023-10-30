@@ -8,7 +8,7 @@ CHECK_ENVIRONMENT
 #####################################################################
 
 CLEAN_LATEX_LOGFILES() {
-	local DIRECTORY=$(SCWRYPTS__GET_PATH_TO_RELATIVE_ARGUMENT ".")
+	local DIRECTORY=$(SCWRYPTS__GET_REALPATH ".")
 	[ $1 ] && DIRECTORY="$(dirname "$(LATEX__GET_MAIN_FILENAME "$1")")"
 	[ $DIRECTORY ] && [ -d $DIRECTORY ] \
 		|| FAIL 1 'unable to parse valid directory'

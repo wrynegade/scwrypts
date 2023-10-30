@@ -1,0 +1,40 @@
+#!/bin/zsh
+#####################################################################
+DEPENDENCIES+=()
+REQUIRED_ENV+=()
+#####################################################################
+
+MAIN() {
+	cd "$SCWRYPTS_ROOT__scwrypts/"
+
+	DEPENDENCIES+=()
+	for group in ${SCWRYPTS_GROUPS[@]}
+	do
+		[[ $group =~ ^ci$ ]] && continue
+
+		GROUP_HOME="$(eval 'echo $SCWRYPTS_ROOT__'$group)"
+		[ $GROUP_HOME ] && [ -d "$GROUP_HOME" ] || continue
+
+		STATUS "checking dependencies for $group"
+		DEPENDENCIES+=($(
+			for file in $(
+				{
+					cd "$GROUP_HOME"
+					rg -l '^DEPENDENCIES\+=\($'
+					rg -l '^DEPENDENCIES\+=\([^)]\+\)'
+				} | grep -v '\.md$' | grep -v 'check-all-dependencies$')
+			do
+				sed -z 's/.*DEPENDENCIES+=(\([^)]*\)).*/\1\n/; s/#.*\n//g; s/\s\+/\n/g' "$GROUP_HOME/$file"
+			done 
+		))
+	done
+
+	DEPENDENCIES=(zsh $(echo $DEPENDENCIES | sed 's/ /\n/g' | sort -u | grep '^[-_a-zA-Z]\+$'))
+
+	STATUS "discovered dependencies: ($DEPENDENCIES)"
+	echo $DEPENDENCIES | sed 's/ /\n/g'
+	CHECK_ENVIRONMENT && SUCCESS "all dependencies satisfied"
+}
+
+#####################################################################
+MAIN $@

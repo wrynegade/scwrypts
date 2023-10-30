@@ -1,0 +1,68 @@
+---  # allow running scwrypts in Github Actions
+name: scwrypts
+author: yage
+description: check requird dependencies and run a scwrypt
+
+inputs:
+  scwrypt:
+    description: "args / identifiers for scwrypts CLI (e.g. '--name <scwrypt-name> --group <group-name> --type <type-name>')"
+    required: true
+
+  args:
+    description: "arguments to pass to the scwrypt-to-be-run"
+    required: false
+
+  version:
+    description: "scwrypts version; defaults to latest (minimum v3.7.0)"
+    required: false
+
+  scwrypts-env:
+    description: "override value for SCWRYPTS_ENV"
+    required: false
+    default: "ci.github-actions"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        repository: wrynegade/scwrypts
+        path: ./scwrypts
+        ref: ${{ inputs.version }}
+
+    - name: check dependencies
+      shell: bash
+      env:
+        CI: true
+        SCWRYPTS_PLUGIN_ENABLED__ci: 1
+      run: |
+        [ $CI_SCWRYPTS_READY ] && [[ $CI_SCWRYPTS_READY -eq 1 ]] && echo 'setup completed previously' && exit 0
+
+        echo "updating package dependencies"
+        {
+          sudo apt-get update
+          sudo apt-get install --yes zsh fzf ripgrep
+
+          for D in $($GITHUB_WORKSPACE/scwrypts/scwrypts -n --name check-all-dependencies --group ci --type zsh)
+          do
+            echo "--- installing $D ---"
+            ( sudo apt-get install --yes $D; exit 0; )
+          done
+        } > $HOME/.scwrypts.apt-get.log 2>&1
+
+        echo "updating virtual dependencies"
+        $GITHUB_WORKSPACE/scwrypts/scwrypts -n \
+          --name scwrypts/virtualenv/update-all \
+          --group scwrypts \
+          --type zsh \
+          > $HOME/.scwrypts.virtualenv.log 2>&1
+
+        echo "CI_SCWRYPTS_READY=1" >> $GITHUB_ENV
+        exit 0
+
+    - name: run scwrypt
+      shell: bash
+      env:
+        CI: true
+        SCWRYPTS_ENV: ${{ inputs.scwrypts-env }}
+      run: $GITHUB_WORKSPACE/scwrypts/scwrypts ${{inputs.scwrypt}} -- ${{inputs.args}}

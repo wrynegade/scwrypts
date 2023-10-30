@@ -10,7 +10,7 @@ REQUIRED_ENV+=()
 #####################################################################
 
 LATEX__GET_MAIN_FILENAME() {
-	local FILENAME=$(SCWRYPTS__GET_PATH_TO_RELATIVE_ARGUMENT "$1")
+	local FILENAME=$(SCWRYPTS__GET_REALPATH "$1")
 	local DIRNAME="$FILENAME"
 
 	for _ in {1..3}

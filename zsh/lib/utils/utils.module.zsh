@@ -19,10 +19,16 @@ source ${0:a:h}/environment.zsh
 
 CHECK_ENVIRONMENT() {
 	local OPTIONAL=0
-	[[ $1 =~ --optional ]] && OPTIONAL=1
 
-	[[ $OPTIONAL -eq 1 ]] \
-		&& E=WARNING || E=ERROR
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			--optional ) OPTIONAL=1 ;;
+		esac
+		shift 1
+	done
+
+	[[ $OPTIONAL -eq 1 ]] && E=WARNING || E=ERROR
 
 	local ENVIRONMENT_STATUS=0
 

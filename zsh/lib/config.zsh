@@ -40,9 +40,12 @@ source "$SCWRYPTS_ROOT/zsh/lib/config.group.zsh" \
 
 #####################################################################
 
-[[ $SCWRYPTS_PLUGIN_ENABLED__kubectl -eq 1 ]] && {
-	source "$SCWRYPTS_ROOT/plugins/kubectl/kubectl.scwrypts.zsh"
-}
+for plugin in $(ls $SCWRYPTS_ROOT__scwrypts/plugins)
+do
+	[[ $(eval 'echo $SCWRYPTS_PLUGIN_ENABLED__'$plugin) -eq 1 ]] && {
+		source "$SCWRYPTS_ROOT/plugins/$plugin/$plugin.scwrypts.zsh"
+	}
+done
 
 #####################################################################
 [ $NO_EXPORT_CONFIG ] || __SCWRYPT=1 # arbitrary; indicates currently inside a scwrypt

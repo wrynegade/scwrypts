@@ -22,4 +22,4 @@ done
 
 [[ $FAILED_COUNT -eq 0 ]] \
 	&& SUCCESS 'all environments up-to-date' \
-	|| FAIL $FAILED_COUNT 'failed to update one or more environments'
+	|| FAIL $FAILED_COUNT "failed to update $FAILED_COUNT more environment(s)"
