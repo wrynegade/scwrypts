@@ -1,0 +1,17 @@
+---
+name: Random Test
+on: push  # yamllint disable-line rule:truthy
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: run a scwrypts thing
+        uses: wrynegade/scwrypts@main
+        with:
+          scwrypt: --name hello-world --group scwrypts --type py
+          args: --message "hello from github actions ci <3"
+
+      - name: cat config stuff
+        shell: bash
+        run: ls ~/.config/scwrypts; cat ~/.config/scwrypts/*
