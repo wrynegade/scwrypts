@@ -8,7 +8,11 @@ CHECK_ENVIRONMENT
 #####################################################################
 
 PLUGIN_INSTALL() {
-	VUNDLE__PLUGIN_INSTALL || return 1
+	[ -d "$HOME/.vim/bundle/Vundle.vim" ] || {
+		mkdir -p "$HOME/.vim/bundle/"
+		git clone https://github.com/VundleVim/Vundle.vim.git "$HOME/vim/budle/Vundle.vim"
+	}
+	VUNDLE__PLUGIN_INSTALL  || return 1
 	VUNDLE__REBUILD_PLUGINS || return 2
 }
 

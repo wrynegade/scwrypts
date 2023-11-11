@@ -20,7 +20,7 @@ VUNDLE__PLUGIN_LIST=$(ls $VUNDLE__PLUGIN_DIR | grep -v 'Vundle.vim' | grep -v 'b
 source $VUNDLE__BUILD_DEFINITIONS
 for PLUGIN in $(echo $VUNDLE__PLUGIN_LIST)
 do
-	typeset -f VUNDLE__BUILD__$PLUGIN >/dev/null 2>/dev/null || {
+	which VUNDLE__BUILD__$PLUGIN >/dev/null 2>/dev/null || {
 		echo -e "\nVUNDLE__BUILD__$PLUGIN() {\n	# ... build steps from $HOME/.vim/$PLUGIN \n}" \
 			>> $VUNDLE__BUILD_DEFINITIONS
 		VUNDLE__BUILD__$PLUGIN() {}

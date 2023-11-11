@@ -54,6 +54,28 @@ _HELM__GET_CHART_ROOT() {
 }
 
 _HELM__GET_DEFAULT_VALUES_ARGS() {
+	for LOCAL_REPOSITORY in $(\
+		cat "$CHART_ROOT/Chart.yaml" \
+			| yq -r '.dependencies[] | .repository' \
+			| grep '^file://' \
+			| sed 's|file://||' \
+		)
+	do
+		[[ $LOCAL_REPOSITORY =~ ^[/~] ]] \
+			&& LOCAL_REPOSITORY_ROOT="$LOCAL_REPOSITORY" \
+			|| LOCAL_REPOSITORY_ROOT="$CHART_ROOT/$LOCAL_REPOSITORY" \
+			;
+
+		for F in \
+			"$LOCAL_REPOSITORY_ROOT/values.yaml" \
+			"$LOCAL_REPOSITORY_ROOT/values.test.yaml" \
+			"$LOCAL_REPOSITORY_ROOT/tests/default.yaml" \
+			;
+		do
+			[ -f "$F" ] && HELM_ARGS+=(--values "$F")
+		done
+	done
+
 	for F in \
 		"$CHART_ROOT/values.yaml" \
 		"$CHART_ROOT/values.test.yaml" \
@@ -63,3 +85,4 @@ _HELM__GET_DEFAULT_VALUES_ARGS() {
 		[ -f "$F" ] && HELM_ARGS+=(--values "$F")
 	done
 }
+
