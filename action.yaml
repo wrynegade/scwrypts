@@ -1,7 +1,7 @@
 ---  # allow running scwrypts in Github Actions
 name: scwrypts
 author: yage
-description: check requird dependencies and run a scwrypt
+description: check required dependencies and run a scwrypt
 
 inputs:
   scwrypt:
@@ -27,7 +27,7 @@ runs:
     - uses: actions/checkout@v4
       with:
         repository: wrynegade/scwrypts
-        path: ./scwrypts
+        path: ./wrynegade/scwrypts
         ref: ${{ inputs.version }}
 
     - name: check dependencies
@@ -43,7 +43,7 @@ runs:
           sudo apt-get update
           sudo apt-get install --yes zsh fzf ripgrep
 
-          for D in $($GITHUB_WORKSPACE/scwrypts/scwrypts -n --name check-all-dependencies --group ci --type zsh)
+          for D in $($GITHUB_WORKSPACE/wrynegade/scwrypts/scwrypts -n --name check-all-dependencies --group ci --type zsh)
           do
             echo "--- installing $D ---"
             ( sudo apt-get install --yes $D; exit 0; )
@@ -51,11 +51,12 @@ runs:
         } > $HOME/.scwrypts.apt-get.log 2>&1
 
         echo "updating virtual dependencies"
-        $GITHUB_WORKSPACE/scwrypts/scwrypts -n \
+        $GITHUB_WORKSPACE/wrynegade/scwrypts/scwrypts -n \
           --name scwrypts/virtualenv/update-all \
           --group scwrypts \
           --type zsh \
-          > $HOME/.scwrypts.virtualenv.log 2>&1
+          ;
+          #> $HOME/.scwrypts.virtualenv.log 2>&1
 
         echo "CI_SCWRYPTS_READY=1" >> $GITHUB_ENV
         exit 0
@@ -65,4 +66,4 @@ runs:
       env:
         CI: true
         SCWRYPTS_ENV: ${{ inputs.scwrypts-env }}
-      run: $GITHUB_WORKSPACE/scwrypts/scwrypts ${{inputs.scwrypt}} -- ${{inputs.args}}
+      run: $GITHUB_WORKSPACE/wrynegade/scwrypts/scwrypts ${{inputs.scwrypt}} -- ${{inputs.args}} || exit 1
