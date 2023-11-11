@@ -1,7 +1,6 @@
 ---
 name: Random Test
 on: push  # yamllint disable-line rule:truthy
-
 jobs:
   test:
     runs-on: ubuntu-latest
