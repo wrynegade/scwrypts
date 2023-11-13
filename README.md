@@ -49,6 +49,7 @@ There are a few notable changes to this runtime:
 - Other user input will default to an empty string
 - Logs will not be captured
 - Setting the environment variable `SCWRYPTS_GROUP_LOADER__[a-z_]\+` will source the file indicated in the variable (this allows custom groups without needing to modify the `config.zsh` directly)
+	- In GitHub actions, `*.scwrypts.zsh` groups are detected automatically from the `$GITHUB_WORKSPACE`; set `SCWRYPTS_GITHUB_NO_AUTOLOAD=true` to disable
 
 
 ## Contributing

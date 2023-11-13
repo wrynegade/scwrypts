@@ -54,6 +54,19 @@ do
 	[ -f "$GROUP_LOADER" ] && source "$GROUP_LOADER"
 done
 
+: \
+	&& [ ! "$SCWRYPTS_AUTODETECT_GROUP_BASEDIR" ] \
+	&& [ $GITHUB_WORKSPACE ] \
+	&& [ ! $SCWRYPTS_GITHUB_NO_AUTOLOAD ] \
+	&& SCWRYPTS_AUTODETECT_GROUP_BASEDIR="$GITHUB_WORKSPACE"
+
+[ "$SCWRYPTS_AUTODETECT_GROUP_BASEDIR" ] && [ -d "$SCWRYPTS_AUTODETECT_GROUP_BASEDIR" ] && {
+	for GROUP_LOADER in $(find "$SCWRYPTS_AUTODETECT_GROUP_BASEDIR" -type f -name \*scwrypts.zsh)
+	do
+		[ -f "$GROUP_LOADER" ] && source "$GROUP_LOADER"
+	done
+}
+
 #####################################################################
 [ $NO_EXPORT_CONFIG ] || __SCWRYPT=1 # arbitrary; indicates currently inside a scwrypt
 true
