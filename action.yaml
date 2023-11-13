@@ -55,8 +55,7 @@ runs:
           --name scwrypts/virtualenv/update-all \
           --group scwrypts \
           --type zsh \
-          ;
-          #> $HOME/.scwrypts.virtualenv.log 2>&1
+          > $HOME/.scwrypts.virtualenv.log 2>&1
 
         echo "CI_SCWRYPTS_READY=1" >> $GITHUB_ENV
         exit 0

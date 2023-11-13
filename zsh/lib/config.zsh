@@ -48,5 +48,12 @@ do
 done
 
 #####################################################################
+
+for GROUP_LOADER in $(env | sed -n 's/^SCWRYPTS_GROUP_LOADER__[a-z_]\+=//p')
+do
+	[ -f "$GROUP_LOADER" ] && source "$GROUP_LOADER"
+done
+
+#####################################################################
 [ $NO_EXPORT_CONFIG ] || __SCWRYPT=1 # arbitrary; indicates currently inside a scwrypt
 true
