@@ -48,6 +48,7 @@ There are a few notable changes to this runtime:
 - User yes/no prompts will **always be YES**
 - Other user input will default to an empty string
 - Logs will not be captured
+- Setting the environment variable `SCWRYPTS_GROUP_LOADER__[a-z_]\+` will source the file indicated in the variable (this allows custom groups without needing to modify the `config.zsh` directly)
 
 
 ## Contributing
