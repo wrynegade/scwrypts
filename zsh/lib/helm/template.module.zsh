@@ -17,6 +17,8 @@ HELM__TEMPLATE__GET() {
 		  --colorize   use 'bat' to colorize output
 		  --raw        remove scwrypts-added fluff and only output helm template details
 
+		  -h, --help   show this help dialogue
+
 		Smart helm-template generator which auto-detects the chart
 		and sample values for testing and developing helm charts.
 	"
@@ -35,7 +37,10 @@ HELM__TEMPLATE__GET() {
 				;;
 
 			--raw ) RAW=1 ;;
+
+			-h | --help ) USAGE; return 0 ;;
 			-- ) shift 1; break ;;
+
 
 			* ) HELM_ARGS+=($1) ;;
 		esac

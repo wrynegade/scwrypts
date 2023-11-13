@@ -17,7 +17,8 @@ __RUN() {
 		  -e, --env <env-name>   set environment; overwrites SCWRYPTS_ENV
 		  -n, --no-log           skip logging and run in quiet mode
 
-		  --update   update scwrypts library to latest version
+		  --update      update scwrypts library to latest version
+		  --list-envs   print out environment list and exit
 
 		  -v, --version   print out scwrypts version and exit
 		  -l, --list      print out command list and exit
@@ -76,6 +77,10 @@ __RUN() {
 				;;
 			-l | --list )
 				SCWRYPTS__GET_AVAILABLE_SCWRYPTS
+				return 0
+				;;
+			--list-envs )
+				SCWRYPTS__GET_ENV_NAMES
 				return 0
 				;;
 			-v | --version )
