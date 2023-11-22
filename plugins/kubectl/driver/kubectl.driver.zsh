@@ -3,6 +3,7 @@
 unalias k h >/dev/null 2>&1
 k() { _SCWRYPTS_KUBECTL_DRIVER kubectl $@; }
 h() { _SCWRYPTS_KUBECTL_DRIVER helm $@; }
+f() { _SCWRYPTS_KUBECTL_DRIVER flux $@; }
 
 
 _SCWRYPTS_KUBECTL_DRIVER() {
@@ -57,7 +58,7 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 	"
 
 	local USAGE__description="
-		Provides 'k' (kubectl) and 'h' (helm) shorthands to the respective
+		Provides 'k' (kubectl), 'h' (helm), and 'f' (flux) shorthands to the respective
 		utility. These functions leverage redis and scwrypts environments to
 		allow quick selection of contexts and namespaces usable across all
 		active shell instances.
@@ -100,14 +101,12 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 			--subsession ) SUBSESSION=$2; shift 1 ;;
 
 			-n | --namespace )
-				echo "TODO: set namespace ('$2')" >&2
-				USER_ARGS+=(--namespace $2); shift 1
+				_SCWRYPTS_KUBECTL_DRIVER kubectl meta set namespace $2
+				shift 1
 				;;
 
 			-k | --context | --kube-context )
-				echo "TODO: set context ('$2')" >&2
-				[[ $CLI =~ ^helm$    ]] && USER_ARGS+=(--kube-context $2)
-				[[ $CLI =~ ^kubectl$ ]] && USER_ARGS+=(--context $2)
+				_SCWRYPTS_KUBECTL_DRIVER kubectl meta set context $2
 				shift 1
 				;;
 
@@ -149,6 +148,7 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 
 			[ $CONTEXT ] && [[ $CLI =~ ^helm$    ]] && CLI_ARGS+=(--kube-context $CONTEXT)
 			[ $CONTEXT ] && [[ $CLI =~ ^kubectl$ ]] && CLI_ARGS+=(--context $CONTEXT)
+			[ $CONTEXT ] && [[ $CLI =~ ^flux$    ]] && CLI_ARGS+=(--context $CONTEXT)
 
 			[[ $STRICT -eq 1 ]] && {
 				[ $CONTEXT   ] || ERROR "missing kubectl 'context'"

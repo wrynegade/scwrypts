@@ -10,40 +10,48 @@ CHECK_ENVIRONMENT
 
 MAIN() {
 	local USAGE="
-	usage: [context] [...options...]
+	usage: [service] [...options...]
 
 	args:
-	  context   (optional) the full name of the kubeconfig context to set
+	  service   (optional) name of the service to forward locally
 
 	options:
+	  --context      override context
+	  --namespace    override namespace
 	  --subsession   REDIS subsession (default 0)
+
+	  to show a required password on screen, use both:
+	  --password-secret   Secret resource
+	  --password-key      key within Secret's 'data'
 
 	  -h, --help   show this dialogue and exit
 	"
-	local CONTEXT
+	local CONTEXT NAMESPACE SERVICE
 	local SUBSESSION=0
 
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
+			--context    ) CONTEXT=$2; shift 1 ;;
+			--namespace  ) NAMESPACE=$2; shift 1 ;;
 			--subsession ) SUBSESSION=$2; shift 1 ;;
+
+			--password-secret ) PASSWORD_SECRET=$2; shift 1 ;;
+			--password-key    ) PASSWORD_KEY=$2; shift 1 ;;
 
 			-h | --help ) USAGE; return 0 ;;
 
 			* )
-				[ $CONTEXT ] && ERROR "unexpected argument '$2'"
-				CONTEXT=$1
+				[ $SERVICE ] && ERROR "unexpected argument '$2'"
+				SERVICE=$1
 				;;
 		esac
 		shift 1
 	done
 
-	[ $CONTEXT ] || CONTEXT=$(KUBECTL__SELECT_CONTEXT)
-	[ $CONTEXT ] || ERROR 'must provide or select a valid kube context'
-
 	CHECK_ERRORS
 
-	KUBECTL__SET_CONTEXT $CONTEXT
+	KUBECTL__SERVE 
 }
 
 #####################################################################

@@ -142,6 +142,7 @@ INPUT() {
 Yn() {
 	PROMPT "$@ [Yn]"
 	[ $CI ] && { echo y; return 0; }
+	[ $__SCWRYPTS_YES ] && [[ $__SCWRYPTS_YES -eq 1 ]] && { echo y; return 0; }
 
 	local Yn; READ -k Yn; echo >&2
 	[[ $Yn =~ [nN] ]] && return 1 || return 0
@@ -150,6 +151,7 @@ Yn() {
 yN() {
 	PROMPT "$@ [yN]"
 	[ $CI ] && { echo y; return 0; }
+	[ $__SCWRYPTS_YES ] && [[ $__SCWRYPTS_YES -eq 1 ]] && { echo y; return 0; }
 
 	local yN; READ -k yN; echo >&2
 	[[ $yN =~ [yY] ]] && return 0 || return 1
@@ -217,4 +219,13 @@ EDIT() {
 	STATUS "opening '$1' for editing"
 	$EDITOR $@ </dev/tty >/dev/tty
 	SUCCESS "finished editing '$1'!"
+}
+
+YQ() {
+	yq --version | grep -q mikefarah || {
+		yq $@
+		return $?
+	}
+
+	yq eval '... comments=""' | yq $@
 }

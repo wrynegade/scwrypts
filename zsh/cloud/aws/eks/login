@@ -7,4 +7,4 @@ use cloud/aws/eks
 CHECK_ENVIRONMENT
 #####################################################################
 
-EKS_CLUSTER_LOGIN $@
+EKS__CLUSTER_LOGIN $@

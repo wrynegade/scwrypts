@@ -17,6 +17,8 @@ MAIN() {
 
 	options:
 	  --subsession   REDIS subsession (default 0)
+
+	  -h, --help   show this dialogue and exit
 	"
 	local NAMESPACE
 	local SUBSESSION=0
@@ -25,6 +27,8 @@ MAIN() {
 	do
 		case $1 in
 			--subsession ) SUBSESSION=$2; shift 1 ;;
+
+			-h | --help ) USAGE; return 0 ;;
 
 			* )
 				[ $NAMESPACE ] && ERROR "unexpected argument '$2'"

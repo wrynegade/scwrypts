@@ -1,19 +1,44 @@
 #####################################################################
 
-DEPENDENCIES+=(
-	kubectl
-)
-
-REQUIRED_ENV+=(
-	AWS_ACCOUNT
-	AWS_REGION
-)
+DEPENDENCIES+=(kubectl yq)
+REQUIRED_ENV+=()
 
 use cloud/aws/cli
 
 #####################################################################
 
-EKS_CLUSTER_LOGIN() {
+EKS__KUBECTL() { EKS kubectl $@; }
+EKS__FLUX()    { EKS flux $@; }
+
+#####################################################################
+
+EKS() {
+	local USAGE="
+		usage: cli [...kubectl args...]
+
+		args:
+		  cli   a kubectl-style CLI (e.g. kubectl, helm, flux, etc)
+
+		Allows access to kubernetes CLI commands by configuring environment
+		to point to a specific cluster.
+	"
+
+	REQUIRED_ENV=(AWS_REGION AWS_ACCOUNT CLUSTER_NAME) DEPENDENCIES=(kubectl $1) CHECK_ENVIRONMENT || return 1
+
+	local CONTEXT="arn:aws:eks:${AWS_REGION}:${AWS_ACCOUNT}:cluster/${CLUSTER_NAME}"
+
+	local CONTEXT_ARGS=()
+	case $1 in
+		helm ) CONTEXT_ARGS+=(--kube-context $CONTEXT) ;;
+		* ) CONTEXT_ARGS+=(--context $CONTEXT) ;;
+	esac
+
+	$1 ${CONTEXT_ARGS[@]} ${@:2}
+}
+
+#####################################################################
+
+EKS__CLUSTER_LOGIN() {
 	local USAGE="
 		usage:  [...options...]
 
@@ -25,6 +50,7 @@ EKS_CLUSTER_LOGIN() {
 		cluster in EKS. Also creates the kubeconfig entry if it does not
 		already exist.
 	"
+	REQUIRED_ENV=(AWS_ACCOUNT AWS_REGION) CHECK_ENVIRONMENT || return 1
 
 	local CLUSTER_NAME
 

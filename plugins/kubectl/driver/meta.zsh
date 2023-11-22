@@ -30,8 +30,15 @@ SCWRYPTS_KUBECTL_CUSTOM_COMMAND_PARSE__meta() {
 				USAGE__args="set (namespace|context)"
 				USAGE__description="interactively set a namespace or context for '$SCWRYPTS_ENV'"
 				case $2 in
-					namespace | context ) USER_ARGS+=($1 $2) ;;
+					namespace | context ) USER_ARGS+=($1 $2 $3); [ $3 ] && shift 1 ;;
 					-h | --help ) HELP=1 ;;
+					'' )
+						: \
+							&& SCWRYPTS_KUBECTL_CUSTOM_COMMAND__meta set context \
+							&& SCWRYPTS_KUBECTL_CUSTOM_COMMAND__meta set namespace \
+							;
+						return $?
+						;;
 
 					* ) ERROR "cannot set '$2'" ;;
 				esac
@@ -94,7 +101,7 @@ SCWRYPTS_KUBECTL_CUSTOM_COMMAND__meta() {
 			;;
 
 		set )
-			scwrypts -n --name set-$2 --type zsh --group kubectl -- --subsession $SUBSESSION >/dev/null \
+			scwrypts -n --name set-$2 --type zsh --group kubectl -- $3 --subsession $SUBSESSION >/dev/null \
 				&& SUCCESS "$2 set"
 			;;
 

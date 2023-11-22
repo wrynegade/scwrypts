@@ -21,7 +21,6 @@ KUBECTL() {
 	kubectl ${KUBECTL_ARGS[@]} $@
 }
 
-
 #####################################################################
 
 KUBECTL__GET_CONTEXT() { REDIS get --prefix "current:context"; }
@@ -86,4 +85,74 @@ KUBECTL__LIST_NAMESPACES() {
 	echo reset
 	echo default
 	KUBECTL get namespaces -o name | sed 's/^namespace\///' | sort
+}
+
+#####################################################################
+
+KUBECTL__SERVE() {
+	[ $CONTEXT ] || local CONTEXT=$(KUBECTL__GET_CONTEXT)
+	[ $CONTEXT ] || ERROR 'must configure a context in which to serve'
+
+	[ $NAMESPACE ] || local NAMESPACE=$(KUBECTL__GET_NAMESPACE)
+	[ $NAMESPACE ] || ERROR 'must configure a namespace in which to serve'
+
+	CHECK_ERRORS --no-fail --no-usage || return 1
+
+	[ $SERVICE ] && SERVICE=$(KUBECTL__LIST_SERVICES | jq -c "select (.service == \"$SERVICE\")" || echo $SERVICE)
+	[ $SERVICE ] || local SERVICE=$(KUBECTL__SELECT_SERVICE)
+	[ $SERVICE ] || ERROR 'must provide or select a service'
+
+	KUBECTL__LIST_SERVICES | grep -q "^$SERVICE$"\
+		|| ERROR "no service '$SERVICE' in '$CONFIG/$NAMESPACE'"
+
+	CHECK_ERRORS --no-fail --no-usage || return 1
+
+	##########################################
+
+	SERVICE_PASSWORD="$(KUBECTL__GET_SERVICE_PASSWORD)"
+	KUBECTL__SERVICE_PARSE
+
+	INFO "attempting to serve ${NAMESPACE}/${SERVICE_NAME}:${SERVICE_PORT}"
+	[ $SERVICE_PASSWORD ] && INFO "password : $SERVICE_PASSWORD"
+
+	KUBECTL port-forward service/$SERVICE_NAME $SERVICE_PORT
+}
+
+KUBECTL__SELECT_SERVICE() {
+	[ $NAMESPACE ] || local NAMESPACE=$(KUBECTL__GET_NAMESPACE)
+	[ $NAMESPACE ] || return 1
+
+	local SERVICES=$(KUBECTL__LIST_SERVICES)
+	local SELECTED=$({
+		echo "namespace service port"
+		echo $SERVICES \
+			| jq -r '.service + " " + .port' \
+			| sed "s/^/$NAMESPACE /" \
+			;
+	} \
+		| column -t \
+		| FZF 'select a service' --header-lines=1 \
+		| awk '{print $2;}' \
+	)
+
+	echo $SERVICES | jq -c "select (.service == \"$SELECTED\")"
+}
+
+KUBECTL__LIST_SERVICES() {
+	KUBECTL get service --no-headers\
+		| awk '{print "{\"service\":\""$1"\",\"ip\":\""$3"\",\"port\":\""$5"\"}"}' \
+		| jq -c 'select (.ip != "None")' \
+		;
+}
+
+KUBECTL__GET_SERVICE_PASSWORD() {
+	[ $PASSWORD_SECRET ] && [ $PASSWORD_KEY ] || return 0
+
+	KUBECTL get secret $PASSWORD_SECRET -o jsonpath="{.data.$PASSWORD_KEY}" \
+		| base64 --decode
+}
+
+KUBECTL__SERVICE_PARSE() {
+	SERVICE_NAME=$(echo $SERVICE | jq -r .service)
+	SERVICE_PORT=$(echo $SERVICE | jq -r .port | sed 's|/.*$||')
 }

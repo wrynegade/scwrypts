@@ -17,6 +17,13 @@ __CHECK_DEPENDENCY() {
 		$E "application '$1' "$([[ $OPTIONAL -eq 1 ]] && echo preferred || echo required)" but not available on PATH $(__CREDITS $1)"
 		return 1
 	}
+
+	[[ $DEPENDENCY =~ ^yq$ ]] && {
+		yq --version | grep -q mikefarah \
+			|| WARNING 'detected kislyuk/yq but mikefarah/yq is preferred (compatibility may vary)'
+	}
+
+	return 0
 }
 
 __CHECK_COREUTILS() {
@@ -36,7 +43,7 @@ __CHECK_COREUTILS() {
 	done
 
 	[[ $NON_GNU_DEPENDENCY_COUNT -gt 0 ]] && {
-		WARNING 'scripts rely on GNU coreutils; functionality may be limited'
+		WARNING 'scripts rely on GNU coreutils; compatibility may vary'
 		IS_MACOS && REMINDER 'GNU coreutils can be installed and linked through Homebrew'
 	}
 

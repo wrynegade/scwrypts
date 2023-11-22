@@ -11,9 +11,10 @@ __RUN() {
 		OPTIONS
 		  -g, --group <group-name>    only use scripts from the indicated group
 		  -t, --type <type-name>      only use scripts of the indicated type
-		  -m, --name <scwrypt-name>   only run the script if there is an exact match 
+		  -m, --name <scwrypt-name>   only run the script if there is an exact match
 		                                (requires type and group)
 
+		  -y, --yes              auto-accept all [yn] prompts through current scwrypt
 		  -e, --env <env-name>   set environment; overwrites SCWRYPTS_ENV
 		  -n, --no-log           skip logging and run in quiet mode
 
@@ -56,14 +57,22 @@ __RUN() {
 				VARSPLIT=$(echo "$1 " | sed 's/^\(-.\)\(.*\) /\1 -\2/')
 				set -- $(echo " $VARSPLIT ") ${@:2}
 				;;
+
 			-h | --help )
 				USAGE
 				return 0
 				;;
+
 			-n | --no-log )
 				[ ! $SUBSCWRYPT ] && SUBSCWRYPT=0
 				shift 1
 				;;
+
+			-y | --yes )
+				export __SCWRYPTS_YES=1
+				shift 1
+				;;
+
 			-e | --env )
 				[ ! $2 ] && ERROR "missing value for argument $1" && break
 				[ ! $SUBSCWRYPTS ] \
@@ -135,7 +144,7 @@ __RUN() {
 
 	local SCWRYPTS_AVAILABLE
 	local POTENTIAL_ERROR="no such scwrypt exists:"
-	
+
 	SCWRYPTS_AVAILABLE=$(SCWRYPTS__GET_AVAILABLE_SCWRYPTS)
 
 	[ $SEARCH_NAME ] && {

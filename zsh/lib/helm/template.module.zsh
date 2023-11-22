@@ -65,6 +65,7 @@ HELM__TEMPLATE__GET() {
 		
 	[ ! $TEMPLATE_OUTPUT ] && EXIT_CODE=1
 
+
 	[[ $RAW -eq 1 ]] && {
 		[ $USE_CHART_ROOT ] && [[ $USE_CHART_ROOT -eq 1 ]] || HELM_ARGS+=(--show-only $(echo $TEMPLATE_FILENAME | sed "s|^$CHART_ROOT/||"))
 		[[ $COLORIZE -eq 1 ]] \
