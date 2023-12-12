@@ -43,11 +43,11 @@ SUCCESS()  { PREFIX="SUCCESS  ✔" COLOR=$__GREEN  PRINT "$@"; }
 WARNING()  { PREFIX="WARNING  " COLOR=$__ORANGE PRINT "$@"; }
 STATUS()   { PREFIX="STATUS    " COLOR=$__BLUE   PRINT "$@"; }
 REMINDER() { PREFIX="REMINDER " COLOR=$__PURPLE PRINT "$@"; }
-INFO()     { PREFIX="INFO     " COLOR=$__WHITE  PRINT "$@"; }
+INFO()     { PREFIX="INFO     ℹ" COLOR=$__WHITE  PRINT "$@"; }
 
 PROMPT() {
 	PREFIX="PROMPT   " COLOR=$__CYAN PRINT "$@"
-	PREFIX="USER     " COLOR=$__CYAN PRINT '' --no-line-end
+	PREFIX="USER     ⌨" COLOR=$__CYAN PRINT '' --no-line-end
 }
 
 FAIL()  { ERROR "${@:2}"; exit $1; }

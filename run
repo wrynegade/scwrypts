@@ -6,24 +6,35 @@ source "${0:a:h}/zsh/lib/import.driver.zsh" || exit 42
 
 __RUN() {
 	local USAGE='
-		usage: scwrypts [OPTIONS ...] SCRIPT -- [SCRIPT OPTIONS ...]
+		usage: scwrypts [... options ...] [patterns] -- [...script options...]
 
-		OPTIONS
-		  -g, --group <group-name>    only use scripts from the indicated group
-		  -t, --type <type-name>      only use scripts of the indicated type
-		  -m, --name <scwrypt-name>   only run the script if there is an exact match
-		                                (requires type and group)
+		options:
+		  selection
+		    -m, --name <scwrypt-name>   only run the script if there is an exact match
+		                                  (requires type and group)
+		    -g, --group <group-name>    only use scripts from the indicated group
+		    -t, --type <type-name>      only use scripts of the indicated type
 
-		  -y, --yes              auto-accept all [yn] prompts through current scwrypt
-		  -e, --env <env-name>   set environment; overwrites SCWRYPTS_ENV
-		  -n, --no-log           skip logging and run in quiet mode
+		  runtime
+		    -y, --yes              auto-accept all [yn] prompts through current scwrypt
+		    -e, --env <env-name>   set environment; overwrites SCWRYPTS_ENV
+		    -q, --quiet            run in quiet mode
+		    -n, --no-log           skip the log file and run in quiet mode
+		    -v, --verbose          override quiet mode settings and print all debug dialogue
 
-		  --update      update scwrypts library to latest version
-		  --list-envs   print out environment list and exit
+		  alternate commands
+		    -h, --help        display this message and exit
+		    -l, --list        print out command list and exit
+		        --list-envs   print out environment list and exit
+		        --update      update scwrypts library to latest version
+		        --version     print out scwrypts version and exit
+		
+		patterns:
+		  - a list of glob patterns to loose-match a scwrypt by name
 
-		  -v, --version   print out scwrypts version and exit
-		  -l, --list      print out command list and exit
-		  -h, --help      display this message and exit
+		script options:
+		  - everything after "--" is forwarded to the scwrypt you run
+		    (usually "-- --help" will provide more information)
 	'
 	cd "$SCWRYPTS_ROOT"
 
@@ -32,70 +43,29 @@ __RUN() {
 
 	local VARSPLIT SEARCH_GROUP SEARCH_TYPE SEARCH_NAME
 
+	local ALLOW_LOGFILE=1
+	local VERBOSE=1
+
+	[ $CI ] && [ ! $SCWRYPTS_CI_FORCE_NON_VERBOSE ] && VERBOSE=2
+
 	local ERROR=0
 
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
-			-t | --type )
-				[ ! $2 ] && ERROR "missing value for argument $1" && break
-				SEARCH_TYPE=$2
-				shift 2
-				;;
-			-g | --group )
-				[ ! $2 ] && ERROR "missing value for argument $1" && break
-				SEARCH_GROUP=$2
-				shift 2
-				;;
-			-m | --name )
-				[ ! $2 ] && ERROR "missing value for argument $1" && break
-				SEARCH_NAME=$2
-				shift 2
-				;;
-
 			-[a-z][a-z]* )
 				VARSPLIT=$(echo "$1 " | sed 's/^\(-.\)\(.*\) /\1 -\2/')
 				set -- $(echo " $VARSPLIT ") ${@:2}
 				;;
 
-			-h | --help )
-				USAGE
+			-h | --help ) USAGE; return 0 ;;
+			-l | --list ) SCWRYPTS__GET_AVAILABLE_SCWRYPTS; return 0 ;;
+			--list-envs ) SCWRYPTS__GET_ENV_NAMES; return 0 ;;
+			--version )
+				echo scwrypts $(git -C "$SCWRYPTS__ROOT__scwrypts" describe --tags)
 				return 0
 				;;
 
-			-n | --no-log )
-				[ ! $SUBSCWRYPT ] && SUBSCWRYPT=0
-				shift 1
-				;;
-
-			-y | --yes )
-				export __SCWRYPTS_YES=1
-				shift 1
-				;;
-
-			-e | --env )
-				[ ! $2 ] && ERROR "missing value for argument $1" && break
-				[ ! $SUBSCWRYPTS ] \
-					&& [ $ENV_NAME ] \
-					&& WARNING 'overwriting session environment' \
-					;
-
-				ENV_NAME="$2"
-				STATUS "using CLI environment '$ENV_NAME'"
-				shift 2
-				;;
-			-l | --list )
-				SCWRYPTS__GET_AVAILABLE_SCWRYPTS
-				return 0
-				;;
-			--list-envs )
-				SCWRYPTS__GET_ENV_NAMES
-				return 0
-				;;
-			-v | --version )
-				echo scwrypts $(cd "$SCWRYPTS__ROOT__scwrypts"; git describe --tags)
-				return 0
-				;;
 			--update )
 				cd "$SCWRYPTS__ROOT__scwrypts"
 				git fetch --quiet origin main
@@ -118,24 +88,53 @@ __RUN() {
 				}
 				return 0
 				;;
-			-- )
-				shift 1
-				break # pass arguments after '--' to the scwrypt
-				;;
-			--* )
-				ERROR "unrecognized argument '$1'"
+
+			-m | --name )
+				[ ! $2 ] && ERROR "missing value for argument $1" && break
+				SEARCH_NAME=$2
 				shift 1
 				;;
-			* )
-				SEARCH_PATTERNS+=($1)
+
+			-g | --group )
+				[ ! $2 ] && ERROR "missing value for argument $1" && break
+				SEARCH_GROUP=$2
 				shift 1
 				;;
+
+			-t | --type )
+				[ ! $2 ] && ERROR "missing value for argument $1" && break
+				SEARCH_TYPE=$2
+				shift 1
+				;;
+
+			-y | --yes     ) export __SCWRYPTS_YES=1 ;;
+			-q | --quiet   ) VERBOSE=0 ;;
+			-n | --no-log  ) VERBOSE=0 ; [ ! $SUBSCWRYPT ] && SUBSCWRYPT=0 ;;
+			-v | --verbose ) VERBOSE=2 ;;
+
+			-e | --env )
+				[ ! $2 ] && ERROR "missing value for argument $1" && break
+				[ ! $SUBSCWRYPTS ] \
+					&& [ $ENV_NAME ] \
+					&& WARNING 'overwriting session environment' \
+					;
+
+				ENV_NAME="$2"
+				STATUS "using CLI environment '$ENV_NAME'"
+				shift 1
+				;;
+
+
+			--  ) shift 1; break ;; # pass arguments after '--' to the scwrypt
+			--* ) ERROR "unrecognized argument '$1'" ;;
+			*   ) SEARCH_PATTERNS+=($1) ;;
 		esac
+		shift 1
 	done
 
 	[ $SEARCH_NAME ] && {
-		[ ! $SEARCH_TYPE  ] && ERROR '--name requires --type argument'
-		[ ! $SEARCH_GROUP ] && ERROR '--name requires --group argument'
+		[ $SEARCH_TYPE  ] || ERROR '--name requires --type argument'
+		[ $SEARCH_GROUP ] || ERROR '--name requires --group argument'
 	}
 
 	CHECK_ERRORS
@@ -209,9 +208,12 @@ __RUN() {
 	local TYPE="$SEARCH_TYPE"
 	local GROUP="$SEARCH_GROUP"
 
-	[[ $(echo $SCWRYPTS_AVAILABLE | wc -l) -eq 2 ]] \
-		&& SCWRYPT_SELECTION=$(echo $SCWRYPTS_AVAILABLE | tail -n1) \
-		|| SCWRYPT_SELECTION=$(echo $SCWRYPTS_AVAILABLE | FZF "select a script to run" --header-lines 1)
+	[[ $(echo $SCWRYPTS_AVAILABLE | wc -l) -eq 2 ]] && {
+		SCWRYPT_SELECTION=$(echo $SCWRYPTS_AVAILABLE | tail -n1)
+		[[ $VERBOSE -eq 2 ]] || VERBOSE=0
+	} || {
+		SCWRYPT_SELECTION=$(echo $SCWRYPTS_AVAILABLE | FZF "select a script to run" --header-lines 1)
+	}
 	[ $SCWRYPT_SELECTION ] || exit 2
 
 	SCWRYPTS__SEPARATE_SCWRYPT_SELECTION $SCWRYPT_SELECTION
@@ -254,7 +256,8 @@ __RUN() {
 
 	##########################################
 
-	[ ! $SUBSCWRYPT ] \
+	: \
+		&& [ ! $SUBSCWRYPT ] \
 		&& [[ $ENV_NAME =~ prod ]] \
 		&& { __VALIDATE_UPSTREAM_TIMELINE || ABORT; }
 
@@ -268,6 +271,7 @@ __RUN() {
 	local LOGFILE=$(__GET_LOGFILE)
 
 	local HEADER=$(
+		[[ $VERBOSE -gt 0 ]] || return 0
 		[ $SUBSCWRYPT ] && return 0
 		echo '====================================================================='
 		echo "script : $SCWRYPT_GROUP $SCWRYPT_TYPE $SCWRYPT_NAME"
@@ -289,14 +293,14 @@ __RUN() {
 
 	{
 		[ $HEADER ] && echo $HEADER
-		echo '\033[1;33m--- BEGIN OUTPUT -------------------------\033[0m'
+		[[ $VERBOSE -gt 0 ]] && echo '\033[1;33m--- BEGIN OUTPUT -------------------------\033[0m'
 		(eval "$RUN_STRING $(printf "%q " "$@")")
 		EXIT_CODE=$?
-		echo '\033[1;33m--- END OUTPUT ---------------------------\033[0m'
+		[[ $VERBOSE -gt 0 ]] && echo '\033[1;33m--- END OUTPUT ---------------------------\033[0m'
 
 		[[ $EXIT_CODE -eq 0 ]] && EXIT_COLOR='32m' || EXIT_COLOR='31m'
 
-		echo "terminated with\\033[1;$EXIT_COLOR code $EXIT_CODE\\033[0m"
+		[[ $VERBOSE -gt 0 ]] && echo "terminated with\\033[1;$EXIT_COLOR code $EXIT_CODE\\033[0m"
 	} 2>&1 | tee --append "$LOGFILE"
 
 	exit $(\
@@ -338,10 +342,9 @@ __VALIDATE_UPSTREAM_TIMELINE() {
 }
 
 __GET_LOGFILE() {
-	[ $SUBSCWRYPT ] \
-		|| [[ $SCWRYPT_NAME =~ scwrypts/logs ]] \
-		|| [[ $SCWRYPT_NAME =~ interactive ]] \
-		&& return 0
+	[ $SUBSCWRYPT ] && return 0
+	[[ $SCWRYPT_NAME =~ scwrypts/logs ]] && return 0
+	[[ $SCWRYPT_NAME =~ interactive ]] && return 0
 
 	echo "$SCWRYPTS_LOG_PATH/$(echo $GROUP/$TYPE/$NAME | sed 's/^\.\///; s/\//\%/g').log"
 }

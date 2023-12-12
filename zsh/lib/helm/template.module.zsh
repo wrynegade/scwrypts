@@ -4,6 +4,7 @@ DEPENDENCIES+=(helm kubeval)
 REQUIRED_ENV+=()
 
 use helm/validate
+use scwrypts
 
 #####################################################################
 

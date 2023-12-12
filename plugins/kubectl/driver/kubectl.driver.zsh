@@ -110,7 +110,11 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 				shift 1
 				;;
 
-			-- ) shift 1; break ;;
+			-- )
+				echo $USER_ARGS | grep -q 'exec' && USER_ARGS+=(--)
+				shift 1
+				break
+				;;
 
 			* )
 				[ ! $CUSTOM_COMMAND ] && {

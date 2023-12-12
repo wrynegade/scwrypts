@@ -2,30 +2,45 @@
 command -v compdef >/dev/null 2>&1 || return 0
 #####################################################################
 
-_k() {
-	local C=$(k meta get context)
-	local NS=$(k meta get namespace)
+for CLI in kubectl helm flux
+do
+	eval "_${CLI[1]}() {
+		local SUBSESSION=0
+		echo \${words[2]} | grep -q '^[0-9]\\+$' && SUBSESSION=\${words[2]}
 
-	local KUBEWORDS=(kubectl)
-	[ $C  ] && KUBEWORDS+=(--context $C)
-	[ $NS ] && KUBEWORDS+=(--namespace $NS)
+		local PASSTHROUGH_WORDS=($CLI)
+		[[ \$CURRENT -gt 2 ]] && echo \${words[2]} | grep -qv '^[0-9]\\+$' && {
+			local KUBECONTEXT=\$(k \$SUBSESSION meta get context)
+			local NAMESPACE=\$(k \$SUBSESSION meta get namespace)
 
-	words="$KUBEWORDS ${words[@]:1}"
-	_kubectl
-}
+			[ \$KUBECONTEXT ] \
+				&& PASSTHROUGH_WORDS+=($([[ $CLI =~ ^helm$ ]] && echo '--kube-context' || echo '--context') \$KUBECONTEXT) \
+				;
+			[ \$NAMESPACE   ] \
+				&& PASSTHROUGH_WORDS+=(--namespace \$NAMESPACE) \
+				;
+		}
 
-compdef _k  k
+		local DELIMIT_COUNT=0
+		local WORD
+		for WORD in \${words[@]:1}
+		do
+			case \$WORD in
+				[0-9]* ) continue ;;
+				-- )
+					echo \$words | grep -q 'exec' && ((DELIMIT_COUNT+=1))
+					[[ \$DELIMIT_COUNT -eq 0 ]] && ((DELIMIT_COUNT+=1)) && continue
+					;;
+			esac
+			PASSTHROUGH_WORDS+=(\"\$WORD\")
+		done
 
-#####################################################################
-_h() {
-	local C=$(k meta get context)
-	local NS=$(k meta get namespace)
+		echo \"\$words\" | grep -q '\\s\\+$' && PASSTHROUGH_WORDS+=(' ')
 
-	local KUBEWORDS=(kubectl)
-	[ $C  ] && KUBEWORDS+=(--context $C)
-	[ $NS ] && KUBEWORDS+=(--namespace $NS)
+		words=\"\$PASSTHROUGH_WORDS\"
+		_$CLI
+	}
+	"
 
-	words="$KUBEWORDS ${words[@]:1}"
-	_helm
-}
-compdef _h  h
+	compdef _${CLI[1]} ${CLI[1]}
+done

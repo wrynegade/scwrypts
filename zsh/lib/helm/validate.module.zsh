@@ -38,6 +38,8 @@ HELM__VALIDATE() {
 		HELM_ARGS+=(--values $TEMPLATE_FILENAME)
 		USE_CHART_ROOT=1
 	}
+	[[ $TEMPLATE_FILENAME =~ .tpl$ ]] \
+		&& USE_CHART_ROOT=1
 
 	[[ $(dirname $TEMPLATE_FILENAME) =~ ^$CHART_ROOT$ ]] \
 		&& USE_CHART_ROOT=1
