@@ -1,13 +1,8 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use redis
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-CURL_WITH_CACHE() {
+MAIN() {
 	[ ! $TTL ] && TTL=10
 
 	[[ $(REDIS__ENABLED) -eq 0 ]] && {
@@ -46,7 +41,6 @@ CURL_WITH_CACHE() {
 	echo $OUTPUT
 }
 
-GET_URL_KEY() { echo "scwrypts:curl:$1" | sed 's/\s\+/+/g'; }
-
 #####################################################################
-CURL_WITH_CACHE $@
+
+GET_URL_KEY() { echo "scwrypts:curl:$1" | sed 's/\s\+/+/g'; }

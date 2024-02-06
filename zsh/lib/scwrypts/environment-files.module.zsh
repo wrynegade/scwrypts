@@ -12,7 +12,7 @@ SCWRYPTS__SELECT_ENV() {
 }
 
 SCWRYPTS__SELECT_OR_CREATE_ENV() {
-	SCWRYPTS__GET_ENV_NAMES | FZF_TAIL 'select / create an environment'
+	SCWRYPTS__GET_ENV_NAMES | FZF_USER_INPUT 'select / create an environment'
 }
 
 SCWRYPTS__GET_ENV_FILES() {

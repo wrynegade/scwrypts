@@ -1,25 +1,21 @@
 #!/bin/zsh
-echo hey
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use scwrypts/virtualenv
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-STATUS 'beginning update for all environments'
-
-FAILED_COUNT=0
-
-for ENV_GROUP in ${SCWRYPTS_GROUPS[@]}
-do
-	for ENV_TYPE in ${AVAILABLE_VIRTUALENVS[@]}
+MAIN() {
+	STATUS 'beginning update for all environments'
+	
+	FAILED_COUNT=0
+	
+	for ENV_GROUP in ${SCWRYPTS_GROUPS[@]}
 	do
-		UPDATE_VIRTUALENV $ENV_GROUP $ENV_TYPE || ((FAILED_COUNT+=1))
+		for ENV_TYPE in ${AVAILABLE_VIRTUALENVS[@]}
+		do
+			UPDATE_VIRTUALENV $ENV_GROUP $ENV_TYPE || ((FAILED_COUNT+=1))
+		done
 	done
-done
-
-[[ $FAILED_COUNT -eq 0 ]] \
-	&& SUCCESS 'all environments up-to-date' \
-	|| FAIL $FAILED_COUNT "failed to update $FAILED_COUNT more environment(s)"
+	
+	[[ $FAILED_COUNT -eq 0 ]] \
+		&& SUCCESS 'all environments up-to-date' \
+		|| FAIL $FAILED_COUNT "failed to update $FAILED_COUNT more environment(s)"
+}

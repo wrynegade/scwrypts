@@ -1,16 +1,55 @@
 #!/usr/bin/env python
+from scwrypts import execute
+#####################################################################
 from json import dumps
 
-from py.lib.fzf import fzf, fzf_tail
-from py.lib.http import directus
-from py.lib.scwrypts import execute
+from scwrypts.fzf import fzf, fzf_tail
+from scwrypts.http import directus
 
-from py.lib.scwrypts.exceptions import ImportedExecutableError
 
-if __name__ != '__main__':
-    raise ImportedExecutableError()
+description = 'interactive CLI to get data from directus'
 
-#####################################################################
+parse_args = [
+        ( ['-c', '--collection'], {
+            "dest"     : 'collection',
+            "default"  : None,
+            "help"     : 'the name of the collection',
+            "required" : False,
+            }),
+        ( ['-f', '--filters'], {
+            "dest"     : 'filters',
+            "default"  : None,
+            "help"     : 'as a URL-suffix, filters for the query',
+            "required" : False,
+            }),
+        ( ['-d', '--fields'], {
+            "dest"     : 'fields',
+            "default"  : None,
+            "help"     : 'comma-separated list of fields to include',
+            "required" : False,
+            }),
+        ( ['-p', '--interactive-prompt'], {
+            "action"   : 'store_true',
+            "dest"     : 'interactive',
+            "default"  : False,
+            "help"     : 'interactively generate filter prompts; implied if no flags are provided',
+            "required" : False,
+            }),
+        ( ['--prompt-filters'], {
+            "action"   : 'store_true',
+            "dest"     : 'generate_filters_prompt',
+            "default"  : False,
+            "help"     : '(superceded by -p) only generate filters interactively',
+            "required" : False,
+            }),
+        ( ['--prompt-fields'], {
+            "action"   : 'store_true',
+            "dest"     : 'generate_fields_prompt',
+            "default"  : False,
+            "help"     : '(superceded by -p) only generate filters interactively',
+            "required" : False,
+            }),
+        ]
 
 def main(args, stream):
     if {None} == { args.collection, args.filters, args.fields }:
@@ -96,50 +135,6 @@ def _get_or_select_fields(args, collection):
 
     return fields
 
-
 #####################################################################
-execute(main,
-        description = 'interactive CLI to get data from directus',
-        parse_args = [
-            ( ['-c', '--collection'], {
-                "dest"     : 'collection',
-                "default"  : None,
-                "help"     : 'the name of the collection',
-                "required" : False,
-                }),
-            ( ['-f', '--filters'], {
-                "dest"     : 'filters',
-                "default"  : None,
-                "help"     : 'as a URL-suffix, filters for the query',
-                "required" : False,
-                }),
-            ( ['-d', '--fields'], {
-                "dest"     : 'fields',
-                "default"  : None,
-                "help"     : 'comma-separated list of fields to include',
-                "required" : False,
-                }),
-            ( ['-p', '--interactive-prompt'], {
-                "action"   : 'store_true',
-                "dest"     : 'interactive',
-                "default"  : False,
-                "help"     : 'interactively generate filter prompts; implied if no flags are provided',
-                "required" : False,
-                }),
-            ( ['--prompt-filters'], {
-                "action"   : 'store_true',
-                "dest"     : 'generate_filters_prompt',
-                "default"  : False,
-                "help"     : '(superceded by -p) only generate filters interactively',
-                "required" : False,
-                }),
-            ( ['--prompt-fields'], {
-                "action"   : 'store_true',
-                "dest"     : 'generate_fields_prompt',
-                "default"  : False,
-                "help"     : '(superceded by -p) only generate filters interactively',
-                "required" : False,
-                }),
-            ]
-
-        )
+if __name__ == '__main__':
+    execute(main, description, parse_args)

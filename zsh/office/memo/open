@@ -1,14 +1,9 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use office/memo
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-OPEN_MEMO() {
-	local MEMO_NAME=$(MEMO__LIST_ALL | FZF_TAIL 'select/create a memo')
+MAIN() {
+	local MEMO_NAME=$(MEMO__LIST_ALL | FZF_USER_INPUT 'select/create a memo')
 	[ ! "$MEMO_NAME" ] && ABORT
 
 	MEMO_FILE="$MEMO__DIR/$MEMO_NAME.$MEMO__FILETYPE"
@@ -26,6 +21,3 @@ OPEN_MEMO() {
 
 	EDIT "$MEMO_FILE"
 }
-
-#####################################################################
-OPEN_MEMO $@

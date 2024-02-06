@@ -99,8 +99,8 @@ TALLY() {
 		true  ) printf "$NEW_VALUE" ;;
 		false )
 			case $TALLY_NAME in
-				default ) INFO "current tally : $NEW_VALUE" ;;
-				*       ) INFO "$TALLY_NAME : $NEW_VALUE" ;;
+				default ) SUCCESS "current tally : $NEW_VALUE" ;;
+				*       ) SUCCESS "$TALLY_NAME : $NEW_VALUE" ;;
 			esac
 	esac
 }

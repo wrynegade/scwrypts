@@ -1,15 +1,10 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use office/latex
-
-CHECK_ENVIRONMENT
 #####################################################################
 
 TEMPLATE_DIR="${0:a:h}/templates"
 
-CREATE_NEW_LATEX_DOCUMENT_FROM_TEMPLATE() {
+MAIN() {
 	local DOCUMENT_DIR="$EXECUTION_DIR"
 	local TEMPLATE=$(GET_TEMPLATES | FZF 'select a template')
 	[ ! $TEMPLATE ] && ABORT
@@ -39,6 +34,8 @@ CREATE_NEW_LATEX_DOCUMENT_FROM_TEMPLATE() {
 	SUCCESS "finished generating '$(basename $DOCUMENT_FILE)' from '$TEMPLATE'"
 }
 
+#####################################################################
+
 GET_TEMPLATES() {
 	find "$TEMPLATE_DIR" -type d | sed "s^$TEMPLATE_DIR/*^^; /^$/d"
 }
@@ -59,4 +56,4 @@ SLUGIFY_TITLE() {
 }
 
 #####################################################################
-CREATE_NEW_LATEX_DOCUMENT_FROM_TEMPLATE $@
+MAIN $@

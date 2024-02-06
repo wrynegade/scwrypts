@@ -1,13 +1,8 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use office/latex
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-PDFLATEX() {
+MAIN() {
 	[ ! $1 ] && FAIL 1 'must provide filename'
 	local FILENAME=$(LATEX__GET_MAIN_FILENAME "$1")
 
@@ -26,6 +21,3 @@ PDFLATEX() {
 
 	SUCCESS "created '$(echo $FILENAME | sed 's/\.[^.]*$/.pdf/')'"
 }
-
-#####################################################################
-PDFLATEX $@

@@ -3,11 +3,9 @@ DEPENDENCIES+=(jq)
 REQUIRED_ENV+=(AWS__EFS__LOCAL_MOUNT_POINT)
 
 use cloud/aws/cli
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-EFS_CONNECT() {
+MAIN() {
 	GETSUDO || exit 1
 	[ ! -d $AWS__EFS__LOCAL_MOUNT_POINT ] && {
 		sudo mkdir $AWS__EFS__LOCAL_MOUNT_POINT \
@@ -64,6 +62,3 @@ EFS_CONNECT() {
 		FAIL 2 "unable to mount '$FS_ID'"
 	}
 }
-
-#####################################################################
-EFS_CONNECT $@

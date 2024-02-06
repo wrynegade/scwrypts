@@ -1,0 +1,60 @@
+[project]
+name = 'scwrypts'
+description = 'scwrypts library and invoker'
+license = 'GPL-3.0-or-later'
+
+readme = 'README.md'
+requires-python = '>=3.10'
+
+authors = [
+	{ name='yage', email='yage@yage.io' },
+]
+
+
+classifiers = [
+	'Programming Language :: Python :: 3',
+	'Programming Language :: Python :: 3.10',
+	'Programming Language :: Python :: 3.11',
+	'Programming Language :: Python :: 3.12',
+	'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+	]
+
+dynamic = ['version']
+
+dependencies = [
+	'bpython',
+	'pyfzf',
+	'pyyaml',
+	'redis',
+	'twilio',
+]
+
+[project.optional-dependencies]
+dev = [
+	'pylint',
+]
+
+test = [
+	'pytest',
+]
+
+[project.urls]
+homepage = 'https://github.com/wrynegade/scwrypts'
+issues = 'https://github.com/wrynegade/scwrypts/issues'
+
+[build-system]
+requires = [
+	'hatchling',
+	'versioningit',
+]
+build-backend = 'hatchling.build'
+
+[tool.hatch.version]
+source = 'versioningit'
+
+[tool.hatch.build.targets.wheel]
+packages = ['./']
+
+[tool.versioningit]
+match = ['v*']
+

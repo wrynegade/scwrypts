@@ -1,14 +1,13 @@
 #!/usr/bin/env python
-from py.lib.redis import get_client
-from py.lib.scwrypts import execute, interactive, getenv
-
-from py.lib.scwrypts.exceptions import ImportedExecutableError
-
-if __name__ != '__main__':
-    raise ImportedExecutableError()
-
+from scwrypts import execute
 #####################################################################
+from scwrypts import interactive
+from scwrypts.env import getenv
+from scwrypts.redis import get_client
 
+
+description = 'establishes a redis client in an interactive python shell'
+parse_args = []
 
 @interactive([
         f'r = StrictRedis(\'{getenv("REDIS_HOST")}:{getenv("REDIS_PORT")}\')',
@@ -20,7 +19,5 @@ def main(_args, _stream):
 
 
 #####################################################################
-execute(main,
-        description = 'establishes a redis client in an interactive python shell',
-        parse_args = [],
-        )
+if __name__ == '__main__':
+    execute(main, description, parse_args)

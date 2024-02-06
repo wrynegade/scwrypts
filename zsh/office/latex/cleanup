@@ -1,13 +1,8 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use office/latex
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-CLEAN_LATEX_LOGFILES() {
+MAIN() {
 	local DIRECTORY=$(SCWRYPTS__GET_REALPATH ".")
 	[ $1 ] && DIRECTORY="$(dirname "$(LATEX__GET_MAIN_FILENAME "$1")")"
 	[ $DIRECTORY ] && [ -d $DIRECTORY ] \
@@ -18,6 +13,3 @@ CLEAN_LATEX_LOGFILES() {
 
 	SUCCESS "cleaned up latex artifacts in '$DIRECTORY'"
 }
-
-#####################################################################
-CLEAN_LATEX_LOGFILES $@

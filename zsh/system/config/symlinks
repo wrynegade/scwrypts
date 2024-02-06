@@ -1,18 +1,15 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use system/config
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-SETUP_SYMLINKS() {
+MAIN() {
 	while read SYMLINK
 	do
 		SETUP_SYMLINK $(echo $SYMLINK | awk '{print $1;}') $(echo $SYMLINK | awk '{print $2}')
 	done < <(echo $SYMLINKS | sed -n '/^[^#]/p')
 }
+
+#####################################################################
 
 SETUP_SYMLINK() {
 	[ ! $2 ] && FAIL 1 'must provide SOURCE_CONFIG and TARGET_CONFIG'
@@ -21,7 +18,7 @@ SETUP_SYMLINK() {
 	local TARGET_CONFIG="$HOME/.config/$2"
 
 	[ ! -f "$SOURCE_CONFIG" ] && [ ! -d "$SOURCE_CONFIG" ] && [ -f "$TARGET_CONFIG" ] && {
-		INFO 'SOURCE_CONFIG is not tracked; copying from TARGET_CONFIG'
+		DEBUG 'SOURCE_CONFIG is not tracked; copying from TARGET_CONFIG'
 		mkdir -p "$(dirname "$SOURCE_CONFIG")"
 		cp "$TARGET_CONFIG" "$SOURCE_CONFIG"
 	}
@@ -42,6 +39,3 @@ SETUP_SYMLINK() {
 		|| FAIL 3 "failed to create link '$TARGET_CONFIG'" \
 		;
 }
-
-#####################################################################
-SETUP_SYMLINKS $@

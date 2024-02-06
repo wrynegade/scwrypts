@@ -85,8 +85,6 @@ CREATE_VIRTUALENV__scwrypts__py() {
 
 	DEPENDENCIES=(virtualenv) CHECK_ENVIRONMENT || return 1
 
-	local VIRTUALENV_PATH="$1"
-
 	STATUS 'creating python virtualenv'
 	local PY PYTHON
 	for PY in $(echo $SCWRYPTS_PREFERRED_PYTHON_VERSIONS__scwrypts)
@@ -140,8 +138,6 @@ CREATE_VIRTUALENV__scwrypts__zx() {
 	[ -d $VIRTUALENV_PATH ] && return 0
 
 	DEPENDENCIES=(nodeenv) CHECK_ENVIRONMENT || return 1
-
-	local VIRTUALENV_PATH="$1"
 
 	STATUS 'setting up nodeenv'
 	nodeenv $VIRTUALENV_PATH --node=$SCWRYPTS_NODE_VERSION__scwrypts \

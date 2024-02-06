@@ -1,15 +1,38 @@
 #!/usr/bin/env python
+from scwrypts import execute
+#####################################################################
 from sys import stderr
 
-from py.lib.scwrypts import execute, getenv
-from py.lib.twilio import send_sms
+from scwrypts.env import getenv
+from scwrypts.twilio import send_sms
 
-from py.lib.scwrypts.exceptions import ImportedExecutableError, MissingFlagAndEnvironmentVariableError
 
-if __name__ != '__main__':
-    raise ImportedExecutableError()
-
-#####################################################################
+description = 'send a simple SMS through twilio'
+parse_args = [
+        ( ['-t', '--to'], {
+            'dest'     : 'to',
+            'help'     : 'phone number of the receipient',
+            'required' : False,
+            'default'  : getenv('TWILIO__DEFAULT_PHONE_TO', required=False),
+            }),
+        ( ['-f', '--from'], {
+            'dest'     : 'from_',
+            'help'     : 'phone number of the receipient',
+            'required' : False,
+            'default'  : getenv('TWILIO__DEFAULT_PHONE_FROM', required=False),
+            }),
+        ( ['-b', '--body'], {
+            'dest'     : 'body',
+            'help'     : 'message body',
+            'required' : False,
+            }),
+        ( ['--max-char-count'], {
+            'dest'     : 'max_char_count',
+            'help'     : 'separate message into parts by character count (1 < N <= 1500)',
+            'required' : False,
+            'default'  : 300,
+            }),
+        ]
 
 def main(args, stream):
     if args.body is None:
@@ -35,31 +58,5 @@ def main(args, stream):
 
 
 #####################################################################
-execute(main,
-        description = 'send a simple SMS through twilio',
-        parse_args = [
-            ( ['-t', '--to'], {
-                'dest'     : 'to',
-                'help'     : 'phone number of the receipient',
-                'required' : False,
-                'default'  : getenv('TWILIO__DEFAULT_PHONE_TO', required=False),
-                }),
-            ( ['-f', '--from'], {
-                'dest'     : 'from_',
-                'help'     : 'phone number of the receipient',
-                'required' : False,
-                'default'  : getenv('TWILIO__DEFAULT_PHONE_FROM', required=False),
-                }),
-            ( ['-b', '--body'], {
-                'dest'     : 'body',
-                'help'     : 'message body',
-                'required' : False,
-                }),
-            ( ['--max-char-count'], {
-                'dest'     : 'max_char_count',
-                'help'     : 'separate message into parts by character count (1 < N <= 1500)',
-                'required' : False,
-                'default'  : 300,
-                }),
-            ]
-        )
+if __name__ == '__main__':
+    execute(main, description, parse_args)

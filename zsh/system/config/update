@@ -1,13 +1,10 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use scwrypts/meta
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-STATUS 'updating all config files and links'
-SCWRYPTS__RUN --name system/config/symlinks --group scwrypts --type zsh || exit 1
-SCWRYPTS__RUN --name system/config/terminfo --group scwrypts --type zsh || exit 2
-SUCCESS 'finished updating config files and links'
+MAIN() {
+	STATUS 'updating all config files and links'
+	SCWRYPTS__RUN --name system/config/symlinks --group scwrypts --type zsh || exit 1
+	SCWRYPTS__RUN --name system/config/terminfo --group scwrypts --type zsh || exit 2
+	SUCCESS 'finished updating config files and links'
+}

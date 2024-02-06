@@ -1,9 +1,7 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use db/postgres
-
-CHECK_ENVIRONMENT
 #####################################################################
-PG_DUMP $@
+
+MAIN() {
+	PG_DUMP $@
+}

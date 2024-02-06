@@ -1,4 +1,5 @@
 __CHECK_REQUIRED_ENV() {
+	local SCWRYPTS_LOG_LEVEL=1
 	local VAR ERROR=0
 	REQUIRED_ENV=($(echo $REQUIRED_ENV | sed 's/\s\+/\n/g' | sort -u))
 	for VAR in ${REQUIRED_ENV[@]}; do __CHECK_ENV_VAR $VAR || ((ERROR+=1)); done

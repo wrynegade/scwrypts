@@ -1,20 +1,11 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use cloud/aws/rds
 use db/postgres
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-RDS_INTERACTIVE_LOGIN() {
+MAIN() {
 	local DB_HOST DB_PORT DB_NAME DB_USER DB_PASS
 	RDS__GET_DATABASE_CREDENTIALS $@ || return 1
 
 	POSTGRES__LOGIN_INTERACTIVE
 }
-
-
-#####################################################################
-RDS_INTERACTIVE_LOGIN $@

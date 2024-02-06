@@ -1,5 +1,1 @@
-bpython
-pyfzf
-pyyaml
-redis
-twilio
+./lib

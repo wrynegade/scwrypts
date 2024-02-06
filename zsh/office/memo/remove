@@ -1,13 +1,8 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use office/memo
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-DELETE_MEMO() {
+MAIN() {
 	local MEMO_NAME=$(MEMO__LIST_ALL | FZF 'select a memo to delete')
 	local MEMO_FILE="$MEMO__DIR/$MEMO_NAME.$MEMO__FILETYPE"
 	[ "$MEMO_NAME" ] && [ -f "$MEMO_FILE" ] || ABORT
@@ -28,6 +23,3 @@ DELETE_MEMO() {
 		|| FAIL 1 "failed to remove memo '$MEMO_NAME'" \
 		;
 }
-
-#####################################################################
-DELETE_MEMO $@
