@@ -3,11 +3,9 @@ DEPENDENCIES+=(jq)
 REQUIRED_ENV+=(AWS__EFS__LOCAL_MOUNT_POINT)
 
 use cloud/aws/cli
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-EFS_DISCONNECT() {
+MAIN() {
 	[ ! -d "$AWS__EFS__LOCAL_MOUNT_POINT" ] && {
 		STATUS 'no efs currently mounted'
 		exit 0
@@ -32,6 +30,3 @@ EFS_DISCONNECT() {
 		&& SUCCESS "done" \
 		|| FAIL 2 "failed to unmount '$EFS'"
 }
-
-#####################################################################
-EFS_DISCONNECT $@

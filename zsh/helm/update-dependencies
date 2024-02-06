@@ -1,17 +1,9 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use helm
 use scwrypts
-
-CHECK_ENVIRONMENT
 #####################################################################
 
 MAIN() {
 	unset USAGE
 	HELM__DEPENDENCY__UPDATE $@
 }
-
-#####################################################################
-MAIN $@

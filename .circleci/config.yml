@@ -1,0 +1,133 @@
+---
+version: 2.1
+
+orbs:
+  python: circleci/python@2.1.1
+
+executors:
+  python:
+    docker:
+      - image: cimg/python:3.11
+    resource_class: small
+
+  nodejs:
+    docker:
+      - image: node:18
+    resource_class: medium
+
+
+jobs:
+  python-test:
+    executor: python
+    working_directory: ~/scwrypts/py/lib
+    steps:
+      - checkout:
+          path: ~/scwrypts
+      - run:
+          name: pytest
+          command: |
+            : \
+              && pip install . .[test] \
+              && pytest \
+              ;
+
+  python-publish:
+    executor: python
+    working_directory: ~/scwrypts/py/lib
+    steps:
+      - checkout:
+          path: ~/scwrypts
+      - python/dist
+      - run: pip install twine && twine upload dist/*
+
+  nodejs-test:
+    executor: nodejs
+    working_directory: ~/scwrypts/zx/lib
+    steps:
+      - checkout:
+          path: ~/scwrypts
+
+      - restore_cache:
+          name: restore pnpm cache
+          keys:
+            - pnpm-packages-{{ checksum "pnpm-lock.yaml" }}
+
+      - run:
+          name: pnpm install
+          command: |
+            corepack enable
+            corepack prepare pnpm@latest-8 --activate
+            pnpm config set store-dir .pnpm-store
+            pnpm install
+
+      - save_cache:
+          name: save pnpm cache
+          key: pnpm-packages-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - .pnpm-store
+
+      - run: pnpm test
+      - run: pnpm lint
+      - run: pnpm build
+
+  nodejs-publish:
+    executor: nodejs
+    working_directory: ~/scwrypts/zx/lib
+    steps:
+      - checkout:
+          path: ~/scwrypts
+
+      - restore_cache:
+          name: restore pnpm cache
+          keys:
+            - pnpm-packages-{{ checksum "pnpm-lock.yaml" }}
+
+      - run:
+          name: pnpm install
+          command: |
+            corepack enable
+            corepack prepare pnpm@latest-8 --activate
+            pnpm config set store-dir .pnpm-store
+            pnpm install
+
+      - save_cache:
+          name: save pnpm cache
+          key: pnpm-packages-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - .pnpm-store
+
+      - run:
+          name: publish
+          command: |
+            : \
+              && [ $CIRCLE_TAG ] \
+              && pnpm build \
+              && pnpm version $(git describe --tags) \
+              && pnpm set //registry.npmjs.org/:_authToken=$NPM_TOKEN \
+              && pnpm publish --no-git-checks \
+              ;
+
+workflows:
+  python:
+    jobs:
+      - python-test
+      - python-publish:
+          requires: [python-test]
+          context: [pypi-yage]
+          filters:
+            tags:
+              only: /^v.*$/
+            branches:
+              ignore: /^.*$/
+
+  nodejs:
+    jobs:
+      - nodejs-test
+      - nodejs-publish:
+          requires: [nodejs-test]
+          context: [npm-wrynegade]
+          filters:
+            tags:
+              only: /^v.*$/
+            branches:
+              ignore: /^.*$/

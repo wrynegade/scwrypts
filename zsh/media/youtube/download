@@ -1,16 +1,11 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use media/youtube
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-DOWNLOAD_VIDEO() {
+MAIN() {
 	local URLS=($@)
 
-	[[ ${#URLS[@]} -eq 0 ]] && URLS=($(echo '' | FZF_HEAD 'enter URL'))
+	[[ ${#URLS[@]} -eq 0 ]] && URLS=($(echo '' | FZF_USER_INPUT 'enter URL'))
 	[[ ${#URLS[@]} -eq 0 ]] && ABORT
 
 	local FILENAME=$(YT__GET_FILENAME $URLS)
@@ -23,6 +18,3 @@ DOWNLOAD_VIDEO() {
 		&& SUCCESS "downloaded to '$YT__OUTPUT_DIR/$FILENAME'" \
 		|| { ERROR "failed to download '$FILENAME'"; return 2; }
 }
-
-#####################################################################
-DOWNLOAD_VIDEO $@

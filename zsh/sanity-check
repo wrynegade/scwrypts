@@ -1,0 +1,52 @@
+#!/bin/zsh
+#####################################################################
+
+USAGE__options='
+	-e, --exit-code         desired exit code of the function (default "0")
+	-f, --output-function   one of the zsh/utils output functions (default "SUCCESS")
+	-m, --message           a message to display (default "Hello, World!")
+'
+
+USAGE__description='
+	a simple hello-world-style script which allows specific scwrypts
+	conditions to be quickly emulated
+'
+
+#####################################################################
+
+MAIN() {
+	local OUTPUT_FUNCTION=SUCCESS
+	local EXIT_CODE=0
+	local MESSAGE='Hello, world!'
+
+	ARGUMENT_REQUIRED() { ERROR "'$1' requires an argument"; }
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			-e | --exit-code )
+				EXIT_CODE="$2"
+				[ $2 ] && shift 1 || ARGUMENT_REQUIRED
+				;;
+			-f | --output-function )
+				OUTPUT_FUNCTION="$2"
+				[ $2 ] && shift 1 || ARGUMENT_REQUIRED
+				;;
+			-m | --message )
+				MESSAGE="$2"
+				[ $2 ] && shift 1 || ARGUMENT_REQUIRED
+				;;
+			* ) ERROR "unknown argument '$1'" ;;
+		esac
+		shift 1
+	done
+
+	CHECK_ERRORS
+
+	##########################################
+
+	[[ $OUTPUT_FUNCTION =~ ^FAIL$ ]] && FAIL $EXIT_CODE "$MESSAGE"
+
+	$OUTPUT_FUNCTION "$MESSAGE"
+	return $EXIT_CODE
+}

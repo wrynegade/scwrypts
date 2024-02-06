@@ -1,9 +1,5 @@
 #!/bin/zsh
 #####################################################################
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-#####################################################################
-
 MAIN() {
 	cd "$SCWRYPTS_ROOT__scwrypts/"
 
@@ -35,6 +31,3 @@ MAIN() {
 	echo $DEPENDENCIES | sed 's/ /\n/g'
 	CHECK_ENVIRONMENT && SUCCESS "all dependencies satisfied"
 }
-
-#####################################################################
-MAIN $@

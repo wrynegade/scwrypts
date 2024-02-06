@@ -1,15 +1,13 @@
 #!/bin/zsh               
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-cd $SCWRYPTS_ROOT
-PROMPT 'select a script log'
-LOG_FILE=$(ls -t $SCWRYPTS_LOG_PATH | FZF 'logfile')
-[ ! $LOG_FILE ] && { ERROR 'user abort'; exit 1; }
-
-STATUS 'opening logfile'
-LESS "$SCWRYPTS_LOG_PATH/$LOG_FILE"
-SUCCESS 'done'
+MAIN() {
+	cd $SCWRYPTS_ROOT
+	PROMPT 'select a script log'
+	LOG_FILE=$(ls -t $SCWRYPTS_LOG_PATH | FZF 'logfile')
+	[ ! $LOG_FILE ] && { ERROR 'user abort'; exit 1; }
+	
+	STATUS 'opening logfile'
+	LESS "$SCWRYPTS_LOG_PATH/$LOG_FILE"
+	SUCCESS 'done'
+}

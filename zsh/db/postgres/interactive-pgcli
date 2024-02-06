@@ -1,9 +1,7 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use db/postgres
-
-CHECK_ENVIRONMENT
 #####################################################################
-POSTGRES__LOGIN_INTERACTIVE $@
+
+MAIN() {
+	POSTGRES__LOGIN_INTERACTIVE $@
+}

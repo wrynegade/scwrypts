@@ -112,6 +112,58 @@ SCWRYPTS__GET_RUNSTRING() {
 SCWRYPTS__GET_RUNSTRING__zsh() {
 	__CHECK_DEPENDENCY zsh || return 1
 
+	local SCWRYPT_FILENAME
+
+	[ $(eval echo '$SCWRYPTS_TYPE__'$SCWRYPT_GROUP) ] \
+		&& SCWRYPT_FILENAME="$GROUP_PATH/$SCWRYPT_NAME" \
+		|| SCWRYPT_FILENAME="$GROUP_PATH/$SCWRYPT_TYPE/$SCWRYPT_NAME" \
+		;
+
+	printf "
+		source '$SCWRYPT_FILENAME'
+		CHECK_ENVIRONMENT
+		ERRORS=0
+
+		export USAGE=\"
+			usage: -
+
+			args: -
+
+			options: -
+			  -h, --help      display this message and exit
+
+			description: -
+		\"
+
+		[ ! \$USAGE__usage ] && export USAGE__usage='[...options...]'
+
+		() {
+			local MAIN_ARGS=()
+			local VARSPLIT
+			while [[ \$# -gt 0 ]]
+			do
+				case \$1 in
+					-[a-z][a-z]* )
+						VARSPLIT=\$(echo \"\$1 \" | sed 's/^\\\\(-.\\\\)\\\\(.*\\\\) /\\\\1 -\\\\2/')
+						set -- throw-away \$(echo \" \$VARSPLIT \") \${@:2}
+						;;
+					-h | --help    ) USAGE; exit 0 ;;
+					* ) MAIN_ARGS+=(\$1) ;;
+				esac
+				shift 1
+			done
+			MAIN \${MAIN_ARGS[@]}
+		} "
+
+
+	return 0
+}
+
+SCWRYPTS__GET_RUNSTRING__zsh_v3() {
+	WARNING "scwrypts zsh/v3 runstrings are now deprecated; please update to scwrypts v4 format"
+
+	__CHECK_DEPENDENCY zsh || return 1
+
 	[ $(eval echo '$SCWRYPTS_TYPE__'$SCWRYPT_GROUP) ] \
 		&& echo "source $GROUP_PATH/$SCWRYPT_NAME" \
 		|| echo "source $GROUP_PATH/$SCWRYPT_TYPE/$SCWRYPT_NAME" \

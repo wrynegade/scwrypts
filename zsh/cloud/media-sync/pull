@@ -1,10 +1,7 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use cloud/media-sync
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-MEDIA_SYNC__PULL $@
+MAIN() {
+	MEDIA_SYNC__PULL $@
+}

@@ -1,13 +1,14 @@
 __CHECK_DEPENDENCIES() {
-	local DEP ERROR=0
+	local DEP ERRORS=0
+	local SCWRYPTS_LOG_LEVEL=1
 	[ ! $E ] && E=ERROR
 
 	DEPENDENCIES=($(echo $DEPENDENCIES | sed 's/ \+/\n/g' | sort -u))
 
-	for DEP in ${DEPENDENCIES[@]}; do __CHECK_DEPENDENCY $DEP || ((ERROR+=1)); done
-	__CHECK_COREUTILS || ((ERROR+=$?))
+	for DEP in ${DEPENDENCIES[@]}; do __CHECK_DEPENDENCY $DEP || ((ERRORS+=1)); done
+	__CHECK_COREUTILS || ((ERRORS+=$?))
 
-	return $ERROR
+	return $ERRORS
 }
 
 __CHECK_DEPENDENCY() {

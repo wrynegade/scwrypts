@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "description": "zx scripts for scwrypts",
   "main": "index.js",
-	"type": "module",
+  "type": "module",
   "scripts": {
     "test": "",
-		"preinstall": "npm i -g zx"
+    "preinstall": "npm i -g zx"
   },
   "author": "yage",
-  "license": "GPL-3.0-or-later"
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "scwrypts": "file:lib"
+  }
 }

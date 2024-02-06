@@ -1,218 +1,104 @@
-PRINT() {
-	local MESSAGE
-	local LAST_LINE_END='\n'
-	local STDERR=1
-	local STDOUT=0
+#####################################################################
+### basic colorized print messages ##################################
+#####################################################################
 
-	local LTRIM=1
-	while [[ $# -gt 0 ]]
-	do
-		case $1 in
-			-n | --no-trim-tabs ) LTRIM=0 ;;
-			-x | --no-line-end  ) LAST_LINE_END='' ;;
-			-o | --use-stdout   ) STDOUT=1; STDERR=0 ;;
-			* ) MESSAGE+="$(echo $1) " ;;
-		esac
-		shift 1
-	done
-
-	MESSAGE="$(echo "$MESSAGE" | sed 's/%/%%/g')"
-
-	local STYLED_MESSAGE="$({
-		printf "${COLOR}"
-		while IFS='' read line
-		do
-			[[ $PREFIX =~ ^[[:space:]]\+$ ]] && printf '\n'
-
-			printf "${PREFIX} : $(echo "$line" | sed 's/^	\+//; s/ \+$//')"
-
-			PREFIX=$(echo $PREFIX | sed 's/./ /g')
-		done <<< $MESSAGE
-	})"
-	STYLED_MESSAGE="${COLOR}$(echo "$STYLED_MESSAGE" | sed 's/%/%%/g')${__COLOR_RESET}${LAST_LINE_END}"
-
-	[[ $STDERR -eq 1 ]] && printf $STYLED_MESSAGE >&2
-	[[ $STDOUT -eq 1 ]] && printf $STYLED_MESSAGE
-
-	return 0
-}
-
+source "${0:a:h}/io.print.zsh"
 [ ! $ERRORS ] && ERRORS=0
-ERROR()    { PREFIX="ERROR    ✖" COLOR=$__RED    PRINT "$@"; ((ERRORS+=1)); }
-SUCCESS()  { PREFIX="SUCCESS  ✔" COLOR=$__GREEN  PRINT "$@"; }
-WARNING()  { PREFIX="WARNING  " COLOR=$__ORANGE PRINT "$@"; }
-STATUS()   { PREFIX="STATUS    " COLOR=$__BLUE   PRINT "$@"; }
-REMINDER() { PREFIX="REMINDER " COLOR=$__PURPLE PRINT "$@"; }
-INFO()     { PREFIX="INFO     ℹ" COLOR=$__WHITE  PRINT "$@"; }
 
-PROMPT() {
-	PREFIX="PROMPT   " COLOR=$__CYAN PRINT "$@"
-	PREFIX="USER     ⌨" COLOR=$__CYAN PRINT '' --no-line-end
-}
-
-FAIL()  { ERROR "${@:2}"; exit $1; }
-ABORT() { FAIL 69 'user abort'; }
-
-CHECK_ERRORS() {
-	local FAIL_OUT=1
-	local DISPLAY_USAGE=1
-
-	while [[ $# -gt 0 ]]
-	do
-		case $1 in
-			--no-fail  ) FAIL_OUT=0 ;;
-			--no-usage ) DISPLAY_USAGE=0 ;;
-		esac
-		shift 1
-	done
-
-	[ ! $ERRORS ] && ERRORS=0
-	[[ $ERRORS -eq 0 ]] && return 0
-
-	[[ $DISPLAY_USAGE -eq 1 ]] && USAGE
-
-	[[ $FAIL_OUT -eq 1 ]] && exit $ERRORS
-
+ERROR() {  # command encountered an error
+	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
+		&& PREFIX="ERROR    ✖" COLOR=$__RED            PRINT "$@"
+	((ERRORS+=1))
 	return $ERRORS
 }
 
-USAGE() { # formatter for USAGE variable
-	[ ! $USAGE ] && return 0
-	local USAGE_LINE=$(echo $USAGE | grep -i '^[	]*usage *:' | sed 's/^[		]*//')
-
-	[ $USAGE__usage ] && echo $USAGE_LINE | grep -q 'usage: -' \
-		&& USAGE_LINE=$(echo $USAGE_LINE | sed "s/usage: -/usage: $USAGE__usage/")
-
-	[ $__SCWRYPT ] \
-		&& USAGE_LINE=$(
-			echo $USAGE_LINE \
-				| sed "s;^[^:]*:;& scwrypts $SCWRYPT_NAME --;" \
-				| sed 's/ \{2,\}/ /g; s/scwrypts -- scwrypts/scwrypts/' \
-			)
-
-	local THE_REST=$(echo $USAGE | grep -vi '^[		]*usage *:' )
-
-	local DYNAMIC_USAGE_ELEMENT
-	#
-	# create dynamic usage elements (like 'args') by defining USAGE__<element>
-	# then using the syntax "<element>: -" in your USAGE variable
-	#
-	# e.g.
-	#
-	# USAGE__args="
-	#	subcommand arg 1   arg 1 description
-	#   subcommand arg 2   some other description
-	# "
-	#
-	# USAGE="
-	# usage: some-command [...args...]
-	#
-	# args: -
-	#   -h, --help   some arguments are applicable everywhere
-	# "
-	#
-	for DYNAMIC_USAGE_ELEMENT in $(echo $THE_REST | sed -n 's/^\([^:]*\): -$/\1/p')
-	do
-		DYNAMIC_USAGE_ELEMENT_TEXT=$(eval echo '$USAGE__'$DYNAMIC_USAGE_ELEMENT)
-
-		[[ ! $DYNAMIC_USAGE_ELEMENT =~ ^description$ ]] \
-			&& DYNAMIC_USAGE_ELEMENT_TEXT=$(echo $DYNAMIC_USAGE_ELEMENT_TEXT | sed 's/[^	]/  &/')
-
-		THE_REST=$(echo $THE_REST | perl -pe "s/$DYNAMIC_USAGE_ELEMENT: -/$DYNAMIC_USAGE_ELEMENT:\n$DYNAMIC_USAGE_ELEMENT_TEXT\n\n/")
-	done
-
-	# allow for dynamic 'description: -' but delete the 'description:' header line
-	THE_REST=$(echo $THE_REST | sed '/^[		]*description:$/d')
-
-	echo "$__DARK_BLUE$USAGE_LINE$__COLOR_RESET\n\n$THE_REST" \
-		| sed "s/^\t\+//; s/\s\+$//; s/^\\s*$//;" \
-		| sed '/./,$!d; :a; /^\n*$/{$d;N;ba;};' \
-		| perl -p0e 's/\n{2,}/\n\n/g' \
-		| perl -p0e 's/:\n{2,}/:\n/g' \
-		>&2
+SUCCESS() {  # command completed successfully
+	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
+		&& PREFIX="SUCCESS  ✔" COLOR=$__GREEN          PRINT "$@"
 }
 
-INPUT() {
+REMINDER() {  # include sysadmin reminder or other important notice to users
+	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
+		&& PREFIX="REMINDER " COLOR=$__BRIGHT_MAGENTA PRINT "$@"
+}
+
+STATUS() {  # general status updates (prefer this to generic 'echo')
+	[[ $SCWRYPTS_LOG_LEVEL -ge 2 ]] \
+		&& PREFIX="STATUS    " COLOR=$__BLUE           PRINT "$@"
+}
+
+WARNING() {  # warning-level messages; not errors
+	[[ $SCWRYPTS_LOG_LEVEL -ge 3 ]] \
+		&& PREFIX="WARNING  " COLOR=$__YELLOW         PRINT "$@"
+}
+
+DEBUG() {  # helpful during development or (sparingly) to help others' development
+	[[ $SCWRYPTS_LOG_LEVEL -ge 4 ]] \
+		&& PREFIX="DEBUG    ℹ" COLOR=$__WHITE          PRINT "$@"
+}
+
+PROMPT() {  # you probably want to use yN or INPUT from below
+	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
+		&& PREFIX="PROMPT   " COLOR=$__CYAN PRINT "$@" \
+		&& PREFIX="USER     ⌨" COLOR=$__BRIGHT_CYAN PRINT '' --no-line-end \
+		;
+}
+
+FAIL()  { SCWRYPTS_LOG_LEVEL=1 ERROR "${@:2}"; exit $1; }
+ABORT() { FAIL 69 'user abort'; }
+
+#####################################################################
+### check for reported errors and format USAGE contents #############
+#####################################################################
+
+CHECK_ERRORS() {
+	local FAIL_OUT=true
+	local DISPLAY_USAGE=true
+
+	[ ! $ERRORS ] && ERRORS=0
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			--fail    ) FAIL_OUT=true  ;;
+			--no-fail ) FAIL_OUT=false ;;
+
+			--usage    ) DISPLAY_USAGE=true  ;;
+			--no-usage ) DISPLAY_USAGE=false ;;
+		esac
+		shift 1
+	done
+
+	[[ $ERRORS -eq 0 ]] && return 0
+
+	[[ $DISPLAY_USAGE =~ true ]] && USAGE
+
+	[[ $FAIL_OUT =~ true ]] && exit $ERRORS || return $ERRORS
+}
+
+source "${0:a:h}/io.usage.zsh"
+
+#####################################################################
+### facilitate user prompt and input ################################
+#####################################################################
+
+# yes/no prompts   && = yes (exit code 0)
+#                  || = no  (exit code 1)
+Yn() { [[ ! $(READ_YN $@ '[Yn]') =~ [nN] ]]; }  # default 'yes'
+yN() { [[   $(READ_YN $@ '[yN]') =~ [yY] ]]; }  # default 'no'
+
+INPUT() {  # read a single line of user input
 	PROMPT "${@:2}"
 	READ $1
 	local VALUE=$(eval echo '$'$1)
 	[ $VALUE ]
 }
 
-Yn() {
-	PROMPT "$@ [Yn]"
-	[ $CI ] && { echo y; return 0; }
-	[ $__SCWRYPTS_YES ] && [[ $__SCWRYPTS_YES -eq 1 ]] && { echo y; return 0; }
+source "${0:a:h}/io.fzf.zsh"  # allow user to select from a list of inputs
 
-	local Yn; READ -k Yn; echo >&2
-	[[ $Yn =~ [nN] ]] && return 1 || return 0
-}
-
-yN() {
-	PROMPT "$@ [yN]"
-	[ $CI ] && { echo y; return 0; }
-	[ $__SCWRYPTS_YES ] && [[ $__SCWRYPTS_YES -eq 1 ]] && { echo y; return 0; }
-
-	local yN; READ -k yN; echo >&2
-	[[ $yN =~ [yY] ]] && return 0 || return 1
-}
-
-CAPTURE() {
-	[ ! $USAGE ] && USAGE="
-	usage: stdout-varname stderr-varname [...cmd and args...]
-
-	captures stdout and stderr on separate variables for a command
-	"
-	{
-		IFS=$'\n' read -r -d '' $2;
-		IFS=$'\n' read -r -d '' $1;
-	} < <((printf '\0%s\0' "$(${@:3})" 1>&2) 2>&1)
-}
-
-#####################################################################
-
-GETSUDO() {
-	echo "\\033[1;36mPROMPT    : checking sudo password...\\033[0m" >&2
-	sudo echo hi >/dev/null 2>&1 </dev/tty \
-		&& SUCCESS '...authenticated!' \
-		|| { ERROR 'failed :c'; return 1; }
-}
-
-LESS() { less -R $@ </dev/tty >/dev/tty; }
-
-FZF()      {
+EDIT() {  # edit a file in user's preferred editor
 	[ $CI ] && {
-		ERROR 'currently in CI, but FZF requires user input'
-		exit 1
-	}
-
-	local FZF_ARGS=()
-
-	FZF_ARGS+=(-i)
-	FZF_ARGS+=(--ansi)
-	FZF_ARGS+=(--bind=ctrl-c:cancel)
-	FZF_ARGS+=(--height=50%)
-	FZF_ARGS+=(--layout=reverse)
-
-	local SELECTION=$(fzf ${FZF_ARGS[@]} --layout=reverse --prompt "$1 : " ${@:2})
-	PROMPT "$1"
-	echo $SELECTION >&2
-	echo $SELECTION
-}
-FZF_HEAD() { FZF $@ --print-query | sed '/^$/d' | head -n1; } # prefer user input over selected
-FZF_TAIL() { FZF $@ --print-query | sed '/^$/d' | tail -n1; } # prefer selected over user input
-
-READ()  {
-	[ $CI ] && {
-		INFO 'currently in CI, skipping READ'
-		return 0
-	}
-	read $@ </dev/tty
-}
-
-EDIT() {
-	[ $CI ] && {
-		INFO 'currently in CI, skipping EDIT'
+		WARNING 'currently in CI, skipping EDIT'
 		return 0
 	}
 
@@ -221,6 +107,12 @@ EDIT() {
 	SUCCESS "finished editing '$1'!"
 }
 
+#####################################################################
+### basic commands with tricky states or default requirements #######
+#####################################################################
+
+LESS() { less -R $@ </dev/tty >/dev/tty; }
+
 YQ() {
 	yq --version | grep -q mikefarah || {
 		yq $@
@@ -228,4 +120,111 @@ YQ() {
 	}
 
 	yq eval '... comments=""' | yq $@
+}
+
+#####################################################################
+### other i/o utilities #############################################
+#####################################################################
+
+CAPTURE() {
+	[ ! $USAGE ] && USAGE="
+		usage: stdout-varname stderr-varname [...cmd and args...]
+
+		captures stdout and stderr on separate variables for a command
+	"
+	{
+		IFS=$'\n' read -r -d '' $2;
+		IFS=$'\n' read -r -d '' $1;
+	} < <((printf '\0%s\0' "$(${@:3})" 1>&2) 2>&1)
+}
+
+
+GETSUDO() {
+	echo "\\033[1;36mPROMPT    : checking sudo password...\\033[0m" >&2
+	sudo echo hi >/dev/null 2>&1 </dev/tty \
+		&& SUCCESS '...authenticated!' \
+		|| { ERROR 'failed :c'; return 1; }
+}
+
+READ()  {
+	[ $CI ] && [ -t 0 ] \
+		&& FAIL 42 'currently in CI, but attempting interactive read; aborting'
+
+	local FORCE_USER_INPUT=false
+	local ARGS=()
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			--force-user-input ) FORCE_USER_INPUT=true ;;
+			-k )
+				ARGS+=($1)
+				;;
+			* ) ARGS+=($1) ;;
+		esac
+		shift 1
+	done
+
+	while read -k -t 0; do :; done;  # flush user stdin
+
+	case $FORCE_USER_INPUT in
+		true  )
+			read ${PREARGS[@]} ${ARGS[@]} $@ </dev/tty
+			;;
+		false )
+			[ -t 0 ] || ARGS=(-u 0 ${ARGS[@]})
+			read ${ARGS[@]} $@
+			;;
+	esac
+}
+
+READ_YN() {  # yes/no read is suprisingly tricky
+	local FORCE_USER_INPUT=false
+	local USERPROMPT=()
+	local READ_ARGS=()
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			--force-user-input )
+				# overrides 'scwrypts -y' and stdin pipe but not CI
+				FORCE_USER_INPUT=true
+				READ_ARGS+=($1)
+				;;
+			* ) USERPROMPT+=($1) ;;
+		esac
+		shift 1
+	done
+
+	##########################################
+
+	local SKIP_USER_INPUT=false
+
+	[ $CI ] \
+		&& SKIP_USER_INPUT=true
+
+	[ $__SCWRYPTS_YES ] && [[ $__SCWRYPTS_YES -eq 1 ]] && [[ $FORCE_USER_INPUT =~ false ]] \
+		&& SKIP_USER_INPUT=true
+
+	##########################################
+
+	local yn
+	PROMPT "${USERPROMPT[@]}"
+
+	case $SKIP_USER_INPUT in
+		true ) yn=y ;;
+		false )
+			[[ $FORCE_USER_INPUT =~ true ]] && [[ $SCWRYPTS_LOG_LEVEL -lt 1 ]] \
+				&& echo -n "${USERPROMPT[@]} : " >&2
+
+			READ ${READ_ARGS[@]} -s -k yn
+
+			[[ $FORCE_USER_INPUT =~ true ]] && [[ $SCWRYPTS_LOG_LEVEL -lt 1 ]] \
+				&& echo $yn >&2
+			;;
+	esac
+
+	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] && echo $yn >&2
+
+	echo $yn
 }

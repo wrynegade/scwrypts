@@ -1,13 +1,10 @@
 #!/bin/zsh
 DEPENDENCIES+=(tic)
-REQUIRED_ENV+=()
 
 use system/config
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-SETUP_TERMINFO() {
+MAIN() {
 	[ ! $TERMINFO_PATH ] && return 0
 	[ ! -d $TERMINFO_PATH ] && FAIL 1 "TERMINFO_PATH='$TERMINFO_PATH' does not exist"
 
@@ -22,6 +19,3 @@ SETUP_TERMINFO() {
 
 	CHECK_ERRORS
 }
-
-#####################################################################
-SETUP_TERMINFO $@

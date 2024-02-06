@@ -1,9 +1,7 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use system/vim/vundle
-
-CHECK_ENVIRONMENT
 #####################################################################
-VUNDLE__REBUILD_PLUGINS $@
+
+MAIN() {
+	VUNDLE__REBUILD_PLUGINS $@
+}

@@ -1,16 +1,40 @@
 #!/usr/bin/env python
+from scwrypts import execute
+#####################################################################
 from json import dumps
 from sys import stderr
 
-from py.lib.http import discord
-from py.lib.scwrypts import execute
+from scwrypts.http import discord
 
-from py.lib.scwrypts.exceptions import ImportedExecutableError
 
-if __name__ != '__main__':
-    raise ImportedExecutableError()
-
-#####################################################################
+description = 'post a message to the indicated discord channel'
+parse_args = [
+        ( ['-b', '--body'], {
+            'dest'     : 'content',
+            'help'     : 'message body',
+            'required' : False,
+            }),
+        ( ['-c', '--channel-id'], {
+            'dest'     : 'channel_id',
+            'help'     : 'override default target channel id',
+            'required' : False,
+            }),
+        ( ['-w', '--webhook'], {
+            'dest'     : 'webhook',
+            'help'     : 'override default target webhook (takes precedence over -c)',
+            'required' : False,
+            }),
+        ( ['--avatar-url'], {
+            'dest'     : 'avatar_url',
+            'help'     : 'override default avatar_url',
+            'required' : False,
+            }),
+        ( ['--username'], {
+            'dest'     : 'username',
+            'help'     : 'override default username',
+            'required' : False,
+            }),
+        ]
 
 def main(args, stream):
     if args.content is None:
@@ -29,33 +53,5 @@ def main(args, stream):
 
 
 #####################################################################
-execute(main,
-        description = 'post a message to the indicated discord channel',
-        parse_args = [
-            ( ['-b', '--body'], {
-                'dest'     : 'content',
-                'help'     : 'message body',
-                'required' : False,
-                }),
-            ( ['-c', '--channel-id'], {
-                'dest'     : 'channel_id',
-                'help'     : 'override default target channel id',
-                'required' : False,
-                }),
-            ( ['-w', '--webhook'], {
-                'dest'     : 'webhook',
-                'help'     : 'override default target webhook (takes precedence over -c)',
-                'required' : False,
-                }),
-            ( ['--avatar-url'], {
-                'dest'     : 'avatar_url',
-                'help'     : 'override default avatar_url',
-                'required' : False,
-                }),
-            ( ['--username'], {
-                'dest'     : 'username',
-                'help'     : 'override default username',
-                'required' : False,
-                }),
-            ]
-        )
+if __name__ == '__main__':
+    execute(main, description, parse_args)

@@ -1,13 +1,22 @@
 #!/usr/bin/env python
-from py.lib.http.linear import graphql
-from py.lib.scwrypts import execute
-
-from py.lib.scwrypts.exceptions import ImportedExecutableError
-
-if __name__ != '__main__':
-    raise ImportedExecutableError()
-
+from scwrypts import execute
 #####################################################################
+from scwrypts.http.linear import graphql
+
+
+description = 'comment on an issue in linear.app'
+parse_args = [
+        ( ['-d', '--issue-id'], {
+            'dest'     : 'issue_id',
+            'help'     : 'issue short-code (e.g. CLOUD-319)',
+            'required' : True,
+            }),
+        ( ['-m', '--message'], {
+            'dest'     : 'message',
+            'help'     : 'comment to post to the target issue',
+            'required' : True,
+            }),
+        ]
 
 
 def get_query(args):
@@ -26,20 +35,6 @@ def main(args, stream):
     response = graphql(get_query(args))
     stream.writeline(response)
 
-
 #####################################################################
-execute(main,
-        description = 'comment on an inssue in linear.app',
-        parse_args = [
-            ( ['-d', '--issue-id'], {
-                'dest'     : 'issue_id',
-                'help'     : 'issue short-code (e.g. CLOUD-319)',
-                'required' : True,
-                }),
-            ( ['-m', '--message'], {
-                'dest'     : 'message',
-                'help'     : 'comment to post to the target issue',
-                'required' : True,
-                }),
-            ]
-        )
+if __name__ == '__main__':
+    execute(main, description, parse_args)

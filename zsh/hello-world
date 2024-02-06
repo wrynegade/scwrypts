@@ -1,8 +1,6 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-SUCCESS 'hello world!'
+MAIN() {
+	SUCCESS 'Hello, World!'
+}

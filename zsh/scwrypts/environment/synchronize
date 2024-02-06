@@ -1,13 +1,8 @@
 #!/bin/zsh               
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use scwrypts/environment-files
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-SYNCHRONIZE() {
+MAIN() {
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
@@ -176,4 +171,4 @@ CLEANUP_ENVIRONMENT_FILE() {
 }
 
 #####################################################################
-SYNCHRONIZE $@
+MAIN $@

@@ -14,7 +14,7 @@ SCWRYPTS__ZSH_PLUGIN() {
 	which scwrypts >/dev/null 2>&1\
 		&& RBUFFER="scwrypts" || RBUFFER="$SCWRYPTS_ROOT/scwrypts"
 
-	RBUFFER+=" --name $NAME --group $GROUP --type $TYPE --verbose"
+	RBUFFER+=" --name $NAME --group $GROUP --type $TYPE"
 	zle accept-line
 }
 

@@ -1,13 +1,8 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use system/vim/vundle
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-PLUGIN_INSTALL() {
+MAIN() {
 	[ -d "$HOME/.vim/bundle/Vundle.vim" ] || {
 		mkdir -p "$HOME/.vim/bundle/"
 		git clone https://github.com/VundleVim/Vundle.vim.git "$HOME/.vim/bundle/Vundle.vim"
@@ -16,6 +11,3 @@ PLUGIN_INSTALL() {
 	VUNDLE__PLUGIN_INSTALL  || return 1
 	VUNDLE__REBUILD_PLUGINS || return 2
 }
-
-#####################################################################
-PLUGIN_INSTALL $@

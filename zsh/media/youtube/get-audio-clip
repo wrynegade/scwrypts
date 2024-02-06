@@ -1,16 +1,11 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use media/youtube
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-GET_AUDIO_CLIP() {
+MAIN() {
 	local URLS=($@)
 
-	[[ ${#URLS[@]} -eq 0 ]] && URLS=($(echo '' | FZF_HEAD 'enter URL'))
+	[[ ${#URLS[@]} -eq 0 ]] && URLS=($(echo '' | FZF_USER_INPUT 'enter URL'))
 	[[ ${#URLS[@]} -eq 0 ]] && ABORT
 
 	local FILENAME=$(YT__GET_FILENAME $URLS)
@@ -26,9 +21,9 @@ GET_AUDIO_CLIP() {
 
 	LENGTH=$(GET_VIDEO_LENGTH "$INPUT_FILE")
 	[ ! $LENGTH ] && { ERROR "unable to determine video length for '$INPUT_FILE'"; return 2; }
-	START_TIME=$(echo 0 | FZF_HEAD "enter start time (0 ≤ t < $LENGTH)")
+	START_TIME=$(echo 0 | FZF_USER_INPUT "enter start time (0 ≤ t < $LENGTH)")
 	[ ! $START_TIME ] && ABORT
-	END_TIME=$(echo $LENGTH | FZF_HEAD "enter end time ($START_TIME > t ≥ $LENGTH)")
+	END_TIME=$(echo $LENGTH | FZF_USER_INPUT "enter end time ($START_TIME > t ≥ $LENGTH)")
 	[ ! $END_TIME ] && ABORT
 
 	STATUS
@@ -37,7 +32,7 @@ GET_AUDIO_CLIP() {
 	STATUS "end time   : $END_TIME"
 	STATUS
 	OUTPUT_FILE=$(echo '' \
-		| FZF_HEAD 'what should I call this clip? (.mp3)' \
+		| FZF_USER_INPUT 'what should I call this clip? (.mp3)' \
 		| sed 's/\.mp3$//' \
 	)
 	[ ! $OUTPUT_FILE ] && ABORT
@@ -49,6 +44,3 @@ GET_AUDIO_CLIP() {
 		&& SUCCESS "created clip '$OUTPUT_FILE'" \
 		|| { ERROR "error creating clip '$(basename $OUTPUT_FILE)' (see above)"; return 3; }
 }
-
-#####################################################################
-GET_AUDIO_CLIP $@

@@ -86,7 +86,7 @@ RDS__GET_DATABASE_CREDENTIALS() {
 		user-input     ) _RDS_AUTH__userinput ;;
 	esac
 
-	[[ $PRINT_PASSWORD -eq 1 ]] && INFO "password : $DB_PASS"
+	[[ $PRINT_PASSWORD -eq 1 ]] && DEBUG "password : $DB_PASS"
 
 	return 0
 }

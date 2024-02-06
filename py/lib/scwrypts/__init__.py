@@ -1,6 +1,13 @@
-from py.lib.scwrypts.execute import execute
-from py.lib.scwrypts.getenv import getenv
-from py.lib.scwrypts.interactive import interactive
-from py.lib.scwrypts.run import run
+'''
+scwrypts
 
-import py.lib.scwrypts.io
+python library functions and invoker for scwrypts
+'''
+
+__all__ = [
+        'scwrypts',
+        'execute',
+        'interactive',
+        ]
+
+from .scwrypts import scwrypts, execute, interactive

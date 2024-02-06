@@ -1,11 +1,8 @@
 #!/bin/zsh
 DEPENDENCIES+=(docker)
-REQUIRED_ENV+=()
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-DOCKER_CLEAN() {
+MAIN() {
 	WARNING 'this will prune all docker resources from the current machine'
 	WARNING 'pruned resources are PERMANENTLY DELETED'
 	yN 'continue?' || return 1
@@ -14,6 +11,3 @@ DOCKER_CLEAN() {
 	SUCCESS "IMAGE     : $(docker image prune -f 2>/dev/null | tail -n 1)"
 	SUCCESS "VOLUME    : $(docker volume prune -f 2>/dev/null | tail -n 1)"
 }
-
-#####################################################################
-DOCKER_CLEAN $@

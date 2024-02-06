@@ -1,13 +1,9 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use db/postgres
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-RUN_SQL_POSTGRES() {
+MAIN() {
+	WARNING " \nthis function is in a beta state\n "
 	local _PASS _ARGS=()
 	POSTGRES__SET_LOGIN_ARGS $@
 
@@ -43,9 +39,3 @@ RUN_SQL_POSTGRES() {
 		&& SUCCESS "finished running '$INPUT_FILE'" \
 		|| FAIL 3 "something went wrong running '$INPUT_FILE' (see above)"
 }
-
-#####################################################################
-WARNING
-WARNING 'this function is in a beta state'
-WARNING
-RUN_SQL_POSTGRES $@

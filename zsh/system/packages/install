@@ -1,13 +1,8 @@
 #!/bin/zsh
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
-
 use system/packages/git
-
-CHECK_ENVIRONMENT
 #####################################################################
 
-INSTALL() {
+MAIN() {
 	local USAGE="
 		usage: [...options...]
 
@@ -71,7 +66,7 @@ INSTALL() {
 
 	[ ! $NAME ] && {
 		NAME=$(echo $TARGET | sed 's/.*\///; s/\.git$//')
-		INFO "using default name '$NAME'"
+		DEBUG "using default name '$NAME'"
 	}
 
 	[ -d "$PACKAGE_INSTALL_DIR/$NAME" ] && [[ $SKIP_PULL -eq 0 ]] && {
@@ -86,6 +81,3 @@ INSTALL() {
 	[[ $SKIP_BUILD -eq 1 ]] && return 0
 	BUILD
 }
-
-#####################################################################
-INSTALL $@

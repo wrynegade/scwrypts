@@ -1,13 +1,11 @@
 #!/usr/bin/env python
-from py.lib.data.converter import convert
-from py.lib.scwrypts import execute
-
-from py.lib.scwrypts.exceptions import ImportedExecutableError
-
-if __name__ != '__main__':
-    raise ImportedExecutableError()
-
+from scwrypts import execute
 #####################################################################
+from scwrypts.data import convert
+
+
+description = 'convert yaml into csv'
+parse_args = []
 
 def main(_args, stream):
     return convert(
@@ -18,7 +16,5 @@ def main(_args, stream):
             )
 
 #####################################################################
-execute(main,
-        description = 'convert yaml into csv',
-        parse_args = [],
-        )
+if __name__ == '__main__':
+    execute(main, description, parse_args)

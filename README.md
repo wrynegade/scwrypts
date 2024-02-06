@@ -6,6 +6,9 @@ In modern developer / dev-ops workflows, scripts require a complex configuration
 Without a better solution, the developer is cursed to copy lines-upon-lines of variables into terminals, create random text artifacts, or maybe even commit secure credentials into source.
 Scwrypts leverages ZSH to give hot-key access to run scripts in such environments.
 
+## Major Version Upgrade Notice
+
+Please refer to [Version 3 to Version 4 Upgrade Path](./docs/upgrade/v3-to-v4.md) when upgrading from scwrypts v3 to scwrypts v4!
 
 ## Dependencies
 Due to the wide variety of resources used by scripting libraries, the user is expected to manually resolve dependencies.
