@@ -56,5 +56,5 @@ source = 'versioningit'
 packages = ['./']
 
 [tool.versioningit]
-match = ['v*']
+match = ['v[0-9]*.[0-9]*.[0-9]*']
 
