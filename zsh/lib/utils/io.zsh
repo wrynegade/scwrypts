@@ -15,26 +15,31 @@ ERROR() {  # command encountered an error
 SUCCESS() {  # command completed successfully
 	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
 		&& PREFIX="SUCCESS  ✔" COLOR=$__GREEN          PRINT "$@"
+	return 0
 }
 
 REMINDER() {  # include sysadmin reminder or other important notice to users
 	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
 		&& PREFIX="REMINDER " COLOR=$__BRIGHT_MAGENTA PRINT "$@"
+	return 0
 }
 
 STATUS() {  # general status updates (prefer this to generic 'echo')
 	[[ $SCWRYPTS_LOG_LEVEL -ge 2 ]] \
 		&& PREFIX="STATUS    " COLOR=$__BLUE           PRINT "$@"
+	return 0
 }
 
 WARNING() {  # warning-level messages; not errors
 	[[ $SCWRYPTS_LOG_LEVEL -ge 3 ]] \
 		&& PREFIX="WARNING  " COLOR=$__YELLOW         PRINT "$@"
+	return 0
 }
 
 DEBUG() {  # helpful during development or (sparingly) to help others' development
 	[[ $SCWRYPTS_LOG_LEVEL -ge 4 ]] \
 		&& PREFIX="DEBUG    ℹ" COLOR=$__WHITE          PRINT "$@"
+	return 0
 }
 
 PROMPT() {  # you probably want to use yN or INPUT from below
@@ -42,6 +47,7 @@ PROMPT() {  # you probably want to use yN or INPUT from below
 		&& PREFIX="PROMPT   " COLOR=$__CYAN PRINT "$@" \
 		&& PREFIX="USER     ⌨" COLOR=$__BRIGHT_CYAN PRINT '' --no-line-end \
 		;
+	return 0
 }
 
 FAIL()  { SCWRYPTS_LOG_LEVEL=1 ERROR "${@:2}"; exit $1; }
@@ -211,15 +217,21 @@ READ_YN() {  # yes/no read is suprisingly tricky
 	local yn
 	PROMPT "${USERPROMPT[@]}"
 
+	local PERFORM_FAKE_PROMPT=false
 	case $SKIP_USER_INPUT in
 		true ) yn=y ;;
 		false )
-			[[ $FORCE_USER_INPUT =~ true ]] && [[ $SCWRYPTS_LOG_LEVEL -lt 1 ]] \
+			[[ $SCWRYPTS_LOG_LEVEL -lt 1 ]] && {
+				[[ $FORCE_USER_INPUT =~ false ]] && [ ! -t 0 ] \
+					|| PERFORM_FAKE_PROMPT=true
+			}
+
+			[[ $PERFORM_FAKE_PROMPT =~ true ]] \
 				&& echo -n "${USERPROMPT[@]} : " >&2
 
 			READ ${READ_ARGS[@]} -s -k yn
 
-			[[ $FORCE_USER_INPUT =~ true ]] && [[ $SCWRYPTS_LOG_LEVEL -lt 1 ]] \
+			[[ $PERFORM_FAKE_PROMPT =~ true ]] \
 				&& echo $yn >&2
 			;;
 	esac
