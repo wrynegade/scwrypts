@@ -100,6 +100,7 @@ jobs:
           name: publish
           command: |
             : \
+              && [ $CIRCLE_TAG ] \
               && pnpm build \
               && pnpm version $(git describe --tags) \
               && pnpm set //registry.npmjs.org/:_authToken=$NPM_TOKEN \
@@ -114,8 +115,10 @@ workflows:
           requires: [python-test]
           context: [pypi-yage]
           filters:
+            tags:
+              only: /^v.*$/
             branches:
-              only: main
+              ignore: /^.*$/
 
   nodejs:
     jobs:
@@ -124,5 +127,7 @@ workflows:
           requires: [nodejs-test]
           context: [npm-wrynegade]
           filters:
+            tags:
+              only: /^v.*$/
             branches:
-              only: main
+              ignore: /^.*$/
