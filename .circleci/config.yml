@@ -30,6 +30,7 @@ jobs:
               && pip install . .[test] \
               && pytest \
               ;
+      - run: python -m build
 
   python-publish:
     executor: python
@@ -37,7 +38,7 @@ jobs:
     steps:
       - checkout:
           path: ~/scwrypts
-      - python/dist
+      - run: python -m build
       - run: pip install twine && twine upload dist/*
 
   nodejs-test:
@@ -113,15 +114,15 @@ workflows:
       - python-test:
           filters:
             tags:
-              only: /^v.*$/
+              only: /^v\d+\.\d+\.\d+.*$/
             branches:
-              only: /^.*$/
+              ignore: /^main$/
       - python-publish:
           requires: [python-test]
           context: [pypi-yage]
           filters:
             tags:
-              only: /^v.*$/
+              only: /^v\d+\.\d+\.\d+.*$/
             branches:
               ignore: /^.*$/
 
@@ -132,12 +133,12 @@ workflows:
             tags:
               only: /^v.*$/
             branches:
-              only: /^.*$/
+              ignore: /^main$/
       - nodejs-publish:
           requires: [nodejs-test]
           context: [npm-wrynegade]
           filters:
             tags:
-              only: /^v.*$/
+              only: /^v\d+\.\d+\.\d+.*$/
             branches:
-              ignore: /^.*$/
+              ignore: /^main$/
