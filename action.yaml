@@ -51,7 +51,7 @@ runs:
         } > $HOME/.scwrypts.apt-get.log 2>&1
 
         echo "updating virtual dependencies"
-        $GITHUB_WORKSPACE/wrynegade/scwrypts/scwrypts -n \
+        $GITHUB_WORKSPACE/wrynegade/scwrypts/scwrypts \
           --name scwrypts/virtualenv/update-all \
           --group scwrypts \
           --type zsh \
