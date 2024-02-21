@@ -41,7 +41,7 @@ def scwrypts(*args, patterns=None, name=None, group=None, _type=None, log_level=
         depth = int(depth) + 1
 
     return run(
-        f'SUBSCWRYPT={depth} {executable} {pre_args} -- {" ".join(args)}',
+        f'SUBSCWRYPT={depth} {executable} {" ".join(pre_args)} -- {" ".join(args)}',
         shell=True,
         executable='/bin/zsh',
         check=False,
