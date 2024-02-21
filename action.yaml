@@ -29,6 +29,7 @@ runs:
         repository: wrynegade/scwrypts
         path: ./wrynegade/scwrypts
         ref: ${{ inputs.version }}
+        fetch-tags: true
 
     - name: check dependencies
       shell: bash
