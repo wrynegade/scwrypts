@@ -30,7 +30,7 @@ jobs:
               && pip install . .[test] \
               && pytest \
               ;
-      - run: python -m build
+      - run: pip install build && python -m build
 
   python-publish:
     executor: python
@@ -38,7 +38,7 @@ jobs:
     steps:
       - checkout:
           path: ~/scwrypts
-      - run: python -m build
+      - run: pip install build && python -m build
       - run: pip install twine && twine upload dist/*
 
   nodejs-test:
@@ -103,12 +103,19 @@ jobs:
             : \
               && [ $CIRCLE_TAG ] \
               && pnpm build \
-              && pnpm version $(git describe --tags) \
+              && pnpm version $CIRCLE_TAG \
               && pnpm set //registry.npmjs.org/:_authToken=$NPM_TOKEN \
               && pnpm publish --no-git-checks \
               ;
 
 workflows:
+  python-dev:
+    jobs:
+      - python-test:
+          filters:
+            branches:
+              ignore: /^main$/
+
   python:
     jobs:
       - python-test:
@@ -116,7 +123,7 @@ workflows:
             tags:
               only: /^v\d+\.\d+\.\d+.*$/
             branches:
-              ignore: /^main$/
+              ignore: /^.*$/
       - python-publish:
           requires: [python-test]
           context: [pypi-yage]
@@ -126,14 +133,21 @@ workflows:
             branches:
               ignore: /^.*$/
 
+  nodejs-dev:
+    jobs:
+      - nodejs-test:
+          filters:
+            branches:
+              ignore: /^main$/
+
   nodejs:
     jobs:
       - nodejs-test:
           filters:
             tags:
-              only: /^v.*$/
+              only: /^v\d+\.\d+\.\d+.*$/
             branches:
-              ignore: /^main$/
+              ignore: /^.*$/
       - nodejs-publish:
           requires: [nodejs-test]
           context: [npm-wrynegade]
@@ -141,4 +155,4 @@ workflows:
             tags:
               only: /^v\d+\.\d+\.\d+.*$/
             branches:
-              ignore: /^main$/
+              ignore: /^.*$/
