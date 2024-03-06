@@ -27,6 +27,9 @@ EKS() {
 
 	local CONTEXT="arn:aws:eks:${AWS_REGION}:${AWS_ACCOUNT}:cluster/${CLUSTER_NAME}"
 
+	kubectl config get-contexts | grep -q $CONTEXT \
+		|| EKS__CLUSTER_LOGIN -c $CLUSTER_NAME
+
 	local CONTEXT_ARGS=()
 	case $1 in
 		helm ) CONTEXT_ARGS+=(--kube-context $CONTEXT) ;;
@@ -51,6 +54,7 @@ EKS__CLUSTER_LOGIN() {
 		already exist.
 	"
 	REQUIRED_ENV=(AWS_ACCOUNT AWS_REGION) CHECK_ENVIRONMENT || return 1
+
 
 	local CLUSTER_NAME
 

@@ -6,6 +6,7 @@ source "${0:a:h}/io.print.zsh"
 [ ! $ERRORS ] && ERRORS=0
 
 ERROR() {  # command encountered an error
+	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
 	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
 		&& PREFIX="ERROR    ✖" COLOR=$__RED            PRINT "$@"
 	((ERRORS+=1))
@@ -13,36 +14,42 @@ ERROR() {  # command encountered an error
 }
 
 SUCCESS() {  # command completed successfully
+	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
 	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
 		&& PREFIX="SUCCESS  ✔" COLOR=$__GREEN          PRINT "$@"
 	return 0
 }
 
 REMINDER() {  # include sysadmin reminder or other important notice to users
+	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
 	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
 		&& PREFIX="REMINDER " COLOR=$__BRIGHT_MAGENTA PRINT "$@"
 	return 0
 }
 
 STATUS() {  # general status updates (prefer this to generic 'echo')
+	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
 	[[ $SCWRYPTS_LOG_LEVEL -ge 2 ]] \
 		&& PREFIX="STATUS    " COLOR=$__BLUE           PRINT "$@"
 	return 0
 }
 
 WARNING() {  # warning-level messages; not errors
+	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
 	[[ $SCWRYPTS_LOG_LEVEL -ge 3 ]] \
 		&& PREFIX="WARNING  " COLOR=$__YELLOW         PRINT "$@"
 	return 0
 }
 
 DEBUG() {  # helpful during development or (sparingly) to help others' development
+	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
 	[[ $SCWRYPTS_LOG_LEVEL -ge 4 ]] \
 		&& PREFIX="DEBUG    ℹ" COLOR=$__WHITE          PRINT "$@"
 	return 0
 }
 
 PROMPT() {  # you probably want to use yN or INPUT from below
+	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
 	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
 		&& PREFIX="PROMPT   " COLOR=$__CYAN PRINT "$@" \
 		&& PREFIX="USER     ⌨" COLOR=$__BRIGHT_CYAN PRINT '' --no-line-end \
