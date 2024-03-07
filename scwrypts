@@ -299,7 +299,7 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 
 		[ ! $WARNING_MESSAGE ] && {
 			GIT_SCWRYPTS fetch --quiet origin main \
-				&& WARNING_MESSAGE='I am unable to verify your scwrypts version'
+				|| WARNING_MESSAGE='I am unable to verify your scwrypts version'
 		}
 
 		[ ! $WARNING_MESSAGE ] && {
