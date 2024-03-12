@@ -37,7 +37,7 @@ __CHECK_COREUTILS() {
 	do
 		__CHECK_DEPENDENCY $UTIL || { ((MISSING_DEPENDENCY_COUNT+=1)); continue; }
 
-		$UTIL --version 2>&1 | grep -q 'GNU' || {
+		$UTIL --version 2>&1 | grep 'GNU' | grep -qv 'BSD' || {
 			WARNING "non-GNU version of $UTIL detected"
 			((NON_GNU_DEPENDENCY_COUNT+=1))
 		}

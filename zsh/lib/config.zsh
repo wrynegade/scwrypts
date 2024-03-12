@@ -4,6 +4,9 @@
 [ ! $SCWRYPTS_ROOT ] \
 	&& SCWRYPTS_ROOT="$(cd $(dirname "${0:a:h}"); git rev-parse --show-toplevel)"
 
+[ ! $SCWRYPTS_ROOT ] && [ -d /usr/share/scwrypts ] \
+	&& SCWRYPTS_ROOT=/usr/share/scwrypts
+
 #####################################################################
 
 DEFAULT_CONFIG="$SCWRYPTS_ROOT/zsh/lib/config.user.zsh"
