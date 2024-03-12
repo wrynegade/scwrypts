@@ -2,7 +2,7 @@
 #####################################################################
 
 [ ! $SCWRYPTS_ROOT ] \
-	&& SCWRYPTS_ROOT="$(cd $(dirname "${0:a:h}"); git rev-parse --show-toplevel)"
+	&& SCWRYPTS_ROOT="$(cd $(dirname "${0:a:h}"); git rev-parse --show-toplevel 2>/dev/null)"
 
 [ ! $SCWRYPTS_ROOT ] && [ -d /usr/share/scwrypts ] \
 	&& SCWRYPTS_ROOT=/usr/share/scwrypts
