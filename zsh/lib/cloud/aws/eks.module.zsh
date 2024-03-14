@@ -28,7 +28,7 @@ EKS() {
 	local CONTEXT="arn:aws:eks:${AWS_REGION}:${AWS_ACCOUNT}:cluster/${CLUSTER_NAME}"
 
 	kubectl config get-contexts | grep -q $CONTEXT \
-		|| EKS__CLUSTER_LOGIN -c $CLUSTER_NAME
+		|| EKS__CLUSTER_LOGIN -c $CLUSTER_NAME >/dev/null
 
 	local CONTEXT_ARGS=()
 	case $1 in
