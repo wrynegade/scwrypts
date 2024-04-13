@@ -1,8 +1,16 @@
+#####################################################################
+
+command -v scwrypts &>/dev/null || {
+	echo 'scwrypts is required in your PATH in order to use the zsh plugins; skipping' >&2
+	return 0
+}
+
 NO_EXPORT_CONFIG=1 source "${0:a:h}/zsh/lib/import.driver.zsh" || return 42
 
 #####################################################################
+
 SCWRYPTS__ZSH_PLUGIN() {
-	local SCWRYPT_SELECTION=$(SCWRYPTS__GET_AVAILABLE_SCWRYPTS | FZF 'select a script' --header-lines 1)
+	local SCWRYPT_SELECTION=$(scwrypts --list | FZF 'select a script' --header-lines 1)
 	local NAME
 	local TYPE
 	local GROUP
@@ -22,8 +30,10 @@ zle -N scwrypts SCWRYPTS__ZSH_PLUGIN
 bindkey $SCWRYPTS_SHORTCUT scwrypts
 
 #####################################################################
+
 SCWRYPTS__ZSH_BUILDER_PLUGIN() {
-	local SCWRYPT_SELECTION=$(SCWRYPTS__GET_AVAILABLE_SCWRYPTS | FZF 'select a script' --header-lines 1)
+	local SCWRYPT_SELECTION=$(scwrypts --list  | FZF 'select a script' --header-lines 1)
+	echo $SCWRYPT_SELECTION >&2
 	local NAME
 	local TYPE
 	local GROUP
@@ -32,7 +42,7 @@ SCWRYPTS__ZSH_BUILDER_PLUGIN() {
 
 	SCWRYPTS__SEPARATE_SCWRYPT_SELECTION $SCWRYPT_SELECTION
 
-	scwrypts --name $NAME --group $GROUP --type $TYPE -- --help >&2 || {
+	scwrypts -n --name $NAME --group $GROUP --type $TYPE -- --help >&2 || {
 		zle accept-line
 		return 0
 	}
@@ -49,6 +59,7 @@ zle -N scwrypts-builder SCWRYPTS__ZSH_BUILDER_PLUGIN
 bindkey $SCWRYPTS_BUILDER_SHORTCUT scwrypts-builder
 
 #####################################################################
+
 SCWRYPTS__ZSH_PLUGIN_ENV() {
 	local RESET='reset'
 	local SELECTED=$(\

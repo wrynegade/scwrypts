@@ -171,7 +171,7 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 
 			[ $NAMESPACE ] && CLI_ARGS+=(--namespace $NAMESPACE)
 			[[ $VERBOSE -eq 1 ]] && {
-				INFO "
+				REMINDER "
 					context '$CONTEXT'
 					namespace '$NAMESPACE'
 					environment '$SCWRYPTS_ENV'
@@ -180,7 +180,7 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 				STATUS "running $CLI ${CLI_ARGS[@]} ${USER_ARGS[@]}"
 			} || {
 				[[ $(_SCWRYPTS_KUBECTL_SETTINGS get context) =~ ^show$ ]] && {
-					INFO "$SCWRYPTS_ENV.$SUBSESSION : $CLI ${CLI_ARGS[@]} ${USER_ARGS[@]}"
+					REMINDER "$SCWRYPTS_ENV.$SUBSESSION : $CLI ${CLI_ARGS[@]} ${USER_ARGS[@]}"
 				}
 			}
 			$CLI ${CLI_ARGS[@]} ${USER_ARGS[@]}

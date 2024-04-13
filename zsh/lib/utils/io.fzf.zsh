@@ -40,18 +40,3 @@ FZF_USER_INPUT() { # allow user to type custom answers; reconfirm if ambiguous w
 	echo $FZF_OUTPUT
 	[ $FZF_OUTPUT ]
 }
-
-#####################################################################
-### vvv DEPRECATED vvv ##############################################
-#####################################################################
-
-FZF_HEAD() {  # prefer user input over selected
-	WARNING 'FZF_HEAD is deprecated and will be unavailable in v4.2; please switch to FZF_USER_INPUT (drop-in fix!)'
-	FZF $@ --print-query | sed '/^$/d' | head -n1;
-}
-FZF_TAIL() {  # prefer selected over user input
-	WARNING 'FZF_TAIL is deprecated and will be unavailable in v4.2; please switch to FZF_USER_INPUT (drop-in fix!)'
-	FZF $@ --print-query | sed '/^$/d' | tail -n1;
-}
-
-#####################################################################

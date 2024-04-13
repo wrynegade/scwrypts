@@ -7,6 +7,8 @@
 [ ! $SCWRYPTS_ROOT ] && [ -d /usr/share/scwrypts ] \
 	&& SCWRYPTS_ROOT=/usr/share/scwrypts
 
+export SCWRYPTS_ROOT__scwrypts="$SCWRYPTS_ROOT"
+
 #####################################################################
 
 DEFAULT_CONFIG="$SCWRYPTS_ROOT/zsh/lib/config.user.zsh"
@@ -35,8 +37,7 @@ export \
 	SCWRYPTS_OUTPUT_PATH \
 	;
 
-SCWRYPTS_GROUPS+=(scwrypts) # 'scwrypts' group is required!
-SCWRYPTS_GROUPS=($(echo $SCWRYPTS_GROUPS | sed 's/\s\+/\n/g' | sort -u))
+SCWRYPTS_GROUPS=(scwrypts $(echo $SCWRYPTS_GROUPS | sed 's/\s\+/\n/g' | sort -u))
 
 source "$SCWRYPTS_ROOT/zsh/lib/config.group.zsh" \
 	|| FAIL 69 'failed to set up scwrypts group; aborting'

@@ -119,6 +119,27 @@ SCWRYPTS__GET_RUNSTRING__zsh() {
 		|| SCWRYPT_FILENAME="$GROUP_PATH/$SCWRYPT_TYPE/$SCWRYPT_NAME" \
 		;
 
+	SCWRYPTS__GET_RUNSTRING__zsh__generic "$SCWRYPT_FILENAME"
+	return 0
+}
+
+SCWRYPTS__GET_RUNSTRING__zsh__generic() {
+	# boilerplate to allow
+	#    - multiflag splitting (e.g. -abc = -a -b -c)
+	#    - help flag injection (e.g. -h | --help)
+	#    - default USAGE definition (allows USAGE__options style usage definition)
+	#    - required MAIN() function wrapping
+	#
+	# this is available automatically in SCWRYPTS_GROUP declaration contexts
+	# (e.g. my-group.scwrypts.zsh)
+	local ZSH_FILENAME="$1"
+	[ $ZSH_FILENAME ] || {
+		ERROR '
+			to use SCWRYPTS__GET_RUNSTRING__zsh__generic, you must provide a
+			ZSH_FILENAME (arg $1) where the MAIN function is defined
+			'
+		return 1
+	}
 	printf "
 		source '$SCWRYPT_FILENAME'
 		CHECK_ENVIRONMENT
@@ -154,22 +175,6 @@ SCWRYPTS__GET_RUNSTRING__zsh() {
 			done
 			MAIN \${MAIN_ARGS[@]}
 		} "
-
-
-	return 0
-}
-
-SCWRYPTS__GET_RUNSTRING__zsh_v3() {
-	WARNING "scwrypts zsh/v3 runstrings are now deprecated; please update to scwrypts v4 format"
-
-	__CHECK_DEPENDENCY zsh || return 1
-
-	[ $(eval echo '$SCWRYPTS_TYPE__'$SCWRYPT_GROUP) ] \
-		&& echo "source $GROUP_PATH/$SCWRYPT_NAME" \
-		|| echo "source $GROUP_PATH/$SCWRYPT_TYPE/$SCWRYPT_NAME" \
-		;
-
-	return 0
 }
 
 SCWRYPTS__GET_RUNSTRING__py() {

@@ -1,12 +1,17 @@
 #!/bin/zsh
-
 export EXECUTION_DIR=$(pwd)
 source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
-
 #####################################################################
 () {
 	cd "$SCWRYPTS_ROOT__scwrypts"
 	GIT_SCWRYPTS() { git -C "$SCWRYPTS_ROOT__scwrypts" $@; }
+
+	local INSTALLATION_TYPE
+	[ ! -d "$SCWRYPTS_ROOT__scwrypts/.git" ] && [ ! -f "$SCWRYPTS_ROOT__scwrypts/.git" ] \
+		&& INSTALLATION_TYPE=$(cat "$SCWRYPTS_ROOT__scwrypts/MANAGED_BY" 2>/dev/null) \
+		|| INSTALLATION_TYPE=manual \
+		;
+
 	local ERRORS=0
 	local USAGE='
 		usage: scwrypts [...options...] [...patterns...] -- [...script options...]
@@ -22,10 +27,10 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 		    -y, --yes              auto-accept all [yn] prompts through current scwrypt
 		    -e, --env <env-name>   set environment; overwrites SCWRYPTS_ENV
 		    -n                     shorthand for "--log-level 0"
-		    -v, --log-level [0-4]  set scwrypts log level to one of the following:
+		    -v, --log-level [0-4]  set incremental scwrypts log level to one of the following:
 			                         0 : only command output and critical failures; skips logfile
-			                         1 : add success / failure messages
-									 2 : include status update messages
+			                         1 : include success / failure messages
+			                         2 : include status update messages
 									 3 : (default) include warning messages
 			                         4 : include debug messages
 
@@ -81,30 +86,51 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 				;;
 
 			--version )
-				echo scwrypts $(GIT_SCWRYPTS describe --tags)
+				case $INSTALLATION_TYPE in
+					manual ) echo "scwrypts $(GIT_SCWRYPTS describe --tags) (via GIT)" ;;
+					     * ) echo scwrypts $(cat "$SCWRYPTS_ROOT__scwrypts/VERSION")   ;;
+				esac
 				return 0
 				;;
 
 			--update )
-				GIT_SCWRYPTS fetch --quiet origin main
-				GIT_SCWRYPTS fetch --quiet origin main --tags
-				local SYNC_STATUS=$?
+				case $INSTALLATION_TYPE in
+					aur )
+						SCWRYPTS_LOG_LEVEL=3 REMINDER " 
+							This installation is built from the AUR. Update through 'makepkg' or use
+							your preferred AUR package management tool (e.g. 'yay -Syu scwrypts')
+							 "
+						;;
 
-				GIT_SCWRYPTS diff --exit-code origin/main -- . >/dev/null 2>&1
-				local DIFF_STATUS=$?
+					manual )
+						GIT_SCWRYPTS fetch --quiet origin main
+						GIT_SCWRYPTS fetch --quiet origin main --tags
+						local SYNC_STATUS=$?
 
-				[[ $SYNC_STATUS -eq 0 ]] && [[ $DIFF_STATUS -eq 0 ]] && {
-					SUCCESS 'already up-to-date with origin/main'
-				} || {
-					GIT_SCWRYPTS rebase --autostash origin/main \
-						&& SUCCESS 'up-to-date with origin/main' \
-						&& GIT_SCWRYPTS log -n1 \
-						|| {
-							GIT_SCWRYPTS rebase --abort
-							ERROR 'unable to update scwrypts; please try manual upgrade'
-							REMINDER "installation in '$(pwd)'"
+						GIT_SCWRYPTS diff --exit-code origin/main -- . >/dev/null 2>&1
+						local DIFF_STATUS=$?
+
+						[[ $SYNC_STATUS -eq 0 ]] && [[ $DIFF_STATUS -eq 0 ]] && {
+							SUCCESS 'already up-to-date with origin/main'
+						} || {
+							GIT_SCWRYPTS rebase --autostash origin/main \
+								&& SUCCESS 'up-to-date with origin/main' \
+								&& GIT_SCWRYPTS log -n1 \
+								|| {
+									GIT_SCWRYPTS rebase --abort
+									ERROR 'unable to update scwrypts; please try manual upgrade'
+									REMINDER "installation in '$SCWRYPTS_ROOT__scwrypts'"
+								}
 						}
-				}
+						;;
+
+					* )
+						SCWRYPTS_LOG_LEVEL=3 REMINDER " 
+							This is a managed installation of scwrypts. Please update through your
+							system package manager.
+							 "
+						;;
+				esac
 				return 0
 				;;
 
@@ -292,30 +318,32 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 
 	[ ! $SUBSCWRYPT ] && export SUBSCWRYPT=0
 
-	[[ $SUBSCWRYPT -eq 0 ]] && [[ $ENV_NAME =~ prod ]] && [[ $SCWRYPTS_LOG_LEVEL -gt 0 ]] && {
-		STATUS "on '$ENV_NAME'; checking diff against origin/main"
+	[[ $INSTALLATION_TYPE =~ ^manual$ ]] && {
+		[[ $SUBSCWRYPT -eq 0 ]] && [[ $ENV_NAME =~ prod ]] && [[ $SCWRYPTS_LOG_LEVEL -gt 0 ]] && {
+			STATUS "on '$ENV_NAME'; checking diff against origin/main"
 
-		local WARNING_MESSAGE
+			local WARNING_MESSAGE
 
-		[ ! $WARNING_MESSAGE ] && {
-			GIT_SCWRYPTS fetch --quiet origin main \
-				|| WARNING_MESSAGE='I am unable to verify your scwrypts version'
-		}
+			[ ! $WARNING_MESSAGE ] && {
+				GIT_SCWRYPTS fetch --quiet origin main \
+					|| WARNING_MESSAGE='I am unable to verify your scwrypts version'
+			}
 
-		[ ! $WARNING_MESSAGE ] && {
-			GIT_SCWRYPTS diff --exit-code origin/main -- . >/dev/null 2>&1 \
-				|| WARNING_MESSAGE='your scwrypts is currently out-of-date'
-		}
+			[ ! $WARNING_MESSAGE ] && {
+				GIT_SCWRYPTS diff --exit-code origin/main -- . >/dev/null 2>&1 \
+					|| WARNING_MESSAGE='your scwrypts is currently out-of-date'
+			}
 
-		[ $WARNING_MESSAGE ] && {
-			[[ $SCWRYPTS_LOG_LEVEL -lt 3 ]] && {
-				REMINDER "you are running in ${__BRIGHT_RED}production${__BRIGHT_MAGENTA} and $WARNING_MESSAGE"
-			} || {
-				GIT_SCWRYPTS diff --exit-code origin/main -- . >&2
-				WARNING "you are trying to run in ${__BRIGHT_RED}production${__YELLOW} but $WARNING_MESSAGE (relevant diffs and errors above)"
-				yN 'continue?' || {
-					REMINDER "you can use 'scwrypts --update' to quickly update scwrypts to latest"
-					ABORT
+			[ $WARNING_MESSAGE ] && {
+				[[ $SCWRYPTS_LOG_LEVEL -lt 3 ]] && {
+					REMINDER "you are running in ${__BRIGHT_RED}production${__BRIGHT_MAGENTA} and $WARNING_MESSAGE"
+				} || {
+					GIT_SCWRYPTS diff --exit-code origin/main -- . >&2
+					WARNING "you are trying to run in ${__BRIGHT_RED}production${__YELLOW} but $WARNING_MESSAGE (relevant diffs and errors above)"
+					yN 'continue?' || {
+						REMINDER "you can use 'scwrypts --update' to quickly update scwrypts to latest"
+						ABORT
+					}
 				}
 			}
 		}
@@ -368,6 +396,7 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 	#####################################################################
 	### run the scwrypt #################################################
 	#####################################################################
+
 	set -o pipefail
 	{
 		[ $HEADER ] && echo $HEADER
