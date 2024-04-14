@@ -44,7 +44,7 @@ commands:
 custom:
   archlinux:
     prepare:
-      - &archlinux_prepare
+      - &archlinux-prepare
         run:
           name: prepare archlinux dependencies
           command: |
@@ -53,18 +53,18 @@ custom:
             echo "ci ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
     clone-aur:
-      - &archlinux_clone_aur
+      - &archlinux-clone-aur
         archlinux-run:
           _name: clone aur/scwrypts
           command: git clone https://aur.archlinux.org/scwrypts.git aur
 
     clone-scwrypts:
-      - &archlinux_clone_scwrypts
+      - &archlinux-clone-scwrypts
         run:
           name: clone wrynegade/scwrypts
           working_directory: /home/ci
           command: |
-            GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone -b "$CIRCLE_BRANCH" "$CIRCLE_REPOSITORY_URL" scwrypts
+            GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone -b "$(echo $CIRCLE_BRANCH | grep . || echo $CIRCLE_TAG)" "$CIRCLE_REPOSITORY_URL" scwrypts
             chown -R ci:ci  ./scwrypts
 
 
@@ -83,9 +83,9 @@ jobs:
   aur-test:
     executor: archlinux
     steps:
-      - *archlinux_prepare
-      - *archlinux_clone_aur
-      - *archlinux_clone_scwrypts
+      - *archlinux-prepare
+      - *archlinux-clone-aur
+      - *archlinux-clone-scwrypts
       - archlinux-run:
           _name: test aur build on current source
           working_directory: /home/ci/aur
@@ -108,8 +108,8 @@ jobs:
   aur-publish:
     executor: archlinux
     steps:
-      - *archlinux_prepare
-      - *archlinux_clone_aur
+      - *archlinux-prepare
+      - *archlinux-clone-aur
       - archlinux-run:
           _name: update PKGBUILD and .SRCINFO
           working_directory: /home/ci/aur
@@ -239,13 +239,13 @@ workflows:
   test:
     jobs:
       - aur-test:
-          &dev_filters
+          &dev-filters
           filters:
             branches:
               ignore: /^main$/
 
-      - python-test: *dev_filters
-      - nodejs-test: *dev_filters
+      - python-test: *dev-filters
+      - nodejs-test: *dev-filters
 
   publish:
     jobs:
