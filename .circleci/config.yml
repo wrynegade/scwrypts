@@ -4,7 +4,14 @@ version: 2.1
 orbs:
   python: circleci/python@2.1.1
 
+
 executors:
+  archlinux:
+    docker:
+      - image: archlinux:base-devel
+    resource_class: small
+    working_directory: /
+
   python:
     docker:
       - image: cimg/python:3.11
@@ -16,30 +23,125 @@ executors:
     resource_class: medium
 
 
-jobs:
-  python-test:
-    executor: python
-    working_directory: ~/scwrypts/py/lib
+commands:
+  archlinux-run:
+    description: execute command steps in the archlinux container from the CI user
+    parameters:
+      _name:
+        type: string
+      command:
+        type: string
+      working_directory:
+        type: string
+        default: /home/ci
     steps:
-      - checkout:
-          path: ~/scwrypts
       - run:
-          name: pytest
+          name: << parameters._name >>
+          working_directory: << parameters.working_directory >>
+          command: su ci -c '<< parameters.command >>'
+
+
+custom:
+  archlinux:
+    prepare:
+      - &archlinux_prepare
+        run:
+          name: prepare archlinux dependencies
+          command: |
+            pacman --noconfirm -Syu git openssh ca-certificates-utils
+            useradd -m ci
+            echo "ci ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+    clone-aur:
+      - &archlinux_clone_aur
+        archlinux-run:
+          _name: clone aur/scwrypts
+          command: git clone https://aur.archlinux.org/scwrypts.git aur
+
+    clone-scwrypts:
+      - &archlinux_clone_scwrypts
+        run:
+          name: clone wrynegade/scwrypts
+          working_directory: /home/ci
+          command: |
+            GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone -b "$CIRCLE_BRANCH" "$CIRCLE_REPOSITORY_URL" scwrypts
+            chown -R ci:ci  ./scwrypts
+
+
+jobs:
+  require-full-semver:
+    executor: python
+    steps:
+      - run:
+          name: check CIRCLE_TAG for full semantic version
           command: |
             : \
-              && pip install . .[test] \
-              && pytest \
-              ;
-      - run: pip install build && python -m build
+                && [ $CIRCLE_TAG ] \
+                && [[ $CIRCLE_TAG =~ ^v[0-9]*.[0-9]*.[0-9]*$ ]] \
+                ;
 
-  python-publish:
-    executor: python
-    working_directory: ~/scwrypts/py/lib
+  aur-test:
+    executor: archlinux
     steps:
-      - checkout:
-          path: ~/scwrypts
-      - run: pip install build && python -m build
-      - run: pip install twine && twine upload dist/*
+      - *archlinux_prepare
+      - *archlinux_clone_aur
+      - *archlinux_clone_scwrypts
+      - archlinux-run:
+          _name: test aur build on current source
+          working_directory: /home/ci/aur
+          command: >-
+            :
+            && PKGVER=$(sed -n "s/^pkgver=//p" ./PKGBUILD)
+            && cp -r ../scwrypts ../scwrypts-$PKGVER
+            && rm -rf ../scwrypts-$PKGVER/.circleci
+            && rm -rf ../scwrypts-$PKGVER/.git
+            && rm -rf ../scwrypts-$PKGVER/.gitattributes
+            && rm -rf ../scwrypts-$PKGVER/.gitignore
+            && rm -rf ../scwrypts-$PKGVER/.github
+            && tar -czf scwrypts.tar.gz ../scwrypts-$PKGVER
+            && echo "source=(scwrypts.tar.gz)" >> PKGBUILD
+            && echo "sha256sums=(SKIP)" >> PKGBUILD
+            && makepkg --noconfirm -si
+            && scwrypts --version | grep "^scwrypts v$PKGVER$"
+            ;
+
+  aur-publish:
+    executor: archlinux
+    steps:
+      - *archlinux_prepare
+      - *archlinux_clone_aur
+      - archlinux-run:
+          _name: update PKGBUILD and .SRCINFO
+          working_directory: /home/ci/aur
+          command: >-
+            :
+            && NEW_VERSION=$(echo $CIRCLE_TAG | sed 's/^v//')
+            && NEW_VERSION=4.2.0
+            && sed "s/pkgver=.*/pkgver=$NEW_VERSION/; s/^pkgrel=.*/pkgrel=1/; /sha256sums/d" PKGBUILD -i
+            && makepkg -g >> PKGBUILD
+            && makepkg --printsrcinfo > .SRCINFO
+            ;
+      - archlinux-run:
+          _name: sanity check for version build
+          working_directory: /home/ci/aur
+          command: >-
+            :
+            && makepkg --noconfirm -si
+            && scwrypts --version
+            && scwrypts --version | grep -q "^scwrypts $CIRCLE_TAG\$"
+            ;
+      - archlinux-run:
+          _name: publish new version
+          working_directory: /home/ci/aur
+          command: >-
+            :
+            && git add PKGBUILD .SRCINFO
+            && git -c user.email=yage@yage.io -c user.name=yage commit -am "$CIRCLE_TAG"
+            && eval $(ssh-agent)
+            && echo -e $SSH_KEY_PRIVATE__AUR | ssh-add -
+            && git remote add upstream ssh://aur@aur.archlinux.org/scwrypts.git
+            && echo 'DO THE GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git push upstream'
+            ;
 
   nodejs-test:
     executor: nodejs
@@ -108,51 +210,75 @@ jobs:
               && pnpm publish --no-git-checks \
               ;
 
+  python-test:
+    executor: python
+    working_directory: ~/scwrypts/py/lib
+    steps:
+      - checkout:
+          path: ~/scwrypts
+      - run:
+          name: pytest
+          command: |
+            : \
+              && pip install . .[test] \
+              && pytest \
+              ;
+      - run: pip install build && python -m build
+
+  python-publish:
+    executor: python
+    working_directory: ~/scwrypts/py/lib
+    steps:
+      - checkout:
+          path: ~/scwrypts
+      - run: pip install build && python -m build
+      - run: pip install twine && twine upload dist/*
+
+
 workflows:
-  python-dev:
+  test:
     jobs:
-      - python-test:
+      - aur-test:
+          &dev_filters
           filters:
             branches:
               ignore: /^main$/
 
-  python:
+      - python-test: *dev_filters
+      - nodejs-test: *dev_filters
+
+  publish:
     jobs:
-      - python-test:
+      - require-full-semver:
           filters:
             tags:
               only: /^v\d+\.\d+\.\d+.*$/
             branches:
               ignore: /^.*$/
+
+      - aur-test:
+          &only-publish-for-full-semver
+          requires: [require-full-semver]
+      - aur-publish:
+          #
+          # there's a crazy-low-chance race-condition between this job and the GH Action '../.github/workflows/automatic-release.yaml'
+          #   - automatic-release creates the release artifact, but takes no more than 15-30 seconds (current avg:16s max:26s)
+          #   - this publish step requires the release artifact, but waits for all language-repository publishes to complete first (a few minutes at least)
+          #
+          # if something goes wrong, this step can be safely rerun after fixing the release artifact :)
+          #
+          context: [aur-yage]
+          requires:
+            - aur-test
+            - python-publish
+            - nodejs-publish
+
+      - python-test: *only-publish-for-full-semver
       - python-publish:
-          requires: [python-test]
-          context: [pypi-yage]
-          filters:
-            tags:
-              only: /^v\d+\.\d+\.\d+.*$/
-            branches:
-              ignore: /^.*$/
+          requires:
+            - python-test
 
-  nodejs-dev:
-    jobs:
-      - nodejs-test:
-          filters:
-            branches:
-              ignore: /^main$/
-
-  nodejs:
-    jobs:
-      - nodejs-test:
-          filters:
-            tags:
-              only: /^v\d+\.\d+\.\d+.*$/
-            branches:
-              ignore: /^.*$/
+      - nodejs-test: *only-publish-for-full-semver
       - nodejs-publish:
-          requires: [nodejs-test]
-          context: [npm-wrynegade]
-          filters:
-            tags:
-              only: /^v\d+\.\d+\.\d+.*$/
-            branches:
-              ignore: /^.*$/
+          requires:
+            - nodejs-test
