@@ -251,6 +251,7 @@ workflows:
     jobs:
       - require-full-semver:
           filters:
+            &only-run-on-full-semver-tag-filters
             tags:
               only: /^v\d+\.\d+\.\d+.*$/
             branches:
@@ -258,7 +259,9 @@ workflows:
 
       - aur-test:
           &only-publish-for-full-semver
-          requires: [require-full-semver]
+          filters: *only-run-on-full-semver-tag-filters
+          requires:
+            - require-full-semver
       - aur-publish:
           #
           # there's a crazy-low-chance race-condition between this job and the GH Action '../.github/workflows/automatic-release.yaml'
@@ -267,6 +270,7 @@ workflows:
           #
           # if something goes wrong, this step can be safely rerun after fixing the release artifact :)
           #
+          filters: *only-run-on-full-semver-tag-filters
           context: [aur-yage]
           requires:
             - aur-test
@@ -275,10 +279,12 @@ workflows:
 
       - python-test: *only-publish-for-full-semver
       - python-publish:
+          filters: *only-run-on-full-semver-tag-filters
           requires:
             - python-test
 
       - nodejs-test: *only-publish-for-full-semver
       - nodejs-publish:
+          filters: *only-run-on-full-semver-tag-filters
           requires:
             - nodejs-test
