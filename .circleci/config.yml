@@ -280,11 +280,13 @@ workflows:
       - python-test: *only-publish-for-full-semver
       - python-publish:
           filters: *only-run-on-full-semver-tag-filters
+          context: [pypi-yage]
           requires:
             - python-test
 
       - nodejs-test: *only-publish-for-full-semver
       - nodejs-publish:
           filters: *only-run-on-full-semver-tag-filters
+          context: [npm-wrynegade]
           requires:
             - nodejs-test
