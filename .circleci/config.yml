@@ -139,7 +139,7 @@ jobs:
             && eval $(ssh-agent)
             && echo -e $SSH_KEY_PRIVATE__AUR | ssh-add -
             && git remote add upstream ssh://aur@aur.archlinux.org/scwrypts.git
-            && echo 'DO THE GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git push upstream'
+            && GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git push upstream
             ;
 
   nodejs-test:
