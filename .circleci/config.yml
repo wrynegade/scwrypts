@@ -116,7 +116,6 @@ jobs:
           command: >-
             :
             && NEW_VERSION=$(echo $CIRCLE_TAG | sed 's/^v//')
-            && NEW_VERSION=4.2.0
             && sed "s/pkgver=.*/pkgver=$NEW_VERSION/; s/^pkgrel=.*/pkgrel=1/; /sha256sums/d" PKGBUILD -i
             && makepkg -g >> PKGBUILD
             && makepkg --printsrcinfo > .SRCINFO
