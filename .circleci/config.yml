@@ -102,6 +102,7 @@ jobs:
             && echo "source=(scwrypts.tar.gz)" >> PKGBUILD
             && echo "sha256sums=(SKIP)" >> PKGBUILD
             && makepkg --noconfirm -si
+            && echo validating scwrypts version
             && scwrypts --version | grep "^scwrypts v$PKGVER$"
             ;
 

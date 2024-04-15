@@ -13,7 +13,7 @@ class MissingFlagAndEnvironmentVariableError(EnvironmentError, ArgumentError):
 
 class MissingScwryptsExecutableError(EnvironmentError):
     def __init__(self):
-        super().__init__(f'scwrypts must be installed and available on your PATH')
+        super().__init__('scwrypts must be installed and available on your PATH')
 
 
 class BadScwryptsLookupError(ValueError):

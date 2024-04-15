@@ -5,44 +5,54 @@ from subprocess import run
 from .exceptions import MissingScwryptsExecutableError, BadScwryptsLookupError, MissingScwryptsGroupOrTypeError
 
 
-def scwrypts(*args, patterns=None, name=None, group=None, _type=None, log_level=None):
+def scwrypts(patterns=None, args=None, executable_args=None, name=None, group=None, _type=None):
     '''
     top-level scwrypts invoker from python
 
-    - patterns allows for pattern-based scwrypt lookup
-    - name/group/type allos for precise-match lookup
+        patterns          str / list   pattern-based scwrypt lookup
+        args              str / list   arguments forwarded to the invoked scwrypt
+        executable_args   str / list   arguments for the 'scwrypts' executable
+          (str above assumes space-delimited values)
 
-    *args should be a list of strings and is forwarded to the
-    invoked scwrypt
+        name    str   exact scwrypt lookup name (requires group and _type)
+        group   str   exact scwrypt lookup group
+        _type   str   exact scwrypt lookup type
+
+        SCWRYPTS_EXECUTABLE   configuration variable which defines the full path to scwrypts executable
 
     see 'scwrypts --help' for more information
     '''
-    executable = which('scwrypts')
-    if executable is None:
-        raise MissingScwryptsExecutableError()
-
     if patterns is None and name is None:
         raise BadScwryptsLookupError()
 
-    pre_args = []
+    if name is not None and (group is None or _type is None):
+        raise MissingScwryptsGroupOrTypeError(group, _type)
 
-    if name is None:
-        pre_args += patterns
-    else:
-        pre_args += ['--name', name, '--group', group, '--type', _type]
-        if group is None or _type is None:
-            raise MissingScwryptsGroupOrTypeError(group, _type)
+    executable = which(getenv('SCWRYPTS_EXECUTABLE', 'scwrypts'))
 
-    if log_level is not None:
-        pre_args += ['--log-level', log_level]
+    if executable is None:
+        raise MissingScwryptsExecutableError()
+
+    lookup = _parse(patterns) if name is None else f'--name {name} --group {group} --type {_type}'
 
     depth = getenv('SUBSCWRYPT', '')
     if depth != '':
         depth = int(depth) + 1
 
     return run(
-        f'SUBSCWRYPT={depth} {executable} {" ".join(pre_args)} -- {" ".join(args)}',
+        f'SUBSCWRYPT={depth} {executable} {_parse(executable_args)} {lookup} -- {_parse(args)}',
         shell=True,
         executable='/bin/zsh',
         check=False,
+        capture_output=True,
+        text=True,
         )
+
+def _parse(string_or_list_args):
+    if string_or_list_args is None:
+        return ''
+
+    if isinstance(string_or_list_args, list):
+        return ' '.join(string_or_list_args)
+
+    return str(string_or_list_args)

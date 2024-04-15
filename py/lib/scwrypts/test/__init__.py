@@ -5,6 +5,6 @@ __all__ = [
         'generate',
         ]
 
-from .generate import generate
+from .generate import generate, get_generator
 
 from .character_set import *

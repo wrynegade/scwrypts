@@ -6,11 +6,6 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 	cd "$SCWRYPTS_ROOT__scwrypts"
 	GIT_SCWRYPTS() { git -C "$SCWRYPTS_ROOT__scwrypts" $@; }
 
-	local INSTALLATION_TYPE
-	[ ! -d "$SCWRYPTS_ROOT__scwrypts/.git" ] && [ ! -f "$SCWRYPTS_ROOT__scwrypts/.git" ] \
-		&& INSTALLATION_TYPE=$(cat "$SCWRYPTS_ROOT__scwrypts/MANAGED_BY" 2>/dev/null) \
-		|| INSTALLATION_TYPE=manual \
-		;
 
 	local ERRORS=0
 	local USAGE='
@@ -38,6 +33,7 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 		    -h, --help        display this message and exit
 		    -l, --list        print out command list and exit
 		        --list-envs   print out environment list and exit
+		        --root        print out SCWRYPTS_ROOT__scwrypts and exit
 		        --update      update scwrypts library to latest version
 		        --version     print out scwrypts version and exit
 
@@ -86,20 +82,29 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 				;;
 
 			--version )
-				case $INSTALLATION_TYPE in
+				case $SCWRYPTS_INSTALLATION_TYPE in
 					manual ) echo "scwrypts $(GIT_SCWRYPTS describe --tags) (via GIT)" ;;
-					     * ) echo scwrypts $(cat "$SCWRYPTS_ROOT__scwrypts/VERSION")   ;;
+					     * ) echo "scwrypts $(cat "$SCWRYPTS_ROOT__scwrypts/VERSION")" ;;
 				esac
 				return 0
 				;;
 
+			--root )
+				echo "$SCWRYPTS_ROOT__scwrypts"
+				return 0
+				;;
+
 			--update )
-				case $INSTALLATION_TYPE in
+				case $SCWRYPTS_INSTALLATION_TYPE in
 					aur )
 						SCWRYPTS_LOG_LEVEL=3 REMINDER " 
 							This installation is built from the AUR. Update through 'makepkg' or use
 							your preferred AUR package management tool (e.g. 'yay -Syu scwrypts')
 							 "
+						;;
+
+					homebrew )
+						SCWRYPTS_LOG_LEVEL=3 REMINDER "This installation is managed by homebrew. Update me with 'brew update scwrypts'"
 						;;
 
 					manual )
@@ -294,9 +299,17 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 
 	[[ $ENV_REQUIRED =~ true ]] && {
 		[ ! $ENV_NAME ] && ENV_NAME=$(SCWRYPTS__SELECT_ENV)
+		[ ! $ENV_NAME ] && ABORT
+
+		export ENV_NAME
+		export SCWRYPTS_ENV=$ENV_NAME
 
 		for GROUP in ${SCWRYPTS_GROUPS[@]}
 		do
+			local REQUIRED_REGEX=$(eval echo '$SCWRYPTS_REQUIRED_ENVIRONMENT_REGEX__'$GROUP)
+			[ $REQUIRED_REGEX ] && {
+				[[ $ENV_NAME =~ $REQUIRED_REGEX ]] || continue
+			}
 			local ENV_FILE=$(SCWRYPTS__GET_ENV_FILE "$ENV_NAME" "$GROUP")
 			source "$ENV_FILE" || FAIL 5 "missing or invalid environment '$GROUP/$ENV_NAME'"
 
@@ -305,8 +318,6 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 				source "$f" || FAIL 5 "invalid static config '$f'"
 			done
 		done
-
-		export ENV_NAME
 	}
 
 	[ $REQUIRED_ENVIRONMENT_REGEX ] && {
@@ -314,11 +325,12 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 			|| FAIL 5 "group '$SCWRYPT_GROUP' requires current environment name to match '$REQUIRED_ENVIRONMENT_REGEX' (currently $ENV_NAME)"
 	}
 
+
 	##########################################
 
 	[ ! $SUBSCWRYPT ] && export SUBSCWRYPT=0
 
-	[[ $INSTALLATION_TYPE =~ ^manual$ ]] && {
+	[[ $SCWRYPTS_INSTALLATION_TYPE =~ ^manual$ ]] && {
 		[[ $SUBSCWRYPT -eq 0 ]] && [[ $ENV_NAME =~ prod ]] && [[ $SCWRYPTS_LOG_LEVEL -gt 0 ]] && {
 			STATUS "on '$ENV_NAME'; checking diff against origin/main"
 

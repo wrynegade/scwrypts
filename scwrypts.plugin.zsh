@@ -1,11 +1,13 @@
 #####################################################################
 
-command -v scwrypts &>/dev/null || {
-	echo 'scwrypts is required in your PATH in order to use the zsh plugins; skipping' >&2
-	return 0
-}
-
-NO_EXPORT_CONFIG=1 source "${0:a:h}/zsh/lib/import.driver.zsh" || return 42
+: \
+	&& command -v scwrypts &>/dev/null \
+	&& source "$(scwrypts --root)/zsh/lib/import.driver.zsh" \
+	&& unset __SCWRYPT \
+	|| {
+		echo 'scwrypts must be in PATH and properly configured; skipping zsh plugin setup' >&2
+		return 0
+	}
 
 #####################################################################
 

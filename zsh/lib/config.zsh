@@ -1,13 +1,23 @@
 [[ $__SCWRYPT -eq 1 ]] && return 0
 #####################################################################
 
-[ ! $SCWRYPTS_ROOT ] \
-	&& SCWRYPTS_ROOT="$(cd $(dirname "${0:a:h}"); git rev-parse --show-toplevel 2>/dev/null)"
+SCWRYPTS_ROOT="$(cd -- ${0:a:h}; git rev-parse --show-toplevel 2>/dev/null)"
 
-[ ! $SCWRYPTS_ROOT ] && [ -d /usr/share/scwrypts ] \
-	&& SCWRYPTS_ROOT=/usr/share/scwrypts
+[ $SCWRYPTS_ROOT ] && [ -d "$SCWRYPTS_ROOT" ] \
+	|| SCWRYPTS_ROOT="$(echo "${0:a:h}" | sed -n 's|\(share/scwrypts\).*$|\1|p')"
+
+[ $SCWRYPTS_ROOT ] && [ -d "$SCWRYPTS_ROOT" ] || {
+	echo "cannot determine scwrypts root path for current installation; aborting"
+	exit 1
+}
 
 export SCWRYPTS_ROOT__scwrypts="$SCWRYPTS_ROOT"
+
+[ -f "$SCWRYPTS_ROOT__scwrypts/MANAGED_BY" ] \
+	&& export SCWRYPTS_INSTALLATION_TYPE=$(cat "$SCWRYPTS_ROOT__scwrypts/MANAGED_BY") \
+	|| export SCWRYPTS_INSTALLATION_TYPE=manual \
+	;
+
 
 #####################################################################
 
@@ -21,11 +31,13 @@ USER_CONFIG_OVERRIDES="$SCWRYPTS_CONFIG_PATH/config.zsh"
 }
 source "$USER_CONFIG_OVERRIDES"
 
-[ ! -d $SCWRYPTS_CONFIG_PATH ] && mkdir -p $SCWRYPTS_CONFIG_PATH
-[ ! -d $SCWRYPTS_DATA_PATH   ] && mkdir -p $SCWRYPTS_DATA_PATH
-[ ! -d $SCWRYPTS_ENV_PATH    ] && mkdir -p $SCWRYPTS_ENV_PATH
-[ ! -d $SCWRYPTS_LOG_PATH    ] && mkdir -p $SCWRYPTS_LOG_PATH
-[ ! -d $SCWRYPTS_OUTPUT_PATH ] && mkdir -p $SCWRYPTS_OUTPUT_PATH
+mkdir -p \
+	"$SCWRYPTS_CONFIG_PATH" \
+	"$SCWRYPTS_DATA_PATH" \
+	"$SCWRYPTS_ENV_PATH" \
+	"$SCWRYPTS_LOG_PATH" \
+	"$SCWRYPTS_OUTPUT_PATH" \
+	;
 
 export \
 	SCWRYPTS_GROUPS \
@@ -62,7 +74,8 @@ done
 	&& [ ! "$SCWRYPTS_AUTODETECT_GROUP_BASEDIR" ] \
 	&& [ $GITHUB_WORKSPACE ] \
 	&& [ ! $SCWRYPTS_GITHUB_NO_AUTOLOAD ] \
-	&& SCWRYPTS_AUTODETECT_GROUP_BASEDIR="$GITHUB_WORKSPACE"
+	&& SCWRYPTS_AUTODETECT_GROUP_BASEDIR="$GITHUB_WORKSPACE" \
+	;
 
 [ "$SCWRYPTS_AUTODETECT_GROUP_BASEDIR" ] && [ -d "$SCWRYPTS_AUTODETECT_GROUP_BASEDIR" ] && {
 	for GROUP_LOADER in $(find "$SCWRYPTS_AUTODETECT_GROUP_BASEDIR" -type f -name \*scwrypts.zsh)
@@ -72,5 +85,4 @@ done
 }
 
 #####################################################################
-[ $NO_EXPORT_CONFIG ] || __SCWRYPT=1 # arbitrary; indicates currently inside a scwrypt
-true
+__SCWRYPT=1 # arbitrary; indicates currently inside a scwrypt

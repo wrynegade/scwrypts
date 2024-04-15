@@ -45,6 +45,21 @@ DEFAULT_OPTIONS = {
         'requests_response_status_code': status_codes.codes[200],
         }
 
+def get_generator(default_options=None):
+    if default_options is None:
+        default_options = {}
+
+    def generator_function(data_type=None, options_overrides=None):
+        if options_overrides is None:
+            options_overrides = {}
+
+        return generate(
+                data_type = data_type,
+                options = default_options | options_overrides,
+                )
+
+    return generator_function
+
 def generate(data_type=None, options=None):
     '''
     generate random data with the call of a function
