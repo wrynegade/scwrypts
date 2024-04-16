@@ -1,7 +1,11 @@
 [[ $__SCWRYPT -eq 1 ]] && return 0
 #####################################################################
 
-SCWRYPTS_ROOT="$(cd -- ${0:a:h}; git rev-parse --show-toplevel 2>/dev/null)"
+# Apparently MacOS puts ALL of the homebrew stuff inside of a top level git repository
+# with bizarre git ignores; so:
+#  - USE the git root if it's a manual install...
+#  - UNLESS that git root is just the $(brew --prefix)
+SCWRYPTS_ROOT="$(cd -- ${0:a:h}; git rev-parse --show-toplevel 2>/dev/null | grep -v "^$(brew --prefix 2>/dev/null)$")"
 
 [ $SCWRYPTS_ROOT ] && [ -d "$SCWRYPTS_ROOT" ] \
 	|| SCWRYPTS_ROOT="$(echo "${0:a:h}" | sed -n 's|\(share/scwrypts\).*$|\1|p')"
