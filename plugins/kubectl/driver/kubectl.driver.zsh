@@ -1,10 +1,9 @@
 [[ $SCWRYPTS_KUBECTL_DRIVER_READY -eq 1 ]] && return 0
 
-unalias k h >/dev/null 2>&1
+unalias k h f >/dev/null 2>&1
 k() { _SCWRYPTS_KUBECTL_DRIVER kubectl $@; }
 h() { _SCWRYPTS_KUBECTL_DRIVER helm $@; }
 f() { _SCWRYPTS_KUBECTL_DRIVER flux $@; }
-
 
 _SCWRYPTS_KUBECTL_DRIVER() {
 	[ ! $SCWRYPTS_ENV ] && {
