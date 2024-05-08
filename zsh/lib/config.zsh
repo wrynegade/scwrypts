@@ -25,7 +25,7 @@ export SCWRYPTS_ROOT__scwrypts="$SCWRYPTS_ROOT"
 
 #####################################################################
 
-DEFAULT_CONFIG="$SCWRYPTS_ROOT/zsh/lib/config.user.zsh"
+DEFAULT_CONFIG="$SCWRYPTS_ROOT__scwrypts/zsh/lib/config.user.zsh"
 source "$DEFAULT_CONFIG"
 
 USER_CONFIG_OVERRIDES="$SCWRYPTS_CONFIG_PATH/config.zsh"
@@ -53,10 +53,10 @@ export \
 	SCWRYPTS_OUTPUT_PATH \
 	;
 
-SCWRYPTS_GROUPS=(scwrypts $(echo $SCWRYPTS_GROUPS | sed 's/\s\+/\n/g' | sort -u))
-
-source "$SCWRYPTS_ROOT/zsh/lib/config.group.zsh" \
+source "$SCWRYPTS_ROOT/scwrypts.scwrypts.zsh" \
 	|| FAIL 69 'failed to set up scwrypts group; aborting'
+
+SCWRYPTS_GROUPS=(scwrypts $(echo $SCWRYPTS_GROUPS | sed 's/\s\+/\n/g' | sort -u | grep -v '^scwrypts$'))
 
 #####################################################################
 

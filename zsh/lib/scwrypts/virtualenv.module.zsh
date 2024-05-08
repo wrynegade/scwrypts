@@ -74,6 +74,8 @@ _VIRTUALENV__GET_PATH() {
 	local ENV_PATH="$(eval echo '$SCWRYPTS_VIRTUALENV_PATH__'$GROUP 2>/dev/null)"
 	[ ! $ENV_PATH ] && ENV_PATH="$SCWRYPTS_VIRTUALENV_PATH__scwrypts"
 
+	mkdir -p "$ENV_PATH/$TYPE" &>/dev/null
+
 	echo $ENV_PATH/$TYPE
 }
 
@@ -95,7 +97,7 @@ CREATE_VIRTUALENV__scwrypts__py() {
 		}
 	done
 	[ ! $PYTHON ] && {
-		ERROR 'python>=3.9 not available; skipping python env'
+		ERROR 'python>=3.10 not available; skipping python env'
 		return 1
 	}
 
@@ -122,7 +124,7 @@ UPDATE_VIRTUALENV__scwrypts__py() {
 	PIP_INSTALL_ARGS+=(--no-cache-dir)
 	PIP_INSTALL_ARGS+=(-r requirements.txt)
 
-	cd "$SCWRYPTS_ROOT/py"
+	cd "$SCWRYPTS_ROOT__scwrypts/py"
 	pip install ${PIP_INSTALL_ARGS[@]}
 }
 
@@ -159,7 +161,7 @@ ACTIVATE_VIRTUALENV__scwrypts__zx() {
 UPDATE_VIRTUALENV__scwrypts__zx() {
 	local NPM_INSTALL_ARGS=()
 
-	cd "$SCWRYPTS_ROOT/zx"
+	cd "$SCWRYPTS_ROOT__scwrypts/zx"
 	npm install ${NPM_INSTALL_ARGS[@]}
 }
 

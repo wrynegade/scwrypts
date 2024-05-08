@@ -1,5 +1,6 @@
 #!/bin/zsh
 export EXECUTION_DIR=$(pwd)
+export SCWRYPTS_RUNTIME_ID=$(uuidgen)
 source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 #####################################################################
 () {
@@ -21,6 +22,7 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 		  runtime
 		    -y, --yes              auto-accept all [yn] prompts through current scwrypt
 		    -e, --env <env-name>   set environment; overwrites SCWRYPTS_ENV
+
 		    -n                     shorthand for "--log-level 0"
 		    -v, --log-level [0-4]  set incremental scwrypts log level to one of the following:
 			                         0 : only command output and critical failures; skips logfile
@@ -29,13 +31,19 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 									 3 : (default) include warning messages
 			                         4 : include debug messages
 
+			-o, --output           specify output format; one of:
+			                         pretty (default)
+									 json   (experimental)
+
 		  alternate commands
-		    -h, --help        display this message and exit
-		    -l, --list        print out command list and exit
-		        --list-envs   print out environment list and exit
-		        --root        print out SCWRYPTS_ROOT__scwrypts and exit
-		        --update      update scwrypts library to latest version
-		        --version     print out scwrypts version and exit
+		    -h, --help          display this message and exit
+		    -l, --list          print out command list and exit
+		        --list-envs     print out environment list and exit
+		        --list-groups   print out configured scwrypts groups and exit
+		        --config        "eval"-ed to enable config and "use" import in non-scwrypts environments
+		        --root          print out SCWRYPTS_ROOT__scwrypts and exit
+		        --update        update scwrypts library to latest version
+		        --version       print out scwrypts version and exit
 
 		patterns:
 		  - a list of glob patterns to loose-match a scwrypt by name
@@ -56,8 +64,10 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 
 	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=3
 
+	local SHIFT_COUNT
 	while [[ $# -gt 0 ]]
 	do
+		SHIFT_COUNT=1
 		case $1 in
 			-[a-z][a-z]* )
 				VARSPLIT=$(echo "$1 " | sed 's/^\(-.\)\(.*\) /\1 -\2/')
@@ -81,6 +91,11 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 				return 0
 				;;
 
+			--list-groups )
+				echo "${SCWRYPTS_GROUPS[@]}" | sed 's/\s\+/\n/g' | sort -u
+				return 0
+				;;
+
 			--version )
 				case $SCWRYPTS_INSTALLATION_TYPE in
 					manual ) echo "scwrypts $(GIT_SCWRYPTS describe --tags) (via GIT)" ;;
@@ -94,6 +109,13 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 				return 0
 				;;
 
+			--config )
+				echo "source '$SCWRYPTS_ROOT__scwrypts/zsh/lib/import.driver.zsh'"
+				echo "CHECK_ENVIRONMENT --no-fail --no-usage"
+				echo "unset __SCWRYPT"
+				return 0
+				;;
+
 			--update )
 				case $SCWRYPTS_INSTALLATION_TYPE in
 					aur )
@@ -104,7 +126,7 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 						;;
 
 					homebrew )
-						SCWRYPTS_LOG_LEVEL=3 REMINDER "This installation is managed by homebrew. Update me with 'brew update scwrypts'"
+						SCWRYPTS_LOG_LEVEL=3 REMINDER "This installation is managed by homebrew. Update me with 'brew update'"
 						;;
 
 					manual )
@@ -142,46 +164,52 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 			### scwrypts filters #####################
 
 			-m | --name )
+				((SHIFT_COUNT+=1))
 				[ $2 ] || { ERROR "missing value for argument $1"; break; }
 				SEARCH_NAME=$2
-				shift 1
 				;;
 
 			-g | --group )
+				((SHIFT_COUNT+=1))
 				[ $2 ] || { ERROR "missing value for argument $1"; break; }
 				SEARCH_GROUP=$2
-				shift 1
 				;;
 
 			-t | --type )
+				((SHIFT_COUNT+=1))
 				[ $2 ] || { ERROR "missing value for argument $1"; break; }
 				SEARCH_TYPE=$2
-				shift 1
 				;;
 
 			### runtime settings #####################
 
 			-y | --yes ) export __SCWRYPTS_YES=1 ;;
 
-			-n | --no-log )
-				SCWRYPTS_LOG_LEVEL=0
-				[[ $1 =~ ^--no-log$ ]] && WARNING 'the --no-log flag is deprecated and will be removed in scwrypts v4.2'
-				;;
+			-n ) SCWRYPTS_LOG_LEVEL=0 ;;
 
 			-v | --log-level )
+				((SHIFT_COUNT+=1))
 				[[ $2 =~ ^[0-4]$ ]] || ERROR "invalid setting for log-level '$2'"
 				SCWRYPTS_LOG_LEVEL=$2
-				shift 1
+				;;
+
+			-o | --output )
+				((SHIFT_COUNT+=1))
+				export SCWRYPTS_OUTPUT_FORMAT=$2
+				case $SCWRYPTS_OUTPUT_FORMAT in
+					pretty | json ) ;;
+					* ) ERROR "unsupported format '$SCWRYPTS_OUTPUT_FORMAT'" ;;
+				esac
 				;;
 
 			-e | --env )
+				((SHIFT_COUNT+=1))
 				[ $2 ] || { ERROR "missing value for argument $1"; break; }
 
 				[ $ENV_NAME ] && DEBUG 'overwriting session environment'
 
 				ENV_NAME="$2"
 				STATUS "using CLI environment '$ENV_NAME'"
-				shift 1
 				;;
 
 			##########################################
@@ -190,8 +218,10 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 			--* ) ERROR "unrecognized argument '$1'" ;;
 			*   ) SEARCH_PATTERNS+=($1) ;;
 		esac
-		shift 1
+		shift $SHIFT_COUNT
 	done
+
+	[ $SCWRYPTS_OUTPUT_FORMAT ] || export SCWRYPTS_OUTPUT_FORMAT=pretty
 
 	[ $SEARCH_NAME ] && {
 		[ $SEARCH_TYPE  ] || ERROR '--name requires --type argument'
@@ -384,25 +414,42 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 	[[ $SCWRYPT_NAME =~ interactive ]] && RUN_MODE=interactive
 
 	local HEADER FOOTER
-
 	[[ $SCWRYPTS_LOG_LEVEL -ge 2 ]] && {
-		HEADER=$(
-			echo "
-				=====================================================================
-				script    : $SCWRYPT_GROUP $SCWRYPT_TYPE $SCWRYPT_NAME
-				run at    : $(date)
-				config    : $ENV_NAME
-				log level : $SCWRYPTS_LOG_LEVEL
-				\\033[1;33m--- SCWRYPT BEGIN ---------------------------------------------------\\033[0m
-			" | sed 's/^\s\+//; 1d'
-		)
+		case $SCWRYPTS_OUTPUT_FORMAT in
+			pretty )
+				HEADER=$(
+					echo "
+						=====================================================================
+						scwrypt   : $SCWRYPT_GROUP $SCWRYPT_TYPE $SCWRYPT_NAME
+						run at    : $(date)
+						config    : $ENV_NAME
+						log level : $SCWRYPTS_LOG_LEVEL
+						\\033[1;33m--- SCWRYPT BEGIN ---------------------------------------------------\\033[0m
+					" | sed 's/^\s\+//; 1d'
+				)
 
-		FOOTER="\\033[1;33m--- SCWRYPT END   ---------------------------------------------------\\033[0m"
+				FOOTER="\\033[1;33m--- SCWRYPT END   ---------------------------------------------------\\033[0m"
+				;;
+			json )
+				HEADER=$(echo '{}' | jq -c ".
+					| .timestamp  = \"$(date +%s)\"
+					| .runtime    = \"$SCWRYPTS_RUNTIME_ID\"
+					| .scwrypt    = \"start of $SCWRYPT_NAME $SCWRYPT_GROUP $SCWRYPT_TYPE\"
+					| .config     = \"$ENV_NAME\"
+					| .logLevel   = \"$SCWRYPTS_LOG_LEVEL\"
+					| .subscwrypt = $SUBSCWRYPT
+					")
+				;;
+		esac
 	}
 
 	[[ $SUBSCWRYPT -eq 0 ]] || {
-		HEADER="\\033[0;33m--- ($SUBSCWRYPT) BEGIN $SCWRYPT_GROUP $SCWRYPT_TYPE $SCWRYPT_NAME ---"
-		FOOTER="\\033[0;33m--- ($SUBSCWRYPT) END   $SCWRYPT_GROUP $SCWRYPT_TYPE $SCWRYPT_NAME ---"
+		case $SCWRYPTS_OUTPUT_FORMAT in
+			pretty )
+				HEADER="\\033[0;33m--- ($SUBSCWRYPT) BEGIN $SCWRYPT_GROUP $SCWRYPT_TYPE $SCWRYPT_NAME ---"
+				FOOTER="\\033[0;33m--- ($SUBSCWRYPT) END   $SCWRYPT_GROUP $SCWRYPT_TYPE $SCWRYPT_NAME ---"
+				;;
+		esac
 	}
 
 	#####################################################################
@@ -433,5 +480,5 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 			&& echo "terminated with\\033[1;$EXIT_COLOR code $EXIT_CODE\\033[0m"
 
 		return $EXIT_CODE
-	} 2>&1 | tee --append "$LOGFILE"
+	} | tee --append "$LOGFILE"
 } $@
