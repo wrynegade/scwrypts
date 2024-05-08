@@ -72,7 +72,7 @@ CHECK_ENVIRONMENT() {
 		$E "environment errors found (see above)\n$ERROR_MESSAGE"
 	}
 
-	[[ $MISSING_ENVIRONMENT_VARIABLES -ne 0 ]] && {
+	[[ $MISSING_ENVIRONMENT_VARIABLES -ne 0 ]] && [[ $__SCWRYPT ]] && {
 		REMINDER "
 			to quickly update missing environment variables, run:
 			'scwrypts zsh/scwrypts/environment/edit'
