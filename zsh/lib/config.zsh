@@ -53,10 +53,10 @@ export \
 	SCWRYPTS_OUTPUT_PATH \
 	;
 
-SCWRYPTS_GROUPS=(scwrypts $(echo $SCWRYPTS_GROUPS | sed 's/\s\+/\n/g' | sort -u))
-
-source "$SCWRYPTS_ROOT/zsh/lib/config.group.zsh" \
+source "$SCWRYPTS_ROOT/scwrypts.scwrypts.zsh" \
 	|| FAIL 69 'failed to set up scwrypts group; aborting'
+
+SCWRYPTS_GROUPS=(scwrypts $(echo $SCWRYPTS_GROUPS | sed 's/\s\+/\n/g' | sort -u | grep -v '^scwrypts$'))
 
 #####################################################################
 

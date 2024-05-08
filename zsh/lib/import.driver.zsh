@@ -34,7 +34,7 @@ source "${0:a:h}/config.zsh"
 
 use() {
 	local SCWRYPTS_LIBRARY SCWRYPTS_LIBRARY_ROOT SCWRYPTS_LIBRARY_GROUP
-	local DEFER_ENVIRONMENT_CHECK=1
+	local DEFER_ENVIRONMENT_CHECK=true
 
 	while [[ $# -gt 0 ]]
 	do
@@ -49,8 +49,8 @@ use() {
 				SCWRYPTS_LIBRARY_ROOT=$2
 				shift 1
 				;;
-			--check-environment )
-				DEFER_ENVIRONMENT_CHECK=0
+			-c | --check-environment )
+				DEFER_ENVIRONMENT_CHECK=false
 				;;
 			* )
 				[ ! $SCWRYPTS_LIBRARY ] \
@@ -106,7 +106,7 @@ use() {
 		return 1
 	}
 
-	[[ $DEFER_ENVIRONMENT_CHECK -eq 0 ]] && {
+	[[ $DEFER_ENVIRONMENT_CHECK =~ false ]] && {
 		CHECK_ENVIRONMENT || {
 			((IMPORT_ERRORS+=1))
 			ERROR "import error for '$SCWRYPTS_LIBRARY_GROUP/$SCWRYPTS_LIBRARY'"
