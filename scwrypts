@@ -23,17 +23,15 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 		    -y, --yes              auto-accept all [yn] prompts through current scwrypt
 		    -e, --env <env-name>   set environment; overwrites SCWRYPTS_ENV
 
-		    -n                     shorthand for "--log-level 0"
-		    -v, --log-level [0-4]  set incremental scwrypts log level to one of the following:
-			                         0 : only command output and critical failures; skips logfile
-			                         1 : include success / failure messages
-			                         2 : include status update messages
-									 3 : (default) include warning messages
-			                         4 : include debug messages
+		    -n                      shorthand for "--log-level 0"
+		    -v, --log-level <0-4>   set incremental scwrypts log level to one of the following:
+		                              0 : only command output and critical failures; skips logfile
+		                              1 : include success / failure messages
+		                              2 : include status update messages
+		                              3 : (default) include warning messages
+		                              4 : include debug messages
 
-			-o, --output           specify output format; one of:
-			                         pretty (default)
-									 json   (experimental)
+		     -o, --output <format>   specify output format; one of: pretty,json (default: pretty)
 
 		  alternate commands
 		    -h, --help          display this message and exit
@@ -119,7 +117,7 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 			--update )
 				case $SCWRYPTS_INSTALLATION_TYPE in
 					aur )
-						SCWRYPTS_LOG_LEVEL=3 REMINDER " 
+						SCWRYPTS_LOG_LEVEL=3 REMINDER "
 							This installation is built from the AUR. Update through 'makepkg' or use
 							your preferred AUR package management tool (e.g. 'yay -Syu scwrypts')
 							 "
@@ -152,7 +150,7 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 						;;
 
 					* )
-						SCWRYPTS_LOG_LEVEL=3 REMINDER " 
+						SCWRYPTS_LOG_LEVEL=3 REMINDER "
 							This is a managed installation of scwrypts. Please update through your
 							system package manager.
 							 "
@@ -173,12 +171,14 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 				((SHIFT_COUNT+=1))
 				[ $2 ] || { ERROR "missing value for argument $1"; break; }
 				SEARCH_GROUP=$2
+				GROUP=$2
 				;;
 
 			-t | --type )
 				((SHIFT_COUNT+=1))
 				[ $2 ] || { ERROR "missing value for argument $1"; break; }
 				SEARCH_TYPE=$2
+				TYPE=$2
 				;;
 
 			### runtime settings #####################
@@ -249,7 +249,6 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 					echo $SCWRYPTS_AVAILABLE | head -n1
 					echo $SCWRYPTS_AVAILABLE | grep ' [^/]*'$SEARCH_TYPE'[^/]* '
 				} \
-				| awk '{$2=""; print $0;}' \
 				| sed 's/ \+$/'$(printf $__COLOR_RESET)'/; s/ \+/^/g'  \
 				| column -ts '^'
 			)
@@ -259,9 +258,8 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 			SCWRYPTS_AVAILABLE=$(
 				{
 					echo $SCWRYPTS_AVAILABLE | head -n1
-					echo $SCWRYPTS_AVAILABLE | grep "$SEARCH_GROUP"'[^/]*$'
+					echo $SCWRYPTS_AVAILABLE | grep "$SEARCH_GROUP"'[^/ 	]*$'
 				} \
-				| awk '{$NF=""; print $0;}' \
 				| sed 's/ \+$/'$(printf $__COLOR_RESET)'/; s/ \+/^/g'  \
 				| column -ts '^'
 			)
