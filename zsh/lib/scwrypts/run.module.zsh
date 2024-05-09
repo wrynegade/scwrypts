@@ -94,7 +94,7 @@ SCWRYPTS__GET_RUNSTRING() {
 	}
 
 	RUNSTRING="SCWRYPTS_ENV=$ENV_NAME; $RUNSTRING"
-	RUNSTRING="source $SCWRYPTS_ROOT/zsh/lib/import.driver.zsh; $RUNSTRING"
+	RUNSTRING="source $SCWRYPTS_ROOT__scwrypts/zsh/lib/import.driver.zsh; $RUNSTRING"
 
 	local _VIRTUALENV=$(eval echo '$SCWRYPTS_VIRTUALENV_PATH__'$SCWRYPT_GROUP'/$SCWRYPT_TYPE/bin/activate')
 	[ -f $_VIRTUALENV ] && RUNSTRING="source $_VIRTUALENV; $RUNSTRING"

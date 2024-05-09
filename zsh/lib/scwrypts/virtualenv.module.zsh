@@ -124,7 +124,7 @@ UPDATE_VIRTUALENV__scwrypts__py() {
 	PIP_INSTALL_ARGS+=(--no-cache-dir)
 	PIP_INSTALL_ARGS+=(-r requirements.txt)
 
-	cd "$SCWRYPTS_ROOT/py"
+	cd "$SCWRYPTS_ROOT__scwrypts/py"
 	pip install ${PIP_INSTALL_ARGS[@]}
 }
 
@@ -161,7 +161,7 @@ ACTIVATE_VIRTUALENV__scwrypts__zx() {
 UPDATE_VIRTUALENV__scwrypts__zx() {
 	local NPM_INSTALL_ARGS=()
 
-	cd "$SCWRYPTS_ROOT/zx"
+	cd "$SCWRYPTS_ROOT__scwrypts/zx"
 	npm install ${NPM_INSTALL_ARGS[@]}
 }
 
