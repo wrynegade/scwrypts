@@ -56,7 +56,6 @@ export \
 source "$SCWRYPTS_ROOT/scwrypts.scwrypts.zsh" \
 	|| FAIL 69 'failed to set up scwrypts group; aborting'
 
-SCWRYPTS_GROUPS=(scwrypts $(echo $SCWRYPTS_GROUPS | sed 's/\s\+/\n/g' | sort -u | grep -v '^scwrypts$'))
 
 #####################################################################
 
@@ -87,6 +86,10 @@ done
 		[ -f "$GROUP_LOADER" ] && source "$GROUP_LOADER"
 	done
 }
+
+#####################################################################
+
+SCWRYPTS_GROUPS=(scwrypts $(echo $SCWRYPTS_GROUPS | sed 's/\s\+/\n/g' | sort -u | grep -v '^scwrypts$'))
 
 #####################################################################
 __SCWRYPT=1 # arbitrary; indicates currently inside a scwrypt

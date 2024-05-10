@@ -1,5 +1,8 @@
 FZF() {
-	[ $CI ] && FAIL 1 'currently in CI, but FZF requires user input'
+	[ $CI ] && {
+		DEBUG "invoked FZF with $@"
+		FAIL 1 'currently in CI, but FZF requires user input'
+	}
 
 	local FZF_ARGS=()
 
