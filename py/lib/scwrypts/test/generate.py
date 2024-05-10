@@ -4,8 +4,10 @@ from json import dumps, loads
 from random import randint, uniform, choice
 from re import sub
 from string import printable
-from typing import Hashable, Callable
+from typing import Callable
 from uuid import uuid4
+
+from collections.abc import Hashable
 
 from requests import Response, status_codes
 from yaml import safe_dump

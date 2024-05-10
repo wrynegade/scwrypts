@@ -1,7 +1,0 @@
-#!/bin/zsh
-use system/config
-#####################################################################
-
-MAIN() {
-	EDIT "$CONFIG__USER_SETTINGS"
-}

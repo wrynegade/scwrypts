@@ -1,9 +1,13 @@
-#!/bin/zsh
-use helm
-use scwrypts
+#!/usr/bin/env zsh
 #####################################################################
 
-MAIN() {
-	unset USAGE
-	HELM__TEMPLATE__GET $@
-}
+use helm
+
+#####################################################################
+
+helm.zshparse.usage
+helm.get-template.parse.usage
+
+#####################################################################
+
+MAIN() { helm.get-template $@; }

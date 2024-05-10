@@ -1,0 +1,89 @@
+#!/bin/zsh
+#
+# a temporary template conversion utility for env.template (<=v4)
+# to env.yaml (>=v5)
+#
+eval $(scwrypts --config)
+use -c scwrypts/environment-files
+
+ENVIRONMENT_ROOT="$1"
+[ "$ENVIRONMENT_ROOT" ] || ENVIRONMENT_ROOT="${0:a:h}"
+
+OLDENV="$ENVIRONMENT_ROOT/env.template"
+NEWENV="$ENVIRONMENT_ROOT/env.yaml"
+ENVMAP="$ENVIRONMENT_ROOT/.map.txt"
+
+GROUP="$2"
+[ $GROUP ] || GROUP=scwrypts
+GENERATE_TEMPLATE \
+	| sed '1,4d; /^$/d' \
+	| sed -z 's/# \([^\n]*\)\n\([^\n]*\)=/\2=\n\2=DESCRIPTION=\1/g' \
+	| sed '
+		s/^export //
+		/./i---
+		s/\s\+$//
+		s/__/=/g
+		s/^\(AWS\|REDIS\)_/\1=/
+		s/^\([^=]*\)=\([^=]*\)=\([^=]*\)=\([^=]*\)=\([^=]*\)=$/\L\1:\n  \2:\n    \3:\n      \4:\n        \5:/
+		s/^\([^=]*\)=\([^=]*\)=\([^=]*\)=\([^=]*\)=$/\L\1:\n  \2:\n    \3:\n      \4:/
+		s/^\([^=]*\)=\([^=]*\)=\([^=]*\)=$/\L\1:\n  \2:\n    \3:/
+		s/^\([^=]*\)=\([^=]*\)=$/\L\1:\n  \2:/
+		s/^\([^=]*\)=$/\L\1:/
+		s/^\([^=]*\)=\([^=]*\)=\([^=]*\)=\([^=]*\)=\([^=]*\)=\([^=]\+\)$/\L\1:\n  \2:\n    \3:\n      \4:\n        \5: \E\6/
+		s/^\([^=]*\)=\([^=]*\)=\([^=]*\)=\([^=]*\)=\([^=]\+\)$/\L\1:\n  \2:\n    \3:\n      \4: \E\5/
+		s/^\([^=]*\)=\([^=]*\)=\([^=]*\)=\([^=]\+\)$/\L\1:\n  \2:\n    \3: \E\4/
+		s/^\([^=]*\)=\([^=]*\)=\([^=]\+\)$/\L\1:\n  \2: \E\3/
+		s/^\([^=]*\)=\([^=]\+\)$/\L\1: \E\2/
+		s/: (\(.*\))/: [\1]/
+		/^/,/:/{s/_/-/g}
+		' \
+	| sed '
+		s/^    \(description:.*\)/  \1/
+		s/description:/.DESCRIPTION:/
+		' \
+	| sed -z 's/\n\(\s\+\).DESCRIPTION:\([^\n]\+\)/\n\1.DESCRIPTION: >-\n\1  \2/g' \
+	| yq eval-all '. as $item ireduce ({}; . *+ $item)' \
+	> "$NEWENV" \
+	;
+
+cat -- "$OLDENV" \
+	| sed '
+		s/#.*//
+		/^$/d
+		s/^export //
+		s/\s\+$//
+		s/^\([^=]*\)=.*/\1=\n\1/
+		' \
+	| sed '
+		/^/s/.*/\L&/
+		/^/s/__/./g
+		/^/s/_/-/g
+		s/^/./
+		s/\(aws\|redis\)-/\1./
+		' \
+	| perl -pe 's/=\n/^/' \
+	| column -ts '^' \
+	> "$ENVMAP" \
+	;
+
+while read line
+do
+	ENV_VAR=$(echo $line | awk '{print $1;}')
+	LOOKUP=$(echo $line | awk '{print $2;}')
+
+	cp "$NEWENV" "$NEWENV.temp"
+	cat "$NEWENV.temp" \
+		| yq ". | $LOOKUP.[\".ENVIRONMENT\"] = \"$ENV_VAR\"" \
+		| yq 'sort_keys(...)' \
+		> "$NEWENV"
+		;
+done < "$ENVMAP"
+
+rm -- "$NEWENV.temp" "$ENVMAP" &>/dev/null
+
+head -n1 -- "$NEWENV" | grep -q "^{}$" && {
+	echo '---' > "$NEWENV"
+}
+
+cat -- "$NEWENV" | yq
+SUCCESS "new environment saved to '$NEWENV'"

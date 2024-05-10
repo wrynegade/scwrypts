@@ -1,0 +1,68 @@
+#!/usr/bin/env zsh
+#####################################################################
+
+use scwrypts/meta
+
+#####################################################################
+
+USAGE__description="
+	runs tests across scwrypts zsh modules (beta)
+"
+
+USAGE__args='
+	$@   paths or lookup patterns to test
+'
+
+#####################################################################
+
+MAIN() {
+	local \
+		ARGS=() \
+		PARSERS=()
+
+	eval "$ZSHPARSEARGS"
+
+	##########################################
+
+	local MODE
+	[[ ${#ARGS[@]} -eq 0 ]] \
+		&& MODE=all \
+		|| MODE=filter \
+		;
+
+	local TEST_FILES="" GROUP
+	for GROUP in ${SCWRYPTS_GROUPS[@]}
+	do
+		TEST_FILES+="$(find "$(scwrypts.config.group ${GROUP} root)" -type f -name \*.test.zsh)"
+	done
+
+	for FILTER in ${ARGS[@]}
+	do
+		TEST_FILES="$(echo "${TEST_FILES}" | grep "${FILTER}")"
+	done
+
+	local SCWRYPTS_CONFIG="$(scwrypts.meta.run --config)"
+	local TEST_FILE
+	local TEST_SUITE_COUNT=0 TEST_SUITE_FAILED_COUNT=0
+	for TEST_FILE in $(echo "${TEST_FILES}")
+	do
+		((TEST_SUITE_COUNT+=1))
+		local TEST_SUITE_NAME="$(basename -- "$(dirname -- ${TEST_FILE})")/$(basename -- "${TEST_FILE}")"
+		zsh <<< "
+		() {
+			local ERRORS=0
+			local CI=true
+			$SCWRYPTS_CONFIG
+			source '$TEST_FILE'
+			use unittest/execute-test-file
+			utils.check-environment
+			SUPPRESS_USAGE_OUTPUT=true SCWRYPTS_TEST_MODULE_STRING=\"${TEST_SUITE_NAME} : \" unittest.execute-test-file
+		}
+		" || ((TEST_SUITE_FAILED_COUNT+=1))
+	done
+
+	[[ ${TEST_SUITE_FAILED_COUNT} -eq 0 ]] \
+		&& echo.success "\nsuccessfully passed ${TEST_SUITE_COUNT} / ${TEST_SUITE_COUNT} test suite(s)\n " \
+		|| echo.error   "\nfailed ${TEST_SUITE_FAILED_COUNT} / ${TEST_SUITE_COUNT} test suite(s)\n " \
+		;
+}

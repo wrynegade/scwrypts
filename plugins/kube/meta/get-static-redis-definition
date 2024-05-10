@@ -1,0 +1,7 @@
+#!/usr/bin/env zsh
+use redis --group kube
+#####################################################################
+
+MAIN() {
+	echo $(kube.redis --get-static-definition)
+}

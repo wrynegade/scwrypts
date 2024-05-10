@@ -1,0 +1,39 @@
+#!/usr/bin/env zsh
+use kubectl --group kube
+#####################################################################
+
+MAIN() {
+	local USAGE="
+	usage: [context] [...options...]
+
+	args:
+	  context   (optional) the full name of the kubeconfig context to set
+
+	options:
+	  --subsession   kube.redis subsession (default 0)
+
+	  -h, --help   show this dialogue and exit
+	"
+	local CONTEXT
+	local SUBSESSION=0
+
+	while [[ $# -gt 0 ]]
+	do
+		case $1 in
+			--subsession ) SUBSESSION=$2; shift 1 ;;
+
+			* )
+				[ $CONTEXT ] && echo.error "unexpected argument '$2'"
+				CONTEXT=$1
+				;;
+		esac
+		shift 1
+	done
+
+	[ $CONTEXT ] || CONTEXT=$(kube.kubectl.context.select)
+	[ $CONTEXT ] || echo.error 'must provide or select a valid kube context'
+
+	utils.check-errors --fail
+
+	kube.kubectl.context.set $CONTEXT
+}

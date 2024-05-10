@@ -1,7 +1,0 @@
-#!/bin/zsh
-use kubectl --group kubectl
-#####################################################################
-
-MAIN() {
-	KUBECTL__GET_CONTEXT
-}
