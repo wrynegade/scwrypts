@@ -1,0 +1,6 @@
+#!/bin/zsh
+use scwrypts/environment
+
+MAIN() {
+	GET_COMPLETE_TEMPLATE_REFERENCE
+}
