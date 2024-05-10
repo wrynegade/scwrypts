@@ -204,7 +204,7 @@ command -v compdef &>/dev/null && {
 					# stop providing suggestions if your pattern is sufficient
 					[[ $(echo $_remaining_scwrypts | wc -l) -le 1 ]] && return 0
 
-					local _remaining_patterns="$(echo "$_remaining_scwrypts" | sed 's/\s\+/\n/g; s|/|\n|g;' | sort -u)"
+					local _remaining_patterns="$(echo "$_remaining_scwrypts" | sed 's/\s\+/\n/g; s|/|\n|g; s/-/\n/g;' | sort -u)"
 
 					for _pattern in ${_patterns[@]}
 					do

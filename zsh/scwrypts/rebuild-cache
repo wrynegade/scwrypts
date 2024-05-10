@@ -1,0 +1,89 @@
+#!/usr/bin/env zsh
+#####################################################################
+
+USAGE__args="
+	\$@   a list of groups; one of (${SCWRYPTS_GROUPS[@]})
+"
+
+USAGE__description="
+	clear and rebuild the zsh library cache for one or all
+	groups
+
+	by default, clears the entire cache and rebuilds for all
+	groups; specifying any number of groups as args will only
+	build the listed groups
+
+	at any time the entire cache can be cleared by manually
+	deleting the cache directory
+		- by default it is    : ~/.cache/zshimport
+		- you have configured : ${ZSHIMPORT_CACHE_DIR}
+"
+
+#####################################################################
+
+MAIN() {
+	local ARGS=()
+
+	eval "${ZSHPARSEARGS}"
+
+	case ${#ARGS[@]} in
+		( 0 ) ARGS=(${SCWRYPTS_GROUPS[@]}) ;;
+	esac
+
+	local GROUP GROUP_ROOT GROUP_TYPE GROUP_MODULES GROUP_MODULE CACHE_DIR 
+	for GROUP in ${ARGS[@]}
+	do
+		GROUP_ROOT="$(scwrypts.config.group ${GROUP} zshlibrary)"
+		[ "${GROUP_ROOT}" ] && [ -d "${GROUP_ROOT}" ] || {
+			GROUP_ROOT="$(scwrypts.config.group ${GROUP} root)"
+			case "$(scwrypts.config.group ${GROUP} type)" in
+				( '' )
+					GROUP_ROOT="${GROUP_ROOT}/zsh"
+					;;
+			esac
+		}
+		[ "${GROUP_ROOT}" ] && [ -d "${GROUP_ROOT}" ] || {
+			echo.warning "cannot identify group root for '${GROUP}'; skipping"
+			continue
+		}
+
+		GROUP_MODULES=($(
+			find "${GROUP_ROOT}" -type f -name \*.module.zsh \
+				| sed "s|^${GROUP_ROOT}/||" \
+				| sed 's/\.module.zsh//' \
+			))
+
+		[[ ${#GROUP_MODULES[@]} -eq 0 ]] && {
+			echo.warning "no modules found for group '${GROUP}'; skipping"
+			continue
+		}
+
+		echo.status "cleaning up old cache(s) for ${GROUP}"
+		for CACHE_DIR in $(find "${ZSHIMPORT_CACHE_DIR}" -mindepth 1 -maxdepth 1 -name ${GROUP}\*)
+		do
+			[ "${CACHE_DIR}" ] \
+				&& rm -rf -- "${CACHE_DIR}" \
+				&& echo.status "  $(utils.colors.yellow)x $(basename -- ${CACHE_DIR})" \
+				|| echo.status "  $(utils.colors.red)x $(basename -- ${CACHE_DIR}) (failed to delete)" \
+				;
+		done
+
+		echo.status "rebuilding cache for ${GROUP}"
+		for GROUP_MODULE in ${GROUP_MODULES[@]}
+		do
+			use --group ${GROUP} ${GROUP_MODULE} --generate-cache &>/dev/null \
+				&& echo.status " $(utils.colors.green)-> ${GROUP_MODULE}" \
+				|| echo.status " $(utils.colors.red)-> ${GROUP_MODULE} (failed to build)" \
+				;
+		done
+	done
+}
+
+MAIN.parse() {}
+MAIN.parse.validate() {
+	[[ ${ZSHIMPORT_USE_CACHE} =~ true ]] \
+		|| echo.error "ZSHIMPORT_USE_CACHE is set to 'false' so I cannot rebuild the cache"
+	
+	[ "${ZSHIMPORT_CACHE_DIR}" ] && [ -d "${ZSHIMPORT_CACHE_DIR}" ] \
+		|| echo.error "I cannot find the ZSHIMPORT_CACHE_DIR '${ZSHIMPORT_CACHE_DIR}'"
+}

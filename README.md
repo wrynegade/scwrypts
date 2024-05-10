@@ -1,59 +1,76 @@
-# *Scwrypts* (Wryn + Scripts)
+# *Scwrypts*
 
-Scwrypts is a friendly CLI / API for quickly running *sandboxed scripts* in the terminal.
+Scwrypts is a CLI and API for safely running scripts in the terminal, CI, and other automated environments.
 
-In modern developer / dev-ops workflows, scripts require a complex configurations.
-Without a better solution, the developer is cursed to copy lines-upon-lines of variables into terminals, create random text artifacts, or maybe even commit secure credentials into source.
-Scwrypts leverages ZSH to give hot-key access to run scripts in such environments.
+Local runs provide a user-friendly approach to quickly execute CI workflows and automations in your terminal.
+Each local run runs through an interactive, *sandboxed environment* so you never accidentally run dev credentials in production ever again!
 
 ## Major Version Upgrade Notice
 
-Please refer to [Version 3 to Version 4 Upgrade Path](./docs/upgrade/v3-to-v4.md) when upgrading from scwrypts v3 to scwrypts v4!
+Please refer to [Version 4 to Version 5 Upgrade Path](./docs/upgrade/v4-to-v5.md) when upgrading from scwrypts v4 to scwrypts v5!
 
-## Dependencies
-Due to the wide variety of resources used by scripting libraries, the user is expected to manually resolve dependencies.
-Dependencies are lazy-loaded, and more information can be found by command error messages or in the appropriate README.
+## Installation
 
-Because Scwrypts relies on Scwrypts (see [Meta Scwrypts](./zsh/scwrypts)), `zsh` must be installed and [`junegunn/fzf`](https://github.com/junegunn/fzf) must be available on your PATH.
+Quick installation is supported through both the [Arch User Repository](https://aur.archlinux.org/packages/scwrypts) and [Homebrew](https://github.com/wrynegade/homebrew-brew/tree/main/Formula)
 
-## Usage
-Install Scwrypts by cloning this repository and sourcing `scwrypts.plugin.zsh` in your `zshrc`.
-You can now run Scwrypts using the ZLE hotkey bound to `SCWRYPTS_SHORTCUT` (default `CTRL + W`).
+```bash
+# AUR
+yay -Syu scwrypts
 
-```console
-% cd <path-to-cloned-repo>
-% echo "source $(pwd)/scwrypts.plugin.zsh >> $HOME/.zshrc"
+# homebrew
+brew install wrynegade/scwrypts
 ```
 
-Check out [Meta Scwrypts](./zsh/scwrypts) to quickly set up environments and adjust configuration.
+### Manual Installation
 
-
-### No Install / API Usage
-Alternatively, the `scwrypts` API can be used directly:
+To install scwrypts manually, clone this repository (and take note of where it is installed)
+Replacing the `/path/to/cloned-repo` appropriately, add the following line to your `~/.zshrc`:
 ```zsh
-./scwrypts [--env environment-name] (...script-name-patterns...) [-- ...passthrough arguments... ]
+source /path/to/cloned-repo/scwrypts.plugin.zsh
 ```
 
-Given one or more script patterns, Scwrypts will filter the commands by pattern conjunction.
-If only one command is found which matches the pattern(s), it will immediately begin execution.
-If multiple commands match, the user will be prompted to select from the filtered list.
-Of course, if no commands match, Scwrypts will exit with an error.
+The next time you start your terminal, you can now execute scwrypts by using the plugin shortcut(s) (by default `CTRL + SPACE`).
+Plugin shortcuts are configurable in your scwrypts configuration file found in `~/.config/scwrypts/config.zsh`, and [here is the default config](./zsh/config.user.zsh).
 
-Given no script patterns, Scwrypts becomes an interactive CLI, prompting the user to select a command.
+If you want to use the `scwrypts` program directly, you can either invoke the executable `./scwrypts` or link it in your PATH for easy access.
+For example, if you have `~/.local/bin` in your PATH, you might run:
+```zsh
+ln -s /path/to/cloned-repo/scwrypts "${HOME}/.local/bin/scwrypts"
+```
 
-After determining which script to run, if no environment has been specified, Scwrypts prompts the user to choose one.
+#### PATH Dependencies
+
+Scwrypts provides a framework for workflows which often depend on a variety of other tools.
+Although the lazy-loaded dependency model allows hardening in CI and extendability, the user is expected to _resolve required PATH dependencies_.
+
+When running locally, this is typically as simple as "install the missing program," but this may require additional steps when working in automated environments.
+
+By default, the `ci` plugin is enabled which provides the `check all dependencies` scwrypt.
+You can run this to output a comprehensive list of PATH dependencies across all scwrypts groups, but, at a bare minimum, you will need the following applications in your PATH:
+
+```bash
+zsh
+
+grep  # GNU
+sed   # GNU
+sort  # GNU
+
+fzf   # https://github.com/junegunn/fzf (only required for interactive / local)
+jo    # https://github.com/jpmens/jo
+jq    # https://github.com/jqlang/jq
+yq    # https://github.com/mikefarah/yq
+```
 
 
-### Using in CI/CD or Automated Workflows
-Set environment variable `CI=true` (and use the no install method) to run in an automated pipeline.
+## Usage in CI and Automated Environments
+
+Set environment variable `CI=true` to run scwrypts in an automated environment.
 There are a few notable changes to this runtime:
-- **The Scwrypts sandbox environment will not load.** All variables will be read from context.
+- **The Scwrypts sandbox environment will not load.** All variables will be read directly from the current context.
 - User yes/no prompts will **always be YES**
 - Other user input will default to an empty string
-- Logs will not be captured
-- Setting the environment variable `SCWRYPTS_GROUP_LOADER__[a-z_]\+` will source the file indicated in the variable (this allows custom groups without needing to modify the `config.zsh` directly)
-	- In GitHub actions, `*.scwrypts.zsh` groups are detected automatically from the `$GITHUB_WORKSPACE`; set `SCWRYPTS_GITHUB_NO_AUTOLOAD=true` to disable
-
+- Logs will not be captured in the user's local cache
+- In GitHub actions, `*.scwrypts.zsh` groups are detected automatically from the `$GITHUB_WORKSPACE`; set `SCWRYPTS_GITHUB_NO_AUTOLOAD=true` to disable
 
 ## Contributing
 

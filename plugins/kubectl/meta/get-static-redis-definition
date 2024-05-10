@@ -1,7 +1,0 @@
-#!/bin/zsh
-use redis --group kubectl
-#####################################################################
-
-MAIN() {
-	echo $(REDIS --get-static-definition)
-}

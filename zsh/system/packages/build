@@ -1,7 +1,0 @@
-#!/bin/zsh
-use scwrypts/meta
-#####################################################################
-
-MAIN() {
-	SCWRYPTS__RUN --name system/packages/install --group scwrypts --type zsh -- --only-build $@
-}

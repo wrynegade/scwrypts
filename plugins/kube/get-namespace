@@ -1,0 +1,7 @@
+#!/usr/bin/env zsh
+use kubectl --group kube
+#####################################################################
+
+MAIN() {
+	kube.kubectl.namespace.get
+}

@@ -57,7 +57,7 @@ Don't worry, it's easy.
 Take your original scwrypt, and slap the executable stuff into a function called `MAIN` (yes, it must be _exactly_, all-caps `MAIN`):
 
 ```diff
-#!/bin/zsh
+#!/usr/bin/env zsh
 #####################################################################
 DEPENDENCIES+=(dep-function-a dep-function-b)
 REQUIRED_ENV+=()
@@ -69,11 +69,11 @@ CHECK_ENVIRONMENT
 
 - echo "do some stuff here"
 - # ... etc ...
-- SUCCESS "completed the stuff"
+- echo.success "completed the stuff"
 + MAIN() {
 +     echo "do some stuff here"
 +     # ... etc ...
-+     SUCCESS "completed the stuff
++     echo.success "completed the stuff
 + }
 ```
 
@@ -85,7 +85,7 @@ All I had to do in this case was delete the function invocation at the end:
 ```diff
 # ... top boilerplate ...
 MAIN() {
-    SUCCESS "look at me I'm so cool I already wrote this in a main function"
+    echo.success "look at me I'm so cool I already wrote this in a main function"
 }
 -
 - #####################################################################
@@ -115,20 +115,20 @@ Also you can ditch the `CHECK_ENVIRONMENT`.
 While it won't hurt, v4 already does this, so just get rid of it.
 Here's my recommended formatting:
 ```diff
-#!/bin/zsh
+#!/usr/bin/env zsh
 - #####################################################################
 DEPENDENCIES+=(dep-function-a dep-function-b)
 - REQUIRED_ENV+=()
 
 use do/awesome/stuff --group my-custom-library
-- 
+-
 - CHECK_ENVIRONMENT
 #####################################################################
 
 MAIN() {
     echo "do some stuff here"
     # ... etc ...
-    SUCCESS "completed the stuff
+    echo.success "completed the stuff
 }
 ```
 
@@ -164,7 +164,7 @@ If you _have_ done it already, typically by writing a variable called "USAGE" in
 
 Returning to our original `MAIN()` example, I'll add some options parsing so we should now look something like this:
 ```sh
-#!/bin/zsh
+#!/usr/bin/env zsh
 DEPENDENCIES+=(dep-function-a dep-function-b)
 
 use do/awesome/stuff --group my-custom-library
@@ -200,7 +200,7 @@ I want to call out a few specific ones:
 
 Just add another section to define these values before declaring `MAIN`:
 ```sh
-#!/bin/zsh
+#!/usr/bin/env zsh
 DEPENDENCIES+=(dep-function-a dep-function-b)
 
 use do/awesome/stuff --group my-custom-library

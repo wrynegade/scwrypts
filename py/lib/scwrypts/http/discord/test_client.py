@@ -5,7 +5,7 @@ from pytest import fixture
 from .client import request
 
 
-def test_discord_request(sample, _response):
+def test_discord_request(sample, _mock_getenv, _response):
     assert _response == sample.response
 
 def test_discord_request_client_setup(sample, mock_get_request_client, _mock_getenv, _response):
@@ -41,7 +41,7 @@ def fixture_mock_get_request_client(sample):
 
 @fixture(name='_mock_getenv')
 def fixture_mock_getenv(sample):
-    with patch('scwrypts.http.discord.client.getenv',) as mock:
+    with patch('scwrypts.http.discord.client.getenv') as mock:
         mock.side_effect = lambda name, **kwargs: {
                 'DISCORD__BOT_TOKEN': sample.bot_token,
                 }[name]
@@ -49,6 +49,6 @@ def fixture_mock_getenv(sample):
 
 @fixture(name='_mock_getenv_optional')
 def fixture_mock_getenv_optional():
-    with patch('scwrypts.http.discord.client.getenv',) as mock:
+    with patch('scwrypts.http.discord.client.getenv') as mock:
         mock.side_effect = lambda name, **kwargs: None
         yield mock
