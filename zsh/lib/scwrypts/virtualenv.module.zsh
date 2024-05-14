@@ -161,6 +161,8 @@ ACTIVATE_VIRTUALENV__scwrypts__zx() {
 UPDATE_VIRTUALENV__scwrypts__zx() {
 	local NPM_INSTALL_ARGS=()
 
+	[ $CI ] && NPM_INSTALL_ARGS+=(--ignore-scripts)
+
 	cd "$SCWRYPTS_ROOT__scwrypts/zx"
 	npm install ${NPM_INSTALL_ARGS[@]}
 }
