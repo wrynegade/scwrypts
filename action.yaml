@@ -49,14 +49,14 @@ runs:
             echo "--- installing $D ---"
             ( sudo apt-get install --yes $D; exit 0; )
           done
-        } > $HOME/.scwrypts.apt-get.log 2>&1
+        }
 
         echo "updating virtual dependencies"
         $GITHUB_WORKSPACE/wrynegade/scwrypts/scwrypts \
           --name scwrypts/virtualenv/update-all \
           --group scwrypts \
           --type zsh \
-          > $HOME/.scwrypts.virtualenv.log 2>&1
+          ;
 
         echo "CI_SCWRYPTS_READY=1" >> $GITHUB_ENV
         exit 0
