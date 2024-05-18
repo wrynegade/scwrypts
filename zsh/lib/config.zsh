@@ -1,4 +1,4 @@
-[[ $__SCWRYPT -eq 1 ]] && return 0
+[[ $__SCWRYPT -eq 1 ]] && return 0  # avoid config reload if already active
 #####################################################################
 
 # Apparently MacOS puts ALL of the homebrew stuff inside of a top level git repository
@@ -38,19 +38,10 @@ source "$USER_CONFIG_OVERRIDES"
 mkdir -p \
 	"$SCWRYPTS_CONFIG_PATH" \
 	"$SCWRYPTS_DATA_PATH" \
+	"$SCWRYPTS_TEMP_PATH" \
 	"$SCWRYPTS_ENV_PATH" \
 	"$SCWRYPTS_LOG_PATH" \
 	"$SCWRYPTS_OUTPUT_PATH" \
-	;
-
-export \
-	SCWRYPTS_GROUPS \
-	SCWRYPTS_CONFIG_PATH \
-	SCWRYPTS_DATA_PATH \
-	SCWRYPTS_SHORTCUT \
-	SCWRYPTS_ENV_SHORTCUT \
-	SCWRYPTS_LOG_PATH \
-	SCWRYPTS_OUTPUT_PATH \
 	;
 
 source "$SCWRYPTS_ROOT/scwrypts.scwrypts.zsh" \
@@ -88,8 +79,4 @@ done
 }
 
 #####################################################################
-
-SCWRYPTS_GROUPS=(scwrypts $(echo $SCWRYPTS_GROUPS | sed 's/\s\+/\n/g' | sort -u | grep -v '^scwrypts$'))
-
-#####################################################################
-__SCWRYPT=1 # arbitrary; indicates currently inside a scwrypt
+__SCWRYPT=1  # arbitrary; indicates currently inside a scwrypt

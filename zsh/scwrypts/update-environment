@@ -1,0 +1,148 @@
+#!/bin/zsh
+
+use scwrypts/environment
+
+#####################################################################
+
+USAGE__options+="
+	-m, --mode <string>   set the execution mode for update
+	   edit        (default) edit the current environment
+	   copy        copy one environment to another
+	   delete      permanently delete an existing environment
+	   recursive   (somewhat advanced) from deepest parent to target environment, edit all related environments in order
+	   advanced    (dangerous) API mode; requires a '--' and additional arguments
+	
+	-n, --name   name of the environment to update (default is current '$SCWRYPTS_ENV')\n$(SCWRYPTS_ENVIRONMENT__GET_ENV_NAMES | sed 's/^/   /')
+
+	--advanced-help   help doc for advanced mode
+"
+
+USAGE__description='
+	interactive utility for scwrypts environment managment
+'
+
+# program exists immediately after running, so environment changes
+# cannot cause errors if this script is run on it's own
+[[ $SUBSCWRYPT -eq 0 ]] \
+	&& export __SCWRYPTS_ENVIRONMENT__WORKFLOW_IS_CHANGE_SAFE=true
+
+#####################################################################
+
+MAIN() {
+	local MODE=edit
+	local ENVIRONMENT_NAME
+
+	local ARGS=()
+
+	local _S ERRORS=0
+	while [[ $# -gt 0 ]]
+	do
+		_S=1
+		case $1 in
+			--advanced-help )
+				SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG --help
+				return 0
+				;;
+
+			-m | --mode )
+				[ $2 ] && ((_S+=1)) || ERROR "missing mode name" || break
+				case $2 in
+					edit | copy | delete | recursive | advanced )
+						MODE="$2"
+						;;
+					* ) ERROR "invalid mode '$MODE'" ;;
+				esac
+				;;
+
+			-n | --name )
+				[ $2 ] && ((_S+=1)) || ERROR "missing environment name" || break
+				ENVIRONMENT_NAME="$2"
+				;;
+
+			-- ) shift 1; ADVANCED_ARGS=($@); break ;;
+			 * ) ERROR "unknown argument '$1'" ;;
+		esac
+		shift $_S
+	done
+
+	CHECK_ERRORS
+
+	case $MODE in
+		edit )
+			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$SCWRYPTS_ENV"
+			;;
+		copy )
+			local SOURCE_ENVIRONMENT="$(SCWRYPTS_ENVIRONMENT__GET_ENV_NAMES | FZF 'select an environment to copy')"
+			[ "$SOURCE_ENVIRONMENT" ] || ABORT
+
+			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME=$(echo | FZF_USER_INPUT 'new environment name')
+			[ "$ENVIRONMENT_NAME" ] || ABORT
+			;;
+		delete )
+			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$(SCWRYPTS_ENVIRONMENT__GET_ENV_NAMES | FZF 'select an environment to delete')"
+			[ "$ENVIRONMENT_NAME" ] || ABORT
+			;;
+	esac
+
+	[ -f "$(SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME "$ENVIRONMENT_NAME" scwrypts)" ] \
+		&& local ENVIRONMENT_EXISTS=true \
+		|| local ENVIRONMENT_EXISTS=false \
+		;
+
+	case $MODE in
+		edit )
+			case $ENVIRONMENT_EXISTS in
+				true ) ;;
+				false )
+					WARNING "environment $ENVIRONMENT_NAME does not exist"
+					Yn "create new environment '$ENVIRONMENT_NAME'?" || ABORT
+					;;
+			esac
+			;;
+
+		copy )
+			ARGS+=(--create-from-existing "$SOURCE_ENVIRONMENT")
+			case $ENVIRONMENT_EXISTS in
+				true )
+					ERROR "target environment '$ENVIRONMENT_NAME' already exists; refusing to copy"
+					;;
+				false ) ;;
+			esac
+			;;
+
+		delete )
+			ARGS+=(--mode delete)
+			case $ENVIRONMENT_EXISTS in
+				true )
+					REMINDER 'deleting an environment is PERMANENT\nmake sure your credentials are backed up!'
+					yN "are you sure you want to delete '$ENVIRONMENT_NAME'?" || ABORT
+					;;
+				false )
+					ERROR "environment '$ENVIRONMENT_NAME' does not exist (can't delete it if it's not there)"
+					;;
+			esac
+			;;
+
+		recursive )
+			ARGS+=(--mode recursive)
+			case $ENVIRONMENT_EXISTS in
+				true ) ;;
+				false )
+					ERROR "environment '$ENVIRONMENT_NAME' does not exist; please create it before attempting recursive edit"
+					;;
+			esac
+			;;
+
+		advanced )
+			WARNING "operating in advanced mode; I hope you know what you are doing!"
+			;;
+	esac
+
+	CHECK_ERRORS --no-usage
+
+	##########################################
+
+	ARGS+=(--environment-name $ENVIRONMENT_NAME)
+
+	SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG ${ARGS[@]}
+}
