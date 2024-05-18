@@ -3,10 +3,18 @@ export EXECUTION_DIR=$(pwd)
 export SCWRYPTS_RUNTIME_ID=$(uuidgen)
 source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 #####################################################################
+
+use utils
+use scwrypts/environment
+use scwrypts/run
+
+SCWRYPTS_LOG_LEVEL=4 SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS \
+	|| ERROR "failed to initialize scwrypts environments (see above)"
+
+#####################################################################
 () {
 	cd "$SCWRYPTS_ROOT__scwrypts"
 	GIT_SCWRYPTS() { git -C "$SCWRYPTS_ROOT__scwrypts" $@; }
-
 
 	local ERRORS=0
 	local USAGE='
@@ -85,7 +93,7 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 				;;
 
 			--list-envs )
-				SCWRYPTS__GET_ENV_NAMES
+				SCWRYPTS_ENVIRONMENT__GET_ENV_NAMES
 				return 0
 				;;
 
@@ -326,7 +334,7 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 	}
 
 	[[ $ENV_REQUIRED =~ true ]] && {
-		[ ! $ENV_NAME ] && ENV_NAME=$(SCWRYPTS__SELECT_ENV)
+		[ ! $ENV_NAME ] && ENV_NAME=$(SCWRYPTS_ENVIRONMENT__SELECT_ENV)
 		[ ! $ENV_NAME ] && ABORT
 
 		export ENV_NAME
@@ -338,8 +346,6 @@ source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
 			[ $REQUIRED_REGEX ] && {
 				[[ $ENV_NAME =~ $REQUIRED_REGEX ]] || continue
 			}
-			local ENV_FILE=$(SCWRYPTS__GET_ENV_FILE "$ENV_NAME" "$GROUP")
-			source "$ENV_FILE" || FAIL 5 "missing or invalid environment '$GROUP/$ENV_NAME'"
 
 			for f in $(eval 'echo $SCWRYPTS_STATIC_CONFIG__'$GROUP)
 			do
