@@ -82,6 +82,8 @@ MAIN() {
 			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$(SCWRYPTS_ENVIRONMENT__GET_ENV_NAMES | FZF 'select an environment to delete')"
 			[ "$ENVIRONMENT_NAME" ] || ABORT
 			;;
+		advanced )
+			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$SCWRYPTS_ENV"
 	esac
 
 	[ -f "$(SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME "$ENVIRONMENT_NAME" scwrypts)" ] \

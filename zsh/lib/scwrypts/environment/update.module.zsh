@@ -82,20 +82,13 @@ SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG() {
 
 	CHECK_ERRORS --no-fail || return $?
 
-	local TEMP_CONFIG_FILE
-	[ -d /tmp ] \
-		&& TEMP_CONFIG_FILE=/tmp/scwrypts/environment.config.yaml \
-		|| TEMP_CONFIG_FILE="$SCWRYPTS_DATA_PATH/environment.temp.yaml" \
-		;
+	local TEMP_CONFIG_FILE="$SCWRYPTS_TEMP_PATH/environment.temp.yaml"
 
 	[ -f "$TEMP_CONFIG_FILE" ] && {
 		ERROR "temp config file already exists at '$TEMP_CONFIG_FILE'\nis another environment update in-progress?"
 		REMINDER "if you are certain no other environment update is in progress, you can resolve with\n  rm -- '$TEMP_CONFIG_FILE'"
 		return 1
 	}
-
-
-	mkdir -p -- "$(dirname -- "$TEMP_CONFIG_FILE")"
 
 	_SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__$EDIT_MODE
 	local EXIT_CODE=$?
