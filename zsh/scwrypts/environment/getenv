@@ -1,0 +1,35 @@
+#!/bin/zsh
+
+use scwrypts/environment
+
+#####################################################################
+
+USAGE__args="
+	  \$1      must be the name of the environment variable
+	  \$2...   any additional arguments to forward to __CHECK_ENV_VAR
+"
+
+USAGE__description="
+	Wrapper API for __CHECK_ENV_VAR to get environment variable values
+	from non-zsh scwrypts environments. Value of the variable is written
+	to stdout, and returns an error status if the variable is required
+	and missing.
+
+	------ __CHECK_ENV_VAR help ------
+
+	$(__CHECK_ENV_VAR --help 2>&1 | sed 's/^/ > /g' | grep -v 'usage')
+	 
+	------ __CHECK_ENV_VAR help ------
+"
+
+#####################################################################
+
+MAIN() {
+	local VARIABLE_NAME="$1"
+	[ $VARIABLE_NAME ] \
+		|| ERROR "missing variable / lookup path to check" \
+		|| return 1
+	shift 1
+
+	__CHECK_ENV_VAR $VARIABLE_NAME $@ --print-value
+}
