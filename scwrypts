@@ -486,3 +486,12 @@ SCWRYPTS_LOG_LEVEL=4 SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS \
 		return $EXIT_CODE
 	} | tee --append "$LOGFILE"
 } $@
+
+EXIT_CODE=$?
+
+[ "$SCWRYPTS_TEMP_PATH" ] && [ -d "$SCWRYPTS_TEMP_PATH" ] \
+	&& {
+		rm -- $(find "$SCWRYPTS_TEMP_PATH" -mindepth 1 -maxdepth 1 -type f)
+		rmdir "$SCWRYPTS_TEMP_PATH"
+	}	&>/dev/null
+return $EXIT_CODE
