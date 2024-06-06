@@ -1,13 +1,7 @@
 #####################################################################
 
-DEPENDENCIES+=(
-	docker
-)
-
-REQUIRED_ENV+=(
-	AWS_ACCOUNT
-	AWS_REGION
-)
+DEPENDENCIES+=(docker)
+REQUIRED_ENV+=(AWS_ACCOUNT AWS_REGION)
 
 use cloud/aws/cli
 
@@ -104,19 +98,19 @@ _RDS_AUTH__secretsmanager() {
 	local CREDENTIALS=$(_RDS__GET_SECRETSMANAGER_CREDENTIALS)
 	echo $CREDENTIALS | jq -e '.pass' >/dev/null 2>&1 \
 		&& DB_PASS="$(echo $CREDENTIALS | jq -r '.pass')"
-	
+
 	echo $CREDENTIALS | jq -e '.password' >/dev/null 2>&1 \
 		&& DB_PASS="$(echo $CREDENTIALS | jq -r '.password')"
-	
+
 	echo $CREDENTIALS | jq -e '.user' >/dev/null 2>&1 \
 		&& DB_USER=$(echo $CREDENTIALS | jq -r '.user')
-	
+
 	echo $CREDENTIALS | jq -e '.username' >/dev/null 2>&1 \
 		&& DB_USER=$(echo $CREDENTIALS | jq -r '.username')
-	
+
 	echo $CREDENTIALS | jq -e '.name' >/dev/null 2>&1 \
 		&& DB_NAME=$(echo $CREDENTIALS | jq -r '.name')
-	
+
 	echo $CREDENTIALS | jq -e '.dbname' >/dev/null 2>&1 \
 		&& DB_NAME=$(echo $CREDENTIALS | jq -r '.dbname')
 }

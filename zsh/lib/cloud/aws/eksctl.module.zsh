@@ -4,73 +4,75 @@ DEPENDENCIES+=(eksctl)
 REQUIRED_ENV+=()
 
 use cloud/aws/eks
+use cloud/aws/zshparse/eksctl
 
 #####################################################################
 
 EKSCTL() {
-	REQUIRED_ENV=(AWS_PROFILE AWS_REGION) CHECK_ENVIRONMENT || return 1
+	eval "$(USAGE__reset)"
+	local USAGE__description="
+		Safe context wrapper for eksctl commands; prevents accidental local environment
+		bleed-through, but otherwise works exactly like 'eksctl'.
 
-	AWS_PROFILE=$AWS_PROFILE AWS_REGION=$AWS_REGION \
-		eksctl $@
+		This wrapper should be used in place of _all_ 'eksctl' usages within scwrypts.
+	"
+	USAGE__args+='
+		args   all remaining arguments are forwarded to eksctl
+	'
+
+	local \
+		AWS_EVAL_PREFIX \
+		ARGS=() ARGS_FORCE=allowed \
+		PARSERS=(
+			AWS_PARSER__OVERRIDES
+		)
+
+	eval "$ZSHPARSEARGS"
+
+	##########################################
+
+	DEBUG "invoking '$(echo "$AWS_EVAL_PREFIX" | sed 's/AWS_\(ACCESS_KEY_ID\|SECRET_ACCESS_KEY\)=[^ ]\+ //g')eksctl ${ARGS[@]}'"
+	eval "${AWS_EVAL_PREFIX}eksctl ${ARGS[@]}"
 }
 
+#####################################################################
+
 EKSCTL__CREATE_IAMSERVICEACCOUNT() {
-	local USAGE="
-		usage: serviceaccount-name namespace [...options...] -- [...'eksctl create iamserviceaccount' args...]
+	eval "$(USAGE__reset)"
+	local USAGE__description="
+		Safe context wrapper for eksctl commands; prevents accidental local environment
+		bleed-through, but otherwise works exactly like 'eksctl'.
 
-		options:
-		  --serviceaccount   (required) target k8s:ServiceAccount
-		  --namespace        (required) target k8s:Namespace
-		  --role-name        (required) name of the IAM role to assign
-
-		  --force   don't check for existing serviceaccount and override any existing configuration
+		This wrapper should be used in place of _all_ 'eksctl' usages within scwrypts.
+	"
+	USAGE__args+="
+		args   all remaining arguments are forwarded to 'eksctl create iamserviceaccount'
 
 		eksctl create iamserviceaccount args:
 		$(eksctl create iamserviceaccount --help 2>&1 | grep -v -- '--name' | grep -v -- '--namespace' | grep -v -- '--role-name' | sed 's/^/  /')
 	"
-	REQUIRED_ENV=(AWS_REGION AWS_ACCOUNT CLUSTER_NAME) CHECK_ENVIRONMENT || return 1
+	REQUIRED_ENV=(AWS_REGION AWS_ACCOUNT) CHECK_ENVIRONMENT || return 1
 
-	local SERVICEACCOUNT NAMESPACE ROLE_NAME
-	local FORCE=0
-	local EKSCTL_ARGS=()
+	local \
+		SERVICEACCOUNT NAMESPACE ROLE_NAME ARGS=() FORCE=false \
+		ARGS=() ARGS_FORCE=allowed \
+		PARSERS=(
+			ARGS_PARSER__EKSCTL__CREATE_IAMSERVICEACCOUNT
+		)
 
-	while [[ $# -gt 0 ]]
-	do
-		case $1 in
-			--serviceaccount ) SERVICEACCOUNT=$2; shift 1 ;;
-			--namespace      ) NAMESPACE=$2; shift 1 ;;
-			--role-name      ) ROLE_NAME=$2; shift 1 ;;
-
-			--force ) FORCE=1 ;; 
-
-			-- ) shift 1; break ;;
-
-			* ) ERROR "unknown argument '$1'" ;;
-		esac
-		shift 1
-	done
-
-	while [[ $# -gt 0 ]]; do EKSCTL_ARGS+=($1); shift 1; done
-
-	[ $SERVICEACCOUNT ] || ERROR "--serviceaccount is required"
-	[ $NAMESPACE      ] || ERROR "--namespace is required"
-	[ $ROLE_NAME      ] || ERROR "--role-name is required"
-
-	CHECK_ERRORS --no-fail || return 1
+	eval "$ZSHPARSEARGS"
 
 	##########################################
-	
-	[[ $FORCE -eq 0 ]] && {
+
+	[[ $FORCE =~ false ]] && {
 		_EKS__CHECK_IAMSERVICEACCOUNT_EXISTS
-		local EXISTS_STATUS=$?
-		case $EXISTS_STATUS in
-			0 )
-				SUCCESS "'$NAMESPACE/$SERVICEACCOUNT' already configured with '$ROLE_NAME'"
+		case $? in
+			0 ) SUCCESS "'$NAMESPACE/$SERVICEACCOUNT' already configured with '$ROLE_NAME'"
 				return 0
 				;;
-			1 ) ;; # role does not exist yet; continue with rollout
-			2 )
-				ERROR "'$NAMESPACE/$SERVICEACCOUNT' has been configured with a different role than '$ROLE_NAME'"
+			1 ) # role does not exist yet; continue with rollout
+				;;
+			2 ) ERROR "'$NAMESPACE/$SERVICEACCOUNT' has been configured with a different role than '$ROLE_NAME'"
 				REMINDER "must use --force flag to overwrite"
 				return 2
 				;;
@@ -85,7 +87,7 @@ EKSCTL__CREATE_IAMSERVICEACCOUNT() {
 			--role-name $ROLE_NAME \
 			--override-existing-serviceaccounts \
 			--approve \
-			${EKSCTL_ARGS[@]} \
+			${ARGS[@]} \
 		&& SUCCESS "successfully configured '$NAMESPACE/$SERVICEACCOUNT' with IAM role '$ROLE_NAME'" \
 		|| { ERROR "unable to configure '$NAMESPACE/$SERVICEACCOUNT' with IAM role '$ROLE_NAME' (check cloudformation dashboard for details)"; return 3; }
 }
