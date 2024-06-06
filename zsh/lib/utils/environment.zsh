@@ -13,14 +13,15 @@ __CHECK_REQUIRED_ENV() {
 __CHECK_ENV_VAR() {
 	local NAME OPTIONAL DEFAULT_VALUE LOOKUP_PATH
 	local NAME_IS=environment-variable
+	local PRINT_VALUE=false
 
 	local USAGE="
 		usage: __CHECK_ENV_VAR <environment variable> [...options...]
 
 		options:
-		  --optional   marks the variable as optional
-		  --default    marks the variable as optional and provides a default value
-
+		  --optional      marks the variable as optional
+		  --default       marks the variable as optional and provides a default value
+		  --print-value   print the value to stdout
 
 		Verifies the existence of an environment variable in the current
 		runtime. When running in scwrypts, allows lookup of environment variable
@@ -33,14 +34,24 @@ __CHECK_ENV_VAR() {
 		configuration env var (even when lookup is a config lookup path)
 	"
 
-
 	local _S ERRORS=0 POSITIONAL_ARGS=0
 	while [[ $# -gt 0 ]]
 	do
 		_S=1
 		case $1 in
-			-h | --help ) USAGE; return 0 ;;
-			--optional ) OPTIONAL=true ;;
+			-h | --help )
+				USAGE
+				return 0
+				;;
+
+			--optional )
+				OPTIONAL=true
+				;;
+
+			--print-value )
+				PRINT_VALUE=true
+				;;
+
 			--default )
 				[ $2 ] && ((_S+=1)) \
 					|| ERROR "missing env var default value" \
@@ -56,13 +67,18 @@ __CHECK_ENV_VAR() {
 				DEFAULT_VALUE="$2"
 				OPTIONAL=true
 				;;
+
 			* )
 				((POSITIONAL_ARGS+=1))
-				[[ $POSITIONAL_ARGS -le 2 ]] || ERROR "unknown argument '$1'"
 				case $POSITIONAL_ARGS in
-					1 ) NAME="$1" ;;
+					1 ) NAME="$1"
+						;;
+
 					2 ) DEFAULT_VALUE="$1"
 						WARNING "use of positional argument for default value is DEPRECATED\nplease use --default <value> flag"
+						;;
+
+					* ) ERROR "unknown argument '$1'"
 						;;
 				esac
 				;;
@@ -103,9 +119,18 @@ __CHECK_ENV_VAR() {
 
 	##########################################
 
+	# only check env vars once
+	local ALREADY_CHECKED="$(eval echo '$'$NAME'__checked')"
+	[ "$ALREADY_CHECKED" ] && return $ALREADY_CHECKED
+
 	[ $__SCWRYPT ] || local CI=true  # outside of scwrypts, environment must load like CI runtime
 	[ $CI ] && {
-		[ "$(eval echo '$'$NAME)" ] && return 0
+		local VALUE="$(eval echo '$'$NAME)"
+		[ "$VALUE" ] && {
+			export ${NAME}__checked=0
+			[[ $PRINT_VALUE =~ true ]] && echo "$VALUE"
+			return 0
+		}
 
 		case $OPTIONAL in
 			true )
@@ -114,6 +139,7 @@ __CHECK_ENV_VAR() {
 					|| WARNING "environment variable '$NAME' is not set" \
 					;
 
+				export ${NAME}__checked=0
 				return 0
 				;;
 			false )
@@ -121,13 +147,14 @@ __CHECK_ENV_VAR() {
 				[ "$LOOKUP_PATH" ] && ERROR_MESSAGE+=" (config path '$LOOKUP_PATH')"
 
 				ERROR "$ERROR_MESSAGE"
+				export ${NAME}__checked=1
 				return 1
 				;;
 		esac
 	}
 
 	[ ! $LOOKUP_PATH ] && {
-		LOOKUP_PATH="$(SCWRYPTS_ENVIRONMENT__GET_ENVVAR_LOOKUP_MAP | YQ -r ".$NAME")"
+		LOOKUP_PATH="$(SCWRYPTS_ENVIRONMENT__GET_ENVVAR_LOOKUP_MAP | YQ -r ".$NAME" | sed 's/\.value$//')"
 	}
 
 	# ensure environment safety; prevent bleed in from user's runtime
@@ -137,14 +164,18 @@ __CHECK_ENV_VAR() {
 		runtimeoverride \
 		value \
 		selection \
+		select \
 		;
 	do
 		VALUE=$(__CHECK_ENV_VAR__$GET_VALUE_METHOD "$NAME" "$LOOKUP_PATH")
 		[ "$VALUE" ] && eval "export $NAME=$VALUE" && break
 	done
 
-	[ "$VALUE" ] && return 0
-
+	[ "$VALUE" ] && {
+		export ${NAME}__checked=0
+		[[ $PRINT_VALUE =~ true ]] && echo "$VALUE"
+		return 0
+	}
 
 	case $OPTIONAL in
 		true )
@@ -153,6 +184,7 @@ __CHECK_ENV_VAR() {
 				|| WARNING "environment variable '$NAME' is not set" \
 				;
 
+			export ${NAME}__checked=0
 			return 0
 			;;
 		false )
@@ -160,6 +192,7 @@ __CHECK_ENV_VAR() {
 			[ "$LOOKUP_PATH" ] && ERROR_MESSAGE+=" (config path '$LOOKUP_PATH')"
 
 			ERROR "$ERROR_MESSAGE"
+			export ${NAME}__checked=1
 			return 1
 			;;
 	esac
@@ -174,8 +207,9 @@ __CHECK_ENV_VAR__runtimeoverride() {
 __CHECK_ENV_VAR__value() {
 	local NAME="$1"
 	local LOOKUP_PATH="$2"
+
 	SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_SHELL_VALUES \
-		| YQ -r "$LOOKUP_PATH" \
+		| YQ -r "$LOOKUP_PATH.value" \
 		| grep -v '^null$' \
 		;
 }
@@ -186,11 +220,27 @@ __CHECK_ENV_VAR__selection() {
 
 	local SELECTION_VALUES=($(
 		SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_SHELL_VALUES \
-			| YQ -r ".$LOOKUP_PATH[]" \
+			| YQ -r "$LOOKUP_PATH.selection[]" \
 			| grep -v '^null$' \
 			))
 
 	[[ ${#SELECTION_VALUES[@]} -gt 0 ]] || return
+
+	echo "$SELECTION_VALUES" \
+		| sed 's/\s\+/\n/g' \
+		| FZF "select a value for '$NAME'" \
+		;
+}
+
+__CHECK_ENV_VAR__select() {  # support for ENV_VAR__select=()
+	local NAME="$1"
+	local LOOKUP_PATH="$2"
+
+	local SELECTION_VALUES=($(eval echo '$'$NAME'__select'))
+
+	[[ ${#SELECTION_VALUES[@]} -gt 0 ]] || return
+
+	WARNING "support for ENV_VAR__select syntax is deprecated;\nplease use the .selection[] array in the yaml configuration for user-selectable options"
 
 	echo "$SELECTION_VALUES" \
 		| sed 's/\s\+/\n/g' \
