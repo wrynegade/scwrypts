@@ -1,27 +1,61 @@
 #!/bin/zsh
-use scwrypts/virtualenv
+use scwrypts/virtualenv/update
+use scwrypts/virtualenv/delete
+#####################################################################
+
+USAGE__options='
+	-g, --group   name of group with specialized virtualenv (default "scwrypts")
+	-t, --type    type of virtual environment to refresh
+	'
+
+USAGE__description='
+	drops, recreates, and updates the virtual environment used
+	by scwrypts in the appropriate group
+	'
+
 #####################################################################
 
 MAIN() {
+	local ENV_GROUP ENV_TYPE
+
+	local ERRORS=0 _S
 	while [[ $# -gt 0 ]]
 	do
+		_S=1
 		case $1 in
-			-g | --group ) ENV_GROUP="$2"; shift 1 ;; 
+			-g | --group )
+				[ $2 ] && ((_S+=1)) \
+					|| ERROR "missing group name" \
+					|| break
+
+				ENV_GROUP="$2"
+				;; 
+
+			-t | --type  )
+				[ $2 ] && ((_S+=1)) \
+					|| ERROR "missing env type" \
+					|| break
+
+				ENV_TYPE="$2"
+				;;
 		esac
-		shift 1
+		shift $_S
 	done
 	
-	[ ! $ENV_GROUP ] && ENV_GROUP=scwrypts
-	
-	ENV_TYPE=$(echo $AVAILABLE_VIRTUALENVS | sed 's/ \+/\n/' | FZF 'select an environment to refresh')
-	[ ! $ENV_TYPE ] && ABORT
-	
-	REMINDER "
-		this will permanently remove all artifacts for the scwrypts $ENV_TYPE environment
-		(safe unless you have put something important in $(_VIRTUALENV__GET_PATH $ENV_GROUP $ENV_TYPE))
-		"
-	
-	Yn "drop and recreate $ENV_TYPE virtual environment?" || ABORT
-	
-	REFRESH_VIRTUALENV $ENV_GROUP $ENV_TYPE
+	[ $ENV_GROUP ] || ENV_GROUP=scwrypts
+
+	[ $ENV_TYPE ] || ENV_TYPE=$(\
+		echo ${SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS[@]} \
+			| sed 's/ \+/\n/' \
+			| FZF 'select an environment to refresh' \
+		)
+	[ $ENV_TYPE ] || ERROR "no environment type selected"
+
+	CHECK_ERRORS
+
+	##########################################
+	: \
+		&& DELETE_VIRTUALENV "$ENV_GROUP" "$ENV_TYPE" \
+		&& UPDATE_VIRTUALENV "$ENV_GROUP" "$ENV_TYPE" \
+		;
 }
