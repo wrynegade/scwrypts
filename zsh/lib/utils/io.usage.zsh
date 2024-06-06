@@ -5,7 +5,7 @@ USAGE() { # formatter for USAGE variable
 	[ $USAGE__usage ] && echo $USAGE_LINE | grep -q 'usage: -' \
 		&& USAGE_LINE=$(echo $USAGE_LINE | sed "s/usage: -/usage: $USAGE__usage/")
 
-	[ $__SCWRYPT ] \
+	[ $__SCWRYPT ] && [[ ! $USAGE_LINE =~ 'usage: [A-Z]' ]] \
 		&& USAGE_LINE=$(
 			echo $USAGE_LINE \
 				| sed "s;^[^:]*:;& scwrypts $SCWRYPT_NAME --;" \
@@ -36,7 +36,7 @@ USAGE() { # formatter for USAGE variable
 	for DYNAMIC_USAGE_ELEMENT in $(echo $THE_REST | sed -n 's/^\([^:]*\): -$/\1/p')
 	do
 		DYNAMIC_USAGE_ELEMENT_TEXT=$(eval echo '$USAGE__'$DYNAMIC_USAGE_ELEMENT)
-		#[ $DYNAMIC_USAGE_ELEMENT_TEXT ] || continue
+		[ $DYNAMIC_USAGE_ELEMENT_TEXT ] || continue
 
 
 		case $DYNAMIC_USAGE_ELEMENT in
@@ -61,5 +61,25 @@ USAGE() { # formatter for USAGE variable
 		| perl -p0e 's/\n{2,}/\n\n/g' \
 		| perl -p0e 's/:\n{2,}/:\n/g' \
 		| perl -p0e 's/([a-z]+:)\n([a-z]+:)/\2/g' \
+		| sed -z 's/\s\n\+$//' \
 		>&2
+}
+
+USAGE__reset() {
+	# eval "$(USAGE__reset)" to setup local usage defaults
+	echo "
+	local USAGE__usage=${funcstack[2]}
+	local USAGE__options
+	local USAGE__args
+	local USAGE__description
+	local USAGE='
+		usage: -
+
+		options: -
+
+		args: -
+
+		description: -
+		'
+	"
 }
