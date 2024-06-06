@@ -1,90 +1,89 @@
 #####################################################################
 
 DEPENDENCIES+=(kubectl yq)
-REQUIRED_ENV+=()
 
 use cloud/aws/cli
-
-#####################################################################
-
-EKS__KUBECTL() { EKS kubectl $@; }
-EKS__FLUX()    { EKS flux $@; }
+use cloud/aws/zshparse
+use cloud/aws/zshparse/eks
 
 #####################################################################
 
 EKS() {
-	local USAGE="
-		usage: cli [...kubectl args...]
-
-		args:
-		  cli   a kubectl-style CLI (e.g. kubectl, helm, flux, etc)
-
+	eval "$(USAGE__reset)"
+	local USAGE__description='
 		Allows access to kubernetes CLI commands by configuring environment
 		to point to a specific cluster.
-	"
+	'
 
-	REQUIRED_ENV=(AWS_REGION AWS_ACCOUNT CLUSTER_NAME) DEPENDENCIES=(kubectl $1) CHECK_ENVIRONMENT || return 1
+	local \
+		ACCOUNT REGION AWS_PASSTHROUGH=() \
+		CLUSTER_NAME \
+		KUBECLI ARGS=() \
+		PARSERS=(
+			AWS_PARSER__OVERRIDES
+			AWS_PARSER__EKS_CLUSTER_NAME
+			ARGS_PARSER__EKS
+		)
 
-	local CONTEXT="arn:aws:eks:${AWS_REGION}:${AWS_ACCOUNT}:cluster/${CLUSTER_NAME}"
+	eval "$ZSHPARSEARGS"
 
-	kubectl config get-contexts | grep -q $CONTEXT \
-		|| EKS__CLUSTER_LOGIN -c $CLUSTER_NAME >/dev/null
+	#####################################################################
+	local CONTEXT="arn:aws:eks:${REGION}:${ACCOUNT}:cluster/${CLUSTER_NAME}"
+
+	kubectl config get-contexts --output=name | grep -q "^$CONTEXT$" || {
+		EKS__CLUSTER_LOGIN \
+				${AWS_PASSTHROUGH[@]} \
+				--cluster-name $CLUSTER_NAME \
+				>/dev/null \
+			|| ERROR "unable to login to cluster '$CLUSTER_NAME'" \
+			|| return 1
+	}
 
 	local CONTEXT_ARGS=()
-	case $1 in
+	case $KUBECLI in
 		helm ) CONTEXT_ARGS+=(--kube-context $CONTEXT) ;;
-		* ) CONTEXT_ARGS+=(--context $CONTEXT) ;;
+		   * ) CONTEXT_ARGS+=(--context      $CONTEXT) ;;
 	esac
 
-	$1 ${CONTEXT_ARGS[@]} ${@:2}
+	$KUBECLI ${CONTEXT_ARGS[@]} ${ARGS[@]}
 }
 
 #####################################################################
 
 EKS__CLUSTER_LOGIN() {
-	local USAGE="
-		usage:  [...options...]
-
-		options
-		  -c, --cluster-name <string>   (optional) login a specific cluster
-
-
+	eval "$(USAGE__reset)"
+	local USAGE__description='
 		Interactively sets the default kubeconfig to match the selected
 		cluster in EKS. Also creates the kubeconfig entry if it does not
 		already exist.
-	"
-	REQUIRED_ENV=(AWS_ACCOUNT AWS_REGION) CHECK_ENVIRONMENT || return 1
+	'
 
+	local \
+		ACCOUNT REGION AWS=() \
+		CLUSTER_NAME EKS_CLUSTER_NAME_INTERACTIVE=allowed \
+		PARSERS=(
+			AWS_PARSER__OVERRIDES
+			AWS_PARSER__EKS_CLUSTER_NAME
+		)
 
-	local CLUSTER_NAME
+	eval "$ZSHPARSEARGS"
 
-	while [[ $# -gt 0 ]]
-	do
-		case $1 in 
-			-c | --cluster-name ) CLUSTER_NAME="$2"; shift 1 ;;
+	#####################################################################
 
-			* ) [ ! $APPLICATION  ] && APPLICATION="$1" \
-					|| ERROR "extra positional argument '$1'"
-				;;
-		esac
-		shift 1
-	done
-
-	[ ! $CLUSTER_NAME ] && CLUSTER_NAME=$(\
-		AWS eks list-clusters \
+	[ $CLUSTER_NAME ] || CLUSTER_NAME=$(\
+		$AWS eks list-clusters \
 			| jq -r '.[] | .[]' \
-			| FZF 'select a cluster'
+			| FZF "select an eks cluster ($ACCOUNT/$REGION)"
 	)
 
-	[ ! $CLUSTER_NAME ] && ERROR 'must select a valid cluster or use -c flag'
+	[ $CLUSTER_NAME ] || ERROR 'must select a valid cluster or use --cluster-name'
 
-	CHECK_ERRORS
+	CHECK_ERRORS --no-fail || return $?
 
 	##########################################
 
-	STATUS 'creating / updating kubeconfig for EKS cluster'
-	STATUS "updating kubeconfig for '$CLUSTER_NAME'"
-	AWS eks update-kubeconfig --name $CLUSTER_NAME \
+	STATUS 'updating kubeconfig for EKS cluster '$CLUSTER_NAME''
+	$AWS eks update-kubeconfig --name $CLUSTER_NAME \
 		&& SUCCESS "kubeconfig updated with '$CLUSTER_NAME'" \
-		|| ERROR "failed to update kubeconfig; do you have permissions to access '$CLUSTER_NAME'?"
+		|| ERROR "failed to update kubeconfig; do you have permission to access '$CLUSTER_NAME'?"
 }

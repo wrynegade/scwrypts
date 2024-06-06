@@ -1,27 +1,33 @@
 #####################################################################
 
-DEPENDENCIES+=(
-	docker
-)
-
-REQUIRED_ENV+=()
+DEPENDENCIES+=(docker)
 
 use cloud/aws/cli
+use cloud/aws/zshparse
 
 #####################################################################
 
 ECR_LOGIN() {
-	REQUIRED_ENV=(AWS_REGION AWS_ACCOUNT) CHECK_ENVIRONMENT || return 1
+	eval "$(USAGE__reset)"
+	local USAGE__description="
+		Performs the appropriate 'docker login' command with temporary
+		credentials from AWS.
+	"
+
+	local \
+		ACCOUNT REGION AWS=() \
+		PARSERS=(
+			AWS_PARSER__OVERRIDES
+		)
+
+	eval "$ZSHPARSEARGS"
 
 	STATUS "performing AWS ECR docker login"
-	AWS ecr get-login-password \
-		| docker login \
+	$AWS ecr get-login-password \
+		| docker login "$ACCOUNT.dkr.ecr.$REGION.amazonaws.com" \
 			--username AWS \
 			--password-stdin \
-			"$AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com" \
-		&& SUCCESS "authenticated docker for '$AWS_ACCOUNT' in '$AWS_REGION'" \
-		|| {
-			ERROR "unable to authenticate docker for '$AWS_ACCOUNT' in '$AWS_REGION'"
-			return 1
-		}
+		&& SUCCESS "authenticated docker for '$ACCOUNT' in '$REGION'" \
+		|| ERROR "unable to authenticate docker for '$ACCOUNT' in '$REGION'" \
+		;
 }
