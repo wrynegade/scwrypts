@@ -1,5 +1,5 @@
 #!/bin/zsh
-use scwrypts/virtualenv
+use scwrypts/virtualenv/update
 #####################################################################
 
 MAIN() {
@@ -9,7 +9,7 @@ MAIN() {
 	
 	for ENV_GROUP in ${SCWRYPTS_GROUPS[@]}
 	do
-		for ENV_TYPE in ${AVAILABLE_VIRTUALENVS[@]}
+		for ENV_TYPE in ${SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS[@]}
 		do
 			UPDATE_VIRTUALENV $ENV_GROUP $ENV_TYPE || ((FAILED_COUNT+=1))
 		done
