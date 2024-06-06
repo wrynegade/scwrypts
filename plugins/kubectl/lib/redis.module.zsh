@@ -5,12 +5,9 @@ DEPENDENCIES+=(
 	docker
 )
 
-# TODO; allow custom redis configuration
-export SCWRYPTS_KUBECTL_REDIS=managed
+REQUIRED_ENV+=()
 
-REQUIRED_ENV+=(
-	SCWRYPTS_KUBECTL_REDIS
-)
+__CHECK_ENV_VAR SCWRYPTS_KUBECTL_REDIS --default managed
 
 #####################################################################
 
