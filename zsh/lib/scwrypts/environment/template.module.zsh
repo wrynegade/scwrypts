@@ -1,44 +1,51 @@
 #####################################################################
 
 use scwrypts/environment/common
+use scwrypts/cache
 
 #####################################################################
 
-
-__SCWRYPTS_ENVIRONMENT_CACHE__TEMPLATE="$SCWRYPTS_TEMP_PATH/environment.template.yaml"
-rm -- "$__SCWRYPTS_ENVIRONMENT_CACHE__TEMPLATE" &>/dev/null
-
 SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE() {
-	local RESET_CACHED_TEMPLATE=false
+	eval "$(USAGE__reset)"
+	local USAGE__description="
+		Provies the combined YAML of all available scwrypts group 'template.yaml' files.
 
-	local _S ERRORS=0
-	while [[ $# -gt 0 ]]
-	do
-		_S=1
-		case $1 in
-			--reset-cache ) RESET_CACHED_TEMPLATE=true ;;
-		esac
-		shift $_S
-	done
+		Template is cached after first generation in a given scwrypts runtime.
+	"
 
-	CHECK_ERRORS --no-fail || return $?
+	local \
+		CACHE_ARGS=() \
+		PARSERS=(
+			SCWRYPTS__CACHED_OUTPUT__ARGS
+			)
 
-	[[ $RESET_CACHED_TEMPLATE =~ true ]] \
-		&& rm -- "$__SCWRYPTS_ENVIRONMENT_CACHE__TEMPLATE" &>/dev/null
+	eval "$ZSHPARSEARGS"
+	##########################################
 
-	[ -f "$__SCWRYPTS_ENVIRONMENT_CACHE__TEMPLATE" ] || {
-		_SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE > "$__SCWRYPTS_ENVIRONMENT_CACHE__TEMPLATE"
-	}
-
-	cat "$__SCWRYPTS_ENVIRONMENT_CACHE__TEMPLATE"
+	SCWRYPTS__CACHED_OUTPUT ${CACHE_ARGS[@]} \
+		--cache-file environment.template.yaml \
+		-- \
+		_SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE \
+		;
 }
 
 SCWRYPTS_ENVIRONMENT__GET_ENVVAR_LOOKUP_MAP() {
-	# outputs a JSON map which can be used to lookup config-file query
-	# paths from environment variable names; GET_FULL_TEMPLATE flags OK
-	#
-	# key   : environment variable name
-	# value : jq-style query path
+	eval "$(USAGE__reset)"
+	local USAGE__description="
+		outputs a JSON map which can be used to lookup config-file query
+		paths from environment variable names; GET_FULL_TEMPLATE flags OK
+
+		key   : environment variable name
+		value : jq-style query path
+	"
+
+	local \
+		PARSERS=(
+			SCWRYPTS__CACHED_OUTPUT__ARGS  # passthrough
+			)
+
+	eval "$ZSHPARSEARGS"
+	##########################################
 	SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE $@ \
 		| YQ -P '
 			..
