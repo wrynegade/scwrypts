@@ -2,6 +2,10 @@ USAGE() { # formatter for USAGE variable
 	[ ! $USAGE ] && return 0
 	local USAGE_LINE=$(echo $USAGE | grep -i '^[	]*usage *:' | sed 's/^[		]*//')
 
+	[ "$USAGE__options" ] && [ "$USAGE__usage" ] && {
+		[[ $USAGE__usage =~ options ]] || USAGE__usage+=' [...options...]'
+	}
+
 	[ $USAGE__usage ] && echo $USAGE_LINE | grep -q 'usage: -' \
 		&& USAGE_LINE=$(echo $USAGE_LINE | sed "s/usage: -/usage: $USAGE__usage/")
 
