@@ -3,7 +3,6 @@
 DEPENDENCIES+=(aws)
 
 use cloud/aws/zshparse
-use cloud/aws/zshparse/cli
 
 #####################################################################
 
@@ -17,12 +16,15 @@ AWS() {
 		This wrapper should be used in place of _all_ 'aws' usages within scwrypts.
 	"
 
+	USAGE__args+='
+		args   arguments forwarded to the AWS CLI
+	'
+
 	local \
 		ACCOUNT AWS_EVAL_PREFIX AWS_CONTEXT_ARGS=() \
-		ARGS=() \
+		ARGS=() ARGS_FORCE=allowed \
 		PARSERS=(
 			AWS_PARSER__OVERRIDES
-			ARGS_PARSER__AWS
 		)
 
 	eval "$ZSHPARSEARGS"

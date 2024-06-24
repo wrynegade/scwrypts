@@ -25,6 +25,7 @@ ARGS_PARSER__EKSCTL__CREATE_IAMSERVICEACCOUNT__usage() {
 		--force   don't check for existing serviceaccount and override any existing configuration
 	"
 }
+
 ARGS_PARSER__EKSCTL__CREATE_IAMSERVICEACCOUNT__validate() {
 	[ $SERVICEACCOUNT ] || ERROR "--serviceaccount is required"
 	[ $NAMESPACE      ] || ERROR "--namespace is required"

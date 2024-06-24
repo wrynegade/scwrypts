@@ -1,4 +1,4 @@
-#####################################################################
+#####################################################################\
 
 DEPENDENCIES+=(kubectl yq)
 
@@ -11,8 +11,14 @@ use cloud/aws/zshparse/eks
 EKS() {
 	eval "$(USAGE__reset)"
 	local USAGE__description='
-		Allows access to kubernetes CLI commands by configuring environment
-		to point to a specific cluster.
+		Context wrapper for kubernetes CLI commands on AWS EKS. This
+		will automatically attempt login for first-time connections,
+		and ensures the correct kubecontext is used for the expected
+		command.
+
+			EKS --cluster-name my-cluster kubectl get pods
+			EKS --cluster-name my-cluster helm history my-deployment
+			... etc ...
 	'
 
 	local \

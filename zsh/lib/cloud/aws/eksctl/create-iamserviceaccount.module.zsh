@@ -1,39 +1,6 @@
 #####################################################################
 
-DEPENDENCIES+=(eksctl)
-REQUIRED_ENV+=()
-
-use cloud/aws/eks
-use cloud/aws/zshparse/eksctl
-
-#####################################################################
-
-EKSCTL() {
-	eval "$(USAGE__reset)"
-	local USAGE__description="
-		Safe context wrapper for eksctl commands; prevents accidental local environment
-		bleed-through, but otherwise works exactly like 'eksctl'.
-
-		This wrapper should be used in place of _all_ 'eksctl' usages within scwrypts.
-	"
-	USAGE__args+='
-		args   all remaining arguments are forwarded to eksctl
-	'
-
-	local \
-		AWS_EVAL_PREFIX \
-		ARGS=() ARGS_FORCE=allowed \
-		PARSERS=(
-			AWS_PARSER__OVERRIDES
-		)
-
-	eval "$ZSHPARSEARGS"
-
-	##########################################
-
-	DEBUG "invoking '$(echo "$AWS_EVAL_PREFIX" | sed 's/AWS_\(ACCESS_KEY_ID\|SECRET_ACCESS_KEY\)=[^ ]\+ //g')eksctl ${ARGS[@]}'"
-	eval "${AWS_EVAL_PREFIX}eksctl ${ARGS[@]}"
-}
+use cloud/aws/eksctl/create-iamserviceaccount.zshparse
 
 #####################################################################
 
@@ -45,12 +12,14 @@ EKSCTL__CREATE_IAMSERVICEACCOUNT() {
 
 		This wrapper should be used in place of _all_ 'eksctl' usages within scwrypts.
 	"
+
 	USAGE__args+="
 		args   all remaining arguments are forwarded to 'eksctl create iamserviceaccount'
 
 		eksctl create iamserviceaccount args:
 		$(eksctl create iamserviceaccount --help 2>&1 | grep -v -- '--name' | grep -v -- '--namespace' | grep -v -- '--role-name' | sed 's/^/  /')
 	"
+
 	REQUIRED_ENV=(AWS_REGION AWS_ACCOUNT) CHECK_ENVIRONMENT || return 1
 
 	local \
