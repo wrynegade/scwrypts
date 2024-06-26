@@ -74,6 +74,9 @@ ZSHPARSEARGS__ARGS() {
 }
 
 ZSHPARSEARGS__ARGS__usage() {
+	# don't auto-add "args" to the usage string if it's already there
+	[[ $USAGE__usage =~ args ]] && return 0
+
 	case $ARGS_FORCE in
 		allowed )
 			USAGE__usage+=' -- [...args...]'

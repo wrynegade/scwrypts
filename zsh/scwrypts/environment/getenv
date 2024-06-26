@@ -4,6 +4,10 @@ use scwrypts/environment
 
 #####################################################################
 
+USAGE__options="
+	--all   print JSON containing all environment variable (name:value)s
+"
+
 USAGE__args="
 	  \$1      must be the name of the environment variable
 	  \$2...   any additional arguments to forward to __CHECK_ENV_VAR
@@ -18,18 +22,59 @@ USAGE__description="
 	------ __CHECK_ENV_VAR help ------
 
 	$(__CHECK_ENV_VAR --help 2>&1 | sed 's/^/ > /g' | grep -v 'usage')
-	 
+
 	------ __CHECK_ENV_VAR help ------
 "
 
 #####################################################################
 
 MAIN() {
-	local VARIABLE_NAME="$1"
-	[ $VARIABLE_NAME ] \
-		|| ERROR "missing variable / lookup path to check" \
-		|| return 1
-	shift 1
+	local MODE=single-variable
+	local VARIABLE_NAMES=()
 
-	__CHECK_ENV_VAR $VARIABLE_NAME $@ --print-value
+	eval "$ZSHPARSEARGS"
+
+	case $MODE in
+		single-variable )
+			local VARIABLE_NAME
+			for VARIABLE_NAME in ${VARIABLE_NAMES[@]}
+			do
+				__CHECK_ENV_VAR $VARIABLE_NAME $@ --print-value
+			done
+			;;
+		all )
+			SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_JSON
+			;;
+	esac
+}
+
+MAIN__parse() {
+	local PARSED=0
+
+	case $1 in
+		--all ) PARSED=1; MODE=all ;;
+		-*    ) ;;
+		*     ) PARSED=1; VARIABLE_NAMES+=($1) ;;
+	esac
+
+	return $PARSED
+}
+
+MAIN__parse__usage() {
+	local USAGE__options="
+		--all   print the whole environment instead of individual environment variables
+	"
+}
+
+MAIN__parse__validate() {
+	case $MODE in
+		single-variable )
+			[[ ${#VARIABLE_NAMES[@]} -gt 0 ]] \
+				|| ERROR "missing variable / lookup path to check"
+			;;
+		all )
+			[[ ${#VARIABLE_NAMES[@]} -eq 0 ]] \
+				|| ERROR "unexpected variable name with '--all' flag"
+			;;
+	esac
 }
