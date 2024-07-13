@@ -1,6 +1,6 @@
 import { parseCLIArgs } from './parse-cli-args.js';
 
-import type { ScwryptsOptions } from './types.js';
+import type { ScwryptsOptions } from './type.scwrypts-options.js';
 
 export type ScwryptsLookupOptions =
   | {

@@ -3,11 +3,11 @@ import { describe, expect, test, beforeEach, jest } from '@jest/globals';
 import { v4 as uuid } from 'uuid';
 
 import { execa } from 'execa';
-import * as Module_getScwryptsLookup from './get-scwrypts-lookup.js';
-import * as Module_parseCLIArgs from './parse-cli-args.js';
-import { ScwryptsLogLevel } from './types.js';
+import * as Module_getScwryptsLookup from '../get-scwrypts-lookup.js';
+import * as Module_parseCLIArgs from '../parse-cli-args.js';
+import { ScwryptsLogLevel } from '../type.scwrypts-log-level.js';
 
-import { scwrypts } from './scwrypts.js';
+import { scwrypts } from '../scwrypts.js';
 
 jest.mock('execa', () => ({
   execa: jest.fn(() => Promise.resolve()),

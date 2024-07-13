@@ -2,11 +2,11 @@
 import { describe, expect, test, beforeEach, jest } from '@jest/globals';
 import { v4 as uuid } from 'uuid';
 
-import * as parseCLIArgs from './parse-cli-args.js';
+import * as Module_parseCLIArgs from '../parse-cli-args.js';
 
-import { getScwryptsLookup, Errors } from './get-scwrypts-lookup.js';
+import { getScwryptsLookup, Errors } from '../get-scwrypts-lookup.js';
 
-import type { ScwryptsOptions } from './types.js';
+import type { ScwryptsOptions } from '../type.scwrypts-options.js';
 
 let sample: any;
 beforeEach(() => {
@@ -15,7 +15,7 @@ beforeEach(() => {
     spy: {},
   };
 
-  sample.spy.parseCLIArgs = jest.spyOn(parseCLIArgs, 'parseCLIArgs');
+  sample.spy.parseCLIArgs = jest.spyOn(Module_parseCLIArgs, 'parseCLIArgs');
   sample.spy.parseCLIArgs.mockReturnValue(sample.parsedCLIArgs);
 });
 

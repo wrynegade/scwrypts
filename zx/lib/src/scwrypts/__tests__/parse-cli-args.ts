@@ -2,7 +2,7 @@
 import { describe, expect, test, beforeEach } from '@jest/globals';
 import { v4 as uuid } from 'uuid';
 
-import { parseCLIArgs } from './parse-cli-args.js';
+import { parseCLIArgs } from '../parse-cli-args.js';
 
 let sample: any;
 beforeEach(() => {
