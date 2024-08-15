@@ -5,7 +5,7 @@ use scwrypts/environment
 #####################################################################
 
 USAGE__options="
-	--all   print JSON containing all environment variable (name:value)s
+	--all   print the whole environment instead of individual environment variables
 "
 
 USAGE__args="
@@ -61,9 +61,6 @@ MAIN__parse() {
 }
 
 MAIN__parse__usage() {
-	local USAGE__options="
-		--all   print the whole environment instead of individual environment variables
-	"
 }
 
 MAIN__parse__validate() {

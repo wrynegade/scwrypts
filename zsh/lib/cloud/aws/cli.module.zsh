@@ -21,6 +21,7 @@ AWS() {
 	'
 
 	local \
+		ERRORS=0 \
 		ACCOUNT AWS_EVAL_PREFIX AWS_CONTEXT_ARGS=() \
 		ARGS=() ARGS_FORCE=allowed \
 		PARSERS=(
@@ -31,6 +32,6 @@ AWS() {
 
 	##########################################
 
-	DEBUG "invoking 'AWS_ACCOUNT=$ACCOUNT aws ${AWS_CONTEXT_ARGS[@]} ${ARGS[@]}'"
+	DEBUG "invoking '$(echo "$AWS_EVAL_PREFIX" | sed 's/AWS_\(ACCESS_KEY_ID\|SECRET_ACCESS_KEY\)=[^ ]\+ //g')aws ${AWS_CONTEXT_ARGS[@]} ${ARGS[@]}'"
 	eval "${AWS_EVAL_PREFIX}aws ${AWS_CONTEXT_ARGS[@]} ${ARGS[@]}"
 }

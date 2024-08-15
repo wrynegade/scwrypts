@@ -31,5 +31,6 @@ ARGS_PARSER__EKS__usage() {
 }
 
 ARGS_PARSER__EKS__validate() {
-	[ $KUBECLI ]
+	[ $KUBECLI ] \
+		|| ERROR "missing argument for 'kubecli'"
 }
