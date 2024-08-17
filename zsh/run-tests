@@ -1,0 +1,60 @@
+#!/bin/zsh
+#####################################################################
+
+MAIN() {
+	local USAGE__description='
+		a simple hello-world-style script which allows specific scwrypts
+		conditions to be quickly emulated
+	'
+
+	local USAGE__args='
+		$@   paths or lookup patterns to test
+	'
+
+	local \
+		ARGS=() ARGS_FORCE=disabled \
+		PARSERS=()
+
+	eval "$ZSHPARSEARGS"
+
+	##########################################
+	
+	local MODE
+	[[ ${#ARGS[@]} -eq 0 ]] \
+		&& MODE=all \
+		|| MODE=filter \
+		;
+	
+	local TEST_FILES=() GROUP FIND_ARGS=() FILTER
+	for GROUP in ${SCWRYPTS_GROUPS[@]}
+	do
+		FIND_ARGS=(-type f -name \*.test.zsh)
+
+		for FILTER in ${ARGS[@]}
+		do
+			FIND_ARGS+=(-a -name \*$FILTER\*)
+		done
+
+		TEST_FILES+=($(find "$(scwrypts.config.group ${GROUP} root)" ${FIND_ARGS[@]}))
+	done
+
+	local SCWRYPTS_CONFIG="$(scwrypts --config)"
+	local TEST_FILE
+	for TEST_FILE in ${TEST_FILES[@]}
+	do
+		local TEST_SUITE_NAME="$(basename -- "$(dirname -- ${TEST_FILE})")/$(basename -- "${TEST_FILE}")"
+		zsh <<< "
+		() {
+			local ERRORS=0
+			local CI=true
+			$SCWRYPTS_CONFIG
+			source '$TEST_FILE'
+			use test
+			CHECK_ENVIRONMENT
+			SCWRYPTS_TEST_MODULE_STRING=\"${TEST_SUITE_NAME} : \" SCWRYPTS__EXECUTE_ALL_TESTS
+		}
+		"
+	done
+}
+
+#####################################################################

@@ -4,7 +4,7 @@ REQUIRED_ENV+=(AWS_PROFILE)
 #####################################################################
 
 MAIN() {
-	local BACKUP_PATH="$SCWRYPTS_OUTPUT_PATH/$ENV_NAME/aws-dns-backup/$(date '+%Y-%m-%d')"
+	local BACKUP_PATH="$SCWRYPTS_DATA_PATH/route53/$ENV_NAME/aws-dns-backup/$(date '+%Y-%m-%d')"
 	mkdir -p $BACKUP_PATH >/dev/null 2>&1
 
 	local DOMAIN

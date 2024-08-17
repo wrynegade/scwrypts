@@ -3,9 +3,10 @@ use system/vim/vundle
 #####################################################################
 
 MAIN() {
-	[ -d "$HOME/.vim/bundle/Vundle.vim" ] || {
-		mkdir -p "$HOME/.vim/bundle/"
-		git clone https://github.com/VundleVim/Vundle.vim.git "$HOME/.vim/bundle/Vundle.vim"
+
+	[ -d "${VUNDLE__PLUGIN_DIR}/Vundle.vim" ] || {
+		mkdir -p "${VUNDLE__PLUGIN_DIR}/"
+		git clone https://github.com/VundleVim/Vundle.vim.git "${VIM_CONFIG_DIR}/bundle/Vundle.vim"
 	}
 
 	VUNDLE__PLUGIN_INSTALL  || return 1

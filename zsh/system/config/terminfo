@@ -9,11 +9,11 @@ MAIN() {
 	[ ! -d $TERMINFO_PATH ] && FAIL 1 "TERMINFO_PATH='$TERMINFO_PATH' does not exist"
 
 	local ERRORS=0
-	for TERMINFO in $(find $TERMINFO_PATH -type f)
+	for TERMINFO_FILE in $(find $TERMINFO_PATH -type f)
 	do
-		tic -x $TERMINFO >/dev/null 2>&1 \
-			&& SUCCESS "added '$(basename $TERMINFO)'" \
-			|| ERROR "failed to add '$(basename $TERMINFO)'" \
+		tic -x $TERMINFO_FILE >/dev/null 2>&1 \
+			&& SUCCESS "added '$(basename $TERMINFO_FILE)'" \
+			|| ERROR "failed to add '$(basename $TERMINFO_FILE)'" \
 			;
 	done
 
