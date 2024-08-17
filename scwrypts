@@ -1,20 +1,14 @@
 #!/bin/zsh
 export EXECUTION_DIR=$(pwd)
 export SCWRYPTS_RUNTIME_ID=$(uuidgen)
-source "$(dirname $(readlink -f "$0"))/zsh/lib/import.driver.zsh" || exit 42
+source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
+
 #####################################################################
-
-use utils
-use scwrypts/environment
-use scwrypts/run
-
-SCWRYPTS_LOG_LEVEL=4 SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS \
-	|| ERROR "failed to initialize scwrypts environments (see above)"
 
 #####################################################################
 () {
-	cd "$SCWRYPTS_ROOT__scwrypts"
-	GIT_SCWRYPTS() { git -C "$SCWRYPTS_ROOT__scwrypts" $@; }
+	cd "$(scwrypts.config.group scwrypts root)"
+	GIT_SCWRYPTS() { git -C "$(scwrypts.config.group scwrypts root)" $@; }
 
 	local ERRORS=0
 	local USAGE='
@@ -47,7 +41,7 @@ SCWRYPTS_LOG_LEVEL=4 SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS \
 		        --list-envs     print out environment list and exit
 		        --list-groups   print out configured scwrypts groups and exit
 		        --config        "eval"-ed to enable config and "use" import in non-scwrypts environments
-		        --root          print out SCWRYPTS_ROOT__scwrypts and exit
+		        --root          print out scwrypts.config.group.scwrypts.root and exit
 		        --update        update scwrypts library to latest version
 		        --version       print out scwrypts version and exit
 
@@ -88,11 +82,13 @@ SCWRYPTS_LOG_LEVEL=4 SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS \
 				;;
 
 			-l | --list )
+				use scwrypts/run
 				SCWRYPTS__GET_AVAILABLE_SCWRYPTS
 				return 0
 				;;
 
 			--list-envs )
+				use scwrypts/environment
 				SCWRYPTS_ENVIRONMENT__GET_ENV_NAMES
 				return 0
 				;;
@@ -105,18 +101,18 @@ SCWRYPTS_LOG_LEVEL=4 SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS \
 			--version )
 				case $SCWRYPTS_INSTALLATION_TYPE in
 					manual ) echo "scwrypts $(GIT_SCWRYPTS describe --tags) (via GIT)" ;;
-					     * ) echo "scwrypts $(cat "$SCWRYPTS_ROOT__scwrypts/VERSION")" ;;
+					     * ) echo "scwrypts $(cat "$(scwrypts.config.group scwrypts root)/VERSION")" ;;
 				esac
 				return 0
 				;;
 
 			--root )
-				echo "$SCWRYPTS_ROOT__scwrypts"
+				scwrypts.config.group scwrypts root
 				return 0
 				;;
 
 			--config )
-				echo "source '$SCWRYPTS_ROOT__scwrypts/zsh/lib/import.driver.zsh'"
+				echo "source '$(scwrypts.config.group scwrypts root)/zsh/import.driver.zsh'"
 				echo "CHECK_ENVIRONMENT --no-fail --no-usage"
 				echo "unset __SCWRYPT"
 				return 0
@@ -152,7 +148,7 @@ SCWRYPTS_LOG_LEVEL=4 SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS \
 								|| {
 									GIT_SCWRYPTS rebase --abort
 									ERROR 'unable to update scwrypts; please try manual upgrade'
-									REMINDER "installation in '$SCWRYPTS_ROOT__scwrypts'"
+									REMINDER "installation in '$(scwrypts.config.group scwrypts root)'"
 								}
 						}
 						;;
@@ -237,6 +233,12 @@ SCWRYPTS_LOG_LEVEL=4 SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS \
 	}
 
 	CHECK_ERRORS
+
+	use utils
+	use scwrypts/run
+	use scwrypts/environment
+	SCWRYPTS_LOG_LEVEL=4 SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS \
+		|| ERROR "failed to initialize scwrypts environments (see above)"
 
 	#####################################################################
 	### scwrypts selection / filtering ##################################
@@ -326,7 +328,7 @@ SCWRYPTS_LOG_LEVEL=4 SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS \
 		&& [[ ! $SCWRYPT_NAME =~ scwrypts/environment ]] \
 		|| ENV_REQUIRED=false
 
-	local REQUIRED_ENVIRONMENT_REGEX=$(eval echo '$SCWRYPTS_REQUIRED_ENVIRONMENT_REGEX__'$SCWRYPT_GROUP)
+	local REQUIRED_ENVIRONMENT_REGEX="$(scwrypts.config.group ${SCWRYPT_GROUP} required_environment_regex)"
 
 	[ $ENV_NAME ] && [ $REQUIRED_ENVIRONMENT_REGEX ] && {
 		[[ $ENV_NAME =~ $REQUIRED_ENVIRONMENT_REGEX ]] \
@@ -342,12 +344,12 @@ SCWRYPTS_LOG_LEVEL=4 SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS \
 
 		for GROUP in ${SCWRYPTS_GROUPS[@]}
 		do
-			local REQUIRED_REGEX=$(eval echo '$SCWRYPTS_REQUIRED_ENVIRONMENT_REGEX__'$GROUP)
+			local REQUIRED_REGEX="$(scwrypts.config.group ${GROUP} required_environment_regex)"
 			[ $REQUIRED_REGEX ] && {
 				[[ $ENV_NAME =~ $REQUIRED_REGEX ]] || continue
 			}
 
-			for f in $(eval 'echo $SCWRYPTS_STATIC_CONFIG__'$GROUP)
+			for f in $(eval echo '$SCWRYPTS_STATIC_CONFIG__'$GROUP)
 			do
 				source "$f" || FAIL 5 "invalid static config '$f'"
 			done
