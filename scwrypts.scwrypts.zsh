@@ -2,6 +2,10 @@
 # configuration for a scwrypts "group" or "plugin"
 #
 
+# this file defines the configuration for the 'scwrypts' group which
+# is required for proper operation, but otherwise loads exactly like
+# any other group/plugin
+
 #
 # both ${scwryptsgroup} and ${scwryptsgrouproot} are set automatically
 #

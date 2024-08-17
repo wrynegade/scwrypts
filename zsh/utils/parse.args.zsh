@@ -8,7 +8,7 @@
 # first line of the function, so it is clear what variables must be set
 # in the parent function
 
-ZSHPARSEARGS__ARGS() {
+ZSHPARSERS.ARGS() {
 	# local ARGS=()
 	# local ARGS_FORCE=allowed   typically you want this to be 'allowed', but see below for details
 	local PARSED=0
@@ -73,7 +73,7 @@ ZSHPARSEARGS__ARGS() {
 	return $PARSED
 }
 
-ZSHPARSEARGS__ARGS__usage() {
+ZSHPARSERS.ARGS.usage() {
 	# don't auto-add "args" to the usage string if it's already there
 	[[ $USAGE__usage =~ args ]] && return 0
 
@@ -89,7 +89,7 @@ ZSHPARSEARGS__ARGS__usage() {
 	# USAGE__args should be updated by the parent function
 }
 
-ZSHPARSEARGS__ARGS__safety() {
+ZSHPARSERS.ARGS.safety() {
 	# skip this parser with NO_DEFAULT_PARSEARGS=true
 	[[ $NO_DEFAULT_PARSEARGS =~ true ]] && return 1
 

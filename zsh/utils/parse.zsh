@@ -51,29 +51,29 @@ ZSHPARSEARGS() {
 	local DEFAULT_PARSERS=()
 	[ $NO_DEFAULT_PARSERS ] || {
 
-		# automatically includes 'MY_FUNCTION__parse()' as 1st parser when parsing for 'MY_FUNCTION()'
+		# automatically includes 'MY_FUNCTION.parse()' as 1st parser when parsing for 'MY_FUNCTION()'
 		[[ ${funcstack[2]} =~ ^[(]eval[)]$ ]] \
-			&& PARSERS=(${funcstack[3]}__parse $PARSERS) \
-			|| PARSERS=(${funcstack[2]}__parse $PARSERS) \
+			&& PARSERS=(${funcstack[3]}.parse $PARSERS) \
+			|| PARSERS=(${funcstack[2]}.parse $PARSERS) \
 			;
 
-		PARSERS+=(ZSHPARSEARGS__ARGS ZSHPARSEARGS__HELP)
+		PARSERS+=(ZSHPARSERS.ARGS ZSHPARSERS.HELP)
 	}
 
 	for PARSER in ${PARSERS[@]}
 	do
 		command -v ${PARSER} &>/dev/null || continue
-		command -v ${PARSER}__safety &>/dev/null || {
+		command -v ${PARSER}.safety &>/dev/null || {
 			VALID_PARSERS+=($PARSER)
 			continue
 		}
 
-		${PARSER}__safety && VALID_PARSERS+=($PARSER)
+		${PARSER}.safety && VALID_PARSERS+=($PARSER)
 	done
 
 	for PARSER in ${VALID_PARSERS[@]}
 	do
-		command -v ${PARSER}__usage &>/dev/null && ${PARSER}__usage
+		command -v ${PARSER}.usage &>/dev/null && ${PARSER}.usage
 	done
 
 	local EARLY_ESCAPE_CODE _S ERRORS=0 POSITIONAL_ARGS=0
@@ -104,9 +104,9 @@ ZSHPARSEARGS() {
 
 	for PARSER in ${VALID_PARSERS[@]}
 	do
-		command -v ${PARSER}__validate &>/dev/null || continue
+		command -v ${PARSER}.validate &>/dev/null || continue
 
-		${PARSER}__validate
+		${PARSER}.validate
 	done
 
 	CHECK_ERRORS --no-fail

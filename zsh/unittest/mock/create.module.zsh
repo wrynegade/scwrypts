@@ -5,26 +5,28 @@ DEPENDENCIES+=(sed)
 #####################################################################
 
 MOCKS=()
-MOCK() {
+${scwryptsmodule}() {
 	eval "$(USAGE__reset)"
 	local USAGE__description="
 		(beta) generates a function mock for basic ZSH unit testing
 	"
 	local \
 		FUNCTION STDOUT STDERR EXIT_CODE \
-		PARSERS=(MOCK__PARSER)
+		PARSERS=()
 
 	eval "$ZSHPARSEARGS"
 
 	##########################################
 	
-	export MOCK__ORIGINAL_IMPLEMENTATION__${FUNCTION}="$(which ${FUNCTION})"
+	local FUNCTION_VARIABLE="$(echo "${FUNCTION}" | sed 's/\./___/g; s/-/_____/g')"
+	
+	export MOCK__ORIGINAL_IMPLEMENTATION__${FUNCTION_VARIABLE}="$(which ${FUNCTION})"
 
-	[ "$STDOUT" ] && export MOCK__STDOUT__${FUNCTION}="$STDOUT"
-	[ "$STDERR" ] && export MOCK__STDERR__${FUNCTION}="$STDERR"
+	[ "$STDOUT" ] && export MOCK__STDOUT__${FUNCTION_VARIABLE}="$STDOUT"
+	[ "$STDERR" ] && export MOCK__STDERR__${FUNCTION_VARIABLE}="$STDERR"
 
 	[ $EXIT_CODE ] || EXIT_CODE=0
-	export MOCK__EXIT_CODE__${FUNCTION}=$EXIT_CODE
+	export MOCK__EXIT_CODE__${FUNCTION_VARIABLE}=$EXIT_CODE
 
 	##########################################
 
@@ -32,69 +34,74 @@ MOCK() {
 	# to run all the test definitions as an eval line :S
 	eval "
 
+	export MOCK__CALLSTACK__${FUNCTION_VARIABLE}=()
+	export MOCK__CALLCOUNT__${FUNCTION_VARIABLE}=0
+
 	${FUNCTION}() {
-		MOCK__CALLSTACK__${FUNCTION}+=(\"\$@\")
-		MOCK__CALLCOUNT__${FUNCTION}+=(\"\$@\")
+		MOCK__CALLSTACK__${FUNCTION_VARIABLE}+=(\"\$@\")
+		((MOCK__CALLCOUNT__${FUNCTION_VARIABLE}+=1))
 
-		local STDOUT=\$(eval echo '\$MOCK__STDOUT__'${FUNCTION})
-		[ \"\$STDOUT\" ] && printf \"\$STDOUT\"
+		printf \"\$MOCK__STDOUT__${FUNCTION_VARIABLE}\"
+		printf \"\$MOCK__STDERR__${FUNCTION_VARIABLE}\" >&2
 
-		local STDERR=\$(eval echo '\$MOCK__STDERR__'${FUNCTION})
-		[ \"$STDERR\" ] && printf \"$STDERR\" >&2
-
-		return \$(eval echo '\$MOCK__EXIT_CODE__'${FUNCTION})
-	}
-
-	${FUNCTION}.assert.callstack() {
-		local ERRORS=0
-		[[ \"\$@\" =~ ^\${MOCK__CALLSTACK__${FUNCTION}}$ ]] \
-			|| ERROR \"${FUNCTION} callstack does not match\nexpected : \$@\nreceived : \${MOCK__CALLSTACK__${FUNCTION}}\"
-	}
-
-	${FUNCTION}.assert.callstackincludes() {
-		local ERRORS=0
-		[[ \${MOCK__CALLSTACK__${FUNCTION}} =~ \$@ ]] \
-			|| ERROR \"${FUNCTION} callstack does not include\nexpected  : \$@\ncallstack : \${MOCK__CALLSTACK__${FUNCTION}}\"
+		return \$(eval echo '\$MOCK__EXIT_CODE__'${FUNCTION_VARIABLE})
 	}
 
 	${FUNCTION}.assert.called() {
 		local ERRORS=0
-		[[ MOCK__CALLCOUNT__${FUNCTION} -gt 0 ]] \
+		[[ MOCK__CALLCOUNT__${FUNCTION_VARIABLE} -gt 0 ]] \
 			|| ERROR \"${FUNCTION} was not called\"
 	}
 
 	${FUNCTION}.assert.not.called() {
 		local ERRORS=0
+		${FUNCTION}.assert.called &>/dev/null
 		[[ \$? -ne 0 ]] \
 			|| ERROR \"${FUNCTION} was called\"
 	}
 
+	${FUNCTION}.assert.callstack() {
+		local ERRORS=0
+		[[ \"\$@\" =~ ^\${MOCK__CALLSTACK__${FUNCTION_VARIABLE}}$ ]] \
+			|| ERROR \"${FUNCTION} callstack does not match\nexpected : \$@\nreceived : \${MOCK__CALLSTACK__${FUNCTION_VARIABLE}}\"
+	}
+
+	${FUNCTION}.assert.callstackincludes() {
+		local ERRORS=0
+		[[ \${MOCK__CALLSTACK__${FUNCTION_VARIABLE}} =~ \$@ ]] \
+			|| ERROR \"${FUNCTION} callstack does not include\nexpected  : \$@\ncallstack : \${MOCK__CALLSTACK__${FUNCTION_VARIABLE}}\"
+	}
+
 	${FUNCTION}.reset() {
-		unset MOCK__CALLSTACK__${FUNCTION}
-		unset MOCK__CALLCOUNT__${FUNCTION}
+		unset \
+			MOCK__CALLSTACK__${FUNCTION_VARIABLE} \
+			MOCK__CALLCOUNT__${FUNCTION_VARIABLE} \
+			;
 	}
 
 	${FUNCTION}.restore() {
 		MOCKS=(\$(echo \"\$MOCKS\" | sed 's/\s\+/\n/g' | grep -v \"^${FUNCTION}$\"))
 
 		unset \
-			MOCK__CALLSTACK__${FUNCTION} \
-			MOCK__CALLCOUNT__${FUNCTION} \
+			MOCK__CALLSTACK__${FUNCTION_VARIABLE} \
+			MOCK__CALLCOUNT__${FUNCTION_VARIABLE} \
 			;
 
 		unset -f \
 			${FUNCTION} \
 			${FUNCTION}.assert.called \
 			${FUNCTION}.assert.not.called \
+			${FUNCTION}.assert.callstack \
+			${FUNCTION}.assert.callstackincludes \
 			${FUNCTION}.reset \
 			${FUNCTION}.restore \
 			;
 
-		local ORIGINAL_IMPLEMENTATION=\"\$(eval echo '\$MOCK__ORIGINAL_IMPLEMENTATION__'${FUNCTION})\"
+		local ORIGINAL_IMPLEMENTATION=\"\$(eval echo '\$MOCK__ORIGINAL_IMPLEMENTATION__'${FUNCTION_VARIABLE})\"
 		[[ \$(echo \"\$ORIGINAL_IMPLEMENTATION\" | wc -l) -gt 1 ]] \
 			&& eval \"\$ORIGINAL_IMPLEMENTATION\"
 
-		unset ORIGINAL__IMPLEMENTATION__${FUNCTION}
+		unset ORIGINAL__IMPLEMENTATION__${FUNCTION_VARIABLE}
 	}
 	"
 
@@ -103,7 +110,7 @@ MOCK() {
 
 #####################################################################
 
-MOCK__PARSER() {
+${scwryptsmodule}.parse() {
 	# local FUNCTION STDOUT STDERR EXIT_CODE
 	local PARSED=0
 
@@ -135,7 +142,7 @@ MOCK__PARSER() {
 	return $PARSED
 }
 
-MOCK__PARSER__usage() {
+${scwryptsmodule}.parse.usage() {
 	USAGE__usage+=' function [...options...]'
 
 	USAGE__args+='
@@ -149,7 +156,7 @@ MOCK__PARSER__usage() {
 	'
 }
 
-MOCK__PARSER__validate() {
+${scwryptsmodule}.parse.validate() {
 	[ $FUNCTION ] && command -v $FUNCTION &>/dev/null \
 		|| ERROR "cannot mock uncallable '$FUNCTION'"
 

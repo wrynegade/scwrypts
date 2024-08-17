@@ -1,7 +1,7 @@
 #####################################################################
 
 use scwrypts/environment/common
-use scwrypts/cache
+use scwrypts/cache-output
 
 #####################################################################
 
@@ -16,13 +16,13 @@ SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE() {
 	local \
 		CACHE_ARGS=() \
 		PARSERS=(
-			SCWRYPTS__CACHED_OUTPUT__ARGS
+			scwrypts.cache-output.parsers.args
 			)
 
 	eval "$ZSHPARSEARGS"
 	##########################################
 
-	SCWRYPTS__CACHED_OUTPUT ${CACHE_ARGS[@]} \
+	scwrypts.cache-output ${CACHE_ARGS[@]} \
 		--cache-file environment.template.yaml \
 		-- \
 		_SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE \
@@ -41,7 +41,7 @@ SCWRYPTS_ENVIRONMENT__GET_ENVVAR_LOOKUP_MAP() {
 
 	local \
 		PARSERS=(
-			SCWRYPTS__CACHED_OUTPUT__ARGS  # passthrough
+			scwrypts.cache-output.parsers.args  # passthrough
 			)
 
 	eval "$ZSHPARSEARGS"

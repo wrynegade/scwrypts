@@ -6,7 +6,7 @@ use cloud/aws/zshparse
 
 #####################################################################
 
-AWS() {
+${scwryptsmodule}() {
 	eval "$(USAGE__reset)"
 	local USAGE__description="
 		Safe context wrapper for aws cli commands; prevents accidental local environment
@@ -25,7 +25,7 @@ AWS() {
 		ACCOUNT REGION AWS_EVAL_PREFIX AWS_CONTEXT_ARGS=() \
 		ARGS=() ARGS_FORCE=allowed \
 		PARSERS=(
-			AWS_PARSER__OVERRIDES
+			cloud.aws.zshparse.overrides
 		)
 
 	eval "$ZSHPARSEARGS"
@@ -35,5 +35,3 @@ AWS() {
 	SCWRYPTS_LOG_LEVEL=4 DEBUG "invoking '$(echo "$AWS_EVAL_PREFIX" | sed 's/AWS_\(ACCESS_KEY_ID\|SECRET_ACCESS_KEY\)=[^ ]\+ //g')aws ${AWS_CONTEXT_ARGS[@]} ${ARGS[@]}'"
 	eval "${AWS_EVAL_PREFIX}aws ${AWS_CONTEXT_ARGS[@]} ${ARGS[@]}"
 }
-
-${scwryptsmodule}cli() { AWS $@; }

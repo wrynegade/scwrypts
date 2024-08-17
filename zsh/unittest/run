@@ -1,18 +1,19 @@
 #!/bin/zsh
 #####################################################################
 
+USAGE__description="
+	runs tests across scwrypts zsh modules (beta)
+"
+
+USAGE__args='
+	$@   paths or lookup patterns to test
+'
+
+#####################################################################
+
 MAIN() {
-	local USAGE__description='
-		a simple hello-world-style script which allows specific scwrypts
-		conditions to be quickly emulated
-	'
-
-	local USAGE__args='
-		$@   paths or lookup patterns to test
-	'
-
 	local \
-		ARGS=() ARGS_FORCE=disabled \
+		ARGS=() \
 		PARSERS=()
 
 	eval "$ZSHPARSEARGS"
@@ -49,12 +50,10 @@ MAIN() {
 			local CI=true
 			$SCWRYPTS_CONFIG
 			source '$TEST_FILE'
-			use test
+			use unittest/execute-test-file
 			CHECK_ENVIRONMENT
-			SCWRYPTS_TEST_MODULE_STRING=\"${TEST_SUITE_NAME} : \" SCWRYPTS__EXECUTE_ALL_TESTS
+			SCWRYPTS_TEST_MODULE_STRING=\"${TEST_SUITE_NAME} : \" unittest.execute-test-file
 		}
 		"
 	done
 }
-
-#####################################################################

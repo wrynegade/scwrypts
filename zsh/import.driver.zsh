@@ -35,7 +35,6 @@ source "${0:a:h}/config.zsh"
 use() {
 	local SCWRYPTS_LIBRARY SCWRYPTS_LIBRARY_ROOT SCWRYPTS_LIBRARY_GROUP
 	local DEFER_ENVIRONMENT_CHECK=true
-	local CUSTOM_MODULE_STRING
 
 	while [[ $# -gt 0 ]]
 	do
@@ -45,18 +44,17 @@ use() {
 				SCWRYPTS_LIBRARY_GROUP=$2
 				shift 1
 				;;
+
 			-r | --library-root )
 				[ "${SCWRYPTS_LIBRARY_GROUP}" ] && ERROR 'specify only one of {(-g), (-r)}'
 				SCWRYPTS_LIBRARY_ROOT=$2
 				shift 1
 				;;
+
 			-c | --check-environment )
 				DEFER_ENVIRONMENT_CHECK=false
 				;;
-			-m | --module-name | --as )
-				CUSTOM_MODULE_STRING=$2
-				shift 1
-				;;
+
 			* )
 				[ ! "${SCWRYPTS_LIBRARY}" ] \
 					&& SCWRYPTS_LIBRARY=$1 \
@@ -92,22 +90,16 @@ use() {
 		[ -f "${LIBRARY_FILE_TEMP}" ] && LIBRARY_FILE="${LIBRARY_FILE_TEMP}" && break
 	done
 
-
 	[ "${LIBRARY_FILE}" ] \
 		|| ERROR "no such library '${SCWRYPTS_LIBRARY_GROUP}/${SCWRYPTS_LIBRARY}'"
 
+	#####################################################################
+
 	local SCWRYPTS_MODULE_BEFORE=${scwryptsmodule}
-
-	[ "${CUSTOM_MODULE_STRING}" ] && {
-		export scwryptsmodule="$CUSTOM_MODULE_STRING"
-	}
-
-	[ ! "${CUSTOM_MODULE_STRING}" ] && [[ "${LIBRARY_FILE}" =~ ^${LIBRARY_FILENAME_GROUP_MODULE}$ ]] && {
-		[[ ${SCWRYPTS_LIBRARY_GROUP} =~ ^scwrypts$ ]] \
-			&& export scwryptsmodule="$(echo "${SCWRYPTS_LIBRARY}" | sed 's|/|.|g')." \
-			|| export scwryptsmodule="${SCWRYPTS_LIBRARY_GROUP}.$(echo "${SCWRYPTS_LIBRARY}" | sed 's|/|.|g')." \
-			;
-	}
+	[[ ${SCWRYPTS_LIBRARY_GROUP} =~ ^scwrypts$ ]] \
+		&& export scwryptsmodule="$(echo "${SCWRYPTS_LIBRARY}" | sed 's|/|.|g')" \
+		|| export scwryptsmodule="${SCWRYPTS_LIBRARY_GROUP}.$(echo "${SCWRYPTS_LIBRARY}" | sed 's|/|.|g')" \
+		;
 
 	#####################################################################
 
@@ -139,7 +131,12 @@ use() {
 	}
 
 	IS_LOADED --set
-	export scwryptsmodule=${SCWRYPTS_MODULE_BEFORE}
+	[[ ${SCWRYPTS_MODULE_BEFORE} ]] \
+		&& export scwryptsmodule=${SCWRYPTS_MODULE_BEFORE} \
+		|| unset scwryptsmodule \
+		;
+
+	return 0
 }
 
 GET_SCWRYPTS_LIBRARY_ROOT() {
@@ -168,7 +165,7 @@ GET_SCWRYPTS_LIBRARY_ROOT() {
 }
 
 IS_LOADED() {
-	local VARIABLE_NAME="SCWRYPTS_LIBRARY_LOADED__${SCWRYPTS_LIBRARY_GROUP}__$(echo ${SCWRYPTS_LIBRARY} | sed 's|[/-]|_|g')__$(echo "${scwryptsmodule}" | sed 's/\.$//; s/\./__/g')"
+	local VARIABLE_NAME="SCWRYPTS_LIBRARY_LOADED__${SCWRYPTS_LIBRARY_GROUP}__$(echo ${SCWRYPTS_LIBRARY} | sed 's|[/-]|_|g')"
 
 	[[ $1 =~ ^--set$ ]] && eval ${VARIABLE_NAME}=true
 

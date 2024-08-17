@@ -1,24 +1,26 @@
 #####################################################################
 
-use test/unittest
-use test/mock
-
-use cloud/aws/cli
+use unittest
+testmodule=cloud.aws.cli
 
 #####################################################################
 
+beforeall() {
+	use cloud/aws/cli
+}
+
 beforeeach() {
-	MOCK aws
-	MOCK DEBUG
+	unittest.mock aws
+	unittest.mock DEBUG
 
 	_ARGS=($(uuidgen) $(uuidgen) $(uuidgen))
 
 	_AWS_REGION=$(uuidgen)
 	_AWS_PROFILE=$(uuidgen)
 
-	MOCK__ENV AWS_ACCOUNT --value $(uuidgen)
-	MOCK__ENV AWS_PROFILE --value ${_AWS_PROFILE}
-	MOCK__ENV AWS_REGION  --value ${_AWS_REGION}
+	unittest.mock.env AWS_ACCOUNT --value $(uuidgen)
+	unittest.mock.env AWS_PROFILE --value ${_AWS_PROFILE}
+	unittest.mock.env AWS_REGION  --value ${_AWS_REGION}
 }
 
 aftereach() {
@@ -26,8 +28,10 @@ aftereach() {
 	unset _AWS_PROFILE
 }
 
-AWS.test.forwards_arguments() {
-	AWS ${_ARGS[@]}
+#####################################################################
+
+test.forwards-arguments() {
+	${testmodule} ${_ARGS[@]}
 
 	aws.assert.callstack \
 		--output json \
@@ -37,10 +41,10 @@ AWS.test.forwards_arguments() {
 		;
 }
 
-AWS.test.overrides_region() {
+test.overrides-region() {
 	local OVERRIDE_REGION=$(uuidgen)
 
-	AWS --region ${OVERRIDE_REGION} ${_ARGS[@]}
+	${testmodule} --region ${OVERRIDE_REGION} ${_ARGS[@]}
 
 	aws.assert.callstack \
 		--output json \
@@ -50,10 +54,10 @@ AWS.test.overrides_region() {
 		;
 }
 
-AWS.test.overrides_account() {
+test.overrides-account() {
 	local OVERRIDE_ACCOUNT=$(uuidgen)
 
-	AWS --account ${OVERRIDE_ACCOUNT} ${_ARGS[@]}
+	${testmodule} --account ${OVERRIDE_ACCOUNT} ${_ARGS[@]}
 
 	DEBUG.assert.callstackincludes \
 		AWS_ACCOUNT=${OVERRIDE_ACCOUNT} \

@@ -2,14 +2,15 @@
 
 MOCKED_ENV=()
 
-MOCK__ENV() {
+${scwryptsmodule}() {
 	eval "$(USAGE__reset)"
 	local USAGE__description="
 		(beta) mocks an environment variable for testing
 	"
+
 	local \
 		ENVIRONMENT_VARIABLE_NAME ENVIRONMENT_VARIABLE_VALUE \
-		PARSERS=(MOCK__ENV__PARSER)
+		PARSERS=()
 
 	eval "$ZSHPARSEARGS"
 
@@ -21,7 +22,7 @@ MOCK__ENV() {
 	export ${ENVIRONMENT_VARIABLE_NAME}=${ENVIRONMENT_VARIABLE_VALUE}
 }
 
-MOCK__ENV.restore() {
+${scwryptsmodule}.restore() {
 	local ENVIRONMENT_VARIABLE_NAME ORIGINAL_VALUE
 	for ENVIRONMENT_VARIABLE_NAME in ${MOCKED_ENV[@]}
 	do
@@ -38,7 +39,7 @@ MOCK__ENV.restore() {
 
 #####################################################################
 
-MOCK__ENV__PARSER() {
+${scwryptsmodule}.parse() {
 	# local ENVIRONMENT_VARIABLE_NAME ENVIRONMENT_VARIABLE_VALUE
 	local PARSED=0
 
@@ -60,7 +61,7 @@ MOCK__ENV__PARSER() {
 	return $PARSED
 }
 
-MOCK__ENV__PARSER__usage() {
+${scwryptsmodule}.parse.usage() {
 	USAGE__usage+=' function [...options...]'
 
 	USAGE__args+='
@@ -72,7 +73,7 @@ MOCK__ENV__PARSER__usage() {
 	'
 }
 
-MOCK__ENV__PARSER__validate() {
+${scwryptsmodule}.parse.validate() {
 	[ "$ENVIRONMENT_VARIABLE_NAME" ] \
 		|| ERROR "no environment variable specified"
 

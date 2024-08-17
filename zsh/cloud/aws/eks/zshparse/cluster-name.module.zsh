@@ -1,5 +1,6 @@
-AWS_PARSER__EKS_CLUSTER_NAME() {
+${scwryptsmodule}() {
 	# local CLUSTER_NAME
+	# local EKS_CLUSTER_NAME_INTERACTIVE=allowed   disabled by default (-c MUST be passed)
 
 	local PARSED=0
 
@@ -14,7 +15,7 @@ AWS_PARSER__EKS_CLUSTER_NAME() {
 }
 
 
-AWS_PARSER__EKS_CLUSTER_NAME__usage() {
+${scwryptsmodule}.usage() {
 	[[ "$USAGE__usage" =~ '\[...options...\]' ]] || USAGE__usage+=' [...options...]'
 
 	USAGE__options+="\n
@@ -22,7 +23,7 @@ AWS_PARSER__EKS_CLUSTER_NAME__usage() {
 	"
 }
 
-AWS_PARSER__EKS_CLUSTER_NAME__validate() {
+${scwryptsmodule}.validate() {
 	[ $CLUSTER_NAME ] && return 0
 
 	[[ $EKS_CLUSTER_NAME_INTERACTIVE =~ allowed ]] \

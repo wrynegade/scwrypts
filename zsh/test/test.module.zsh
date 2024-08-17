@@ -1,6 +1,0 @@
-#
-#
-#
-
-#
-use test/execute-all

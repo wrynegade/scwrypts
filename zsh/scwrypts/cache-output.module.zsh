@@ -1,4 +1,4 @@
-SCWRYPTS__CACHED_OUTPUT() {
+${scwryptsmodule}() {
 	eval "$(USAGE__reset)"
 	local USAGE__description="
 		Caches any successful shell operation for the current scwrypts runtime;
@@ -52,36 +52,7 @@ SCWRYPTS__CACHED_OUTPUT() {
 
 #####################################################################
 
-SCWRYPTS__CACHED_OUTPUT__ARGS() {
-	# local CACHE_ARGS=()
-	local PARSED=0
-	case $1 in
-		--use-cache )
-			PARSED=2
-			case $2 in
-				true | reset | bypass )
-					CACHE_ARGS+=(--use-cache $2)
-					;;
-
-				* ) ERROR "invalid --use-cache value '$2'" ;;
-			esac
-	esac
-	return $PARSED
-}
-
-SCWRYPTS__CACHED_OUTPUT__ARGS__usage() {
-	USAGE__options+="\n
-		--use-cache   (default true) one of {'true', 'reset', 'bypass'}
-	"
-
-	USAGE__description+="\n
-		(this function uses functions cached per scwrypts runtime)
-	"
-}
-
-#####################################################################
-
-SCWRYPTS__CACHED_OUTPUT__parse() {
+${scwryptsmodule}.parse() {
 	# local USE_CACHE CACHE_ARGS_COUNT=0 CACHE_FILE
 	local PARSED=0
 	case $1 in
@@ -104,7 +75,7 @@ SCWRYPTS__CACHED_OUTPUT__parse() {
 	return $PARSED
 }
 
-SCWRYPTS__CACHED_OUTPUT__parse__usage() {
+${scwryptsmodule}.parse.usage() {
 	USAGE__options+="\n
 		--cache-file   (required) runtime-unique filename for cached data
 		               for cache to be automatically cleared, make sure this is a simple filename (no directories)
@@ -118,7 +89,7 @@ SCWRYPTS__CACHED_OUTPUT__parse__usage() {
 	"
 }
 
-SCWRYPTS__CACHED_OUTPUT__parse__validate() {
+${scwryptsmodule}.parse.validate() {
 	case $USE_CACHE in
 		true | reset | bypass ) ;;
 		* ) ERROR "invalid value '$USE_CACHE' for USE_CACHE (are you missing 'local USE_CACHE=true'?)" ;;
@@ -137,3 +108,34 @@ SCWRYPTS__CACHED_OUTPUT__parse__validate() {
 	[[ $CACHE_ARGS_COUNT -le 1 ]] \
 		|| ERROR "too many '--use-cache' flags used"
 }
+
+#####################################################################
+
+${scwryptsmodule}.parsers.args() {
+	# local CACHE_ARGS=()
+	local PARSED=0
+	case $1 in
+		--use-cache )
+			PARSED=2
+			case $2 in
+				true | reset | bypass )
+					CACHE_ARGS+=(--use-cache $2)
+					;;
+
+				* ) ERROR "invalid --use-cache value '$2'" ;;
+			esac
+	esac
+	return $PARSED
+}
+
+${scwryptsmodule}.parsers.args.usage() {
+	USAGE__options+="\n
+		--use-cache   (default true) one of {'true', 'reset', 'bypass'}
+	"
+
+	USAGE__description+="\n
+		(this function uses functions cached per scwrypts runtime)
+	"
+}
+
+#####################################################################

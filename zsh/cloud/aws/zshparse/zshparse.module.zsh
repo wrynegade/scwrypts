@@ -3,7 +3,4 @@
 #
 
 # load/override AWS_* variables
-use cloud/aws/zshparse/overrides
-
-# EKS cluster identification
-use cloud/aws/zshparse/cluster-name
+use cloud/aws/zshparse/overrides  # ./overrides.module.zsh

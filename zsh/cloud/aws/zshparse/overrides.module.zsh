@@ -1,6 +1,6 @@
-AWS_PARSER__OVERRIDES() {
+${scwryptsmodule}() {
 	# local ACCOUNT REGION                        parsed/configured $AWS_ACCOUNT and $AWS_REGION (use this instead of direct env-var)
-	# local AWS=() AWS_PASSTHROUGH=()             used to forward parsed overrides to AWS calls (e.g. 'AWS ${AWS_PASSTHROUGH[@]} your command' or '$AWS your command')
+	# local AWS=() AWS_PASSTHROUGH=()             used to forward parsed overrides to AWS calls (e.g. 'cloud.aws.cli ${AWS_PASSTHROUGH[@]} your command' or '$AWS your command')
 	# local AWS_EVAL_PREFIX AWS_CONTEXT_ARGS=()   should only be used by lib/cloud/aws/cli:AWS
 	local PARSED=0
 
@@ -12,7 +12,7 @@ AWS_PARSER__OVERRIDES() {
 	return $PARSED
 }
 
-AWS_PARSER__OVERRIDES__usage() {
+${scwryptsmodule}.usage() {
 	[[ "$USAGE__usage" =~ ' \[...options...\]' ]] || USAGE__usage+=' [...options...]'
 
 	USAGE__options+="\n
@@ -22,7 +22,7 @@ AWS_PARSER__OVERRIDES__usage() {
 }
 
 
-AWS_PARSER__OVERRIDES__validate() {
+${scwryptsmodule}.validate() {
 	AWS_CONTEXT_ARGS=(--output json)
 
 	[ $ACCOUNT ] || { __CHECK_ENV_VAR AWS_ACCOUNT &>/dev/null && ACCOUNT=$AWS_ACCOUNT; }
@@ -46,7 +46,7 @@ AWS_PARSER__OVERRIDES__validate() {
 		&& AWS_CONTEXT_ARGS+=(--profile $AWS_PROFILE) \
 		;
 
-	AWS=(AWS ${AWS_PASSTHROUGH[@]})
+	AWS=(cloud.aws.cli ${AWS_PASSTHROUGH[@]})
 
 	[ ! $CI ] && {
 		# non-CI must use PROFILE authentication
