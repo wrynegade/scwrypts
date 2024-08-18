@@ -15,7 +15,7 @@ ARGS_PARSER__EKSCTL__CREATE_IAMSERVICEACCOUNT() {
 	return $PARSED
 }
 
-ARGS_PARSER__EKSCTL__CREATE_IAMSERVICEACCOUNT__usage() {
+ARGS_PARSER__EKSCTL__CREATE_IAMSERVICEACCOUNT.usage() {
 	[[ $USAGE__usage =~ 'options' ]] || USAGE__usage+=' [...options...]'
 	USAGE__options+="\n
 		--serviceaccount   (required) target k8s:ServiceAccount
@@ -26,7 +26,7 @@ ARGS_PARSER__EKSCTL__CREATE_IAMSERVICEACCOUNT__usage() {
 	"
 }
 
-ARGS_PARSER__EKSCTL__CREATE_IAMSERVICEACCOUNT__validate() {
+ARGS_PARSER__EKSCTL__CREATE_IAMSERVICEACCOUNT.validate() {
 	[ $SERVICEACCOUNT ] || ERROR "--serviceaccount is required"
 	[ $NAMESPACE      ] || ERROR "--namespace is required"
 	[ $ROLE_NAME      ] || ERROR "--role-name is required"

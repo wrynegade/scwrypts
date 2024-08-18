@@ -8,7 +8,7 @@ use cloud/aws/zshparse
 #####################################################################
 
 ECR_LOGIN() {
-	eval "$(USAGE__reset)"
+	eval "$(USAGE.reset)"
 	local USAGE__description="
 		Performs the appropriate 'docker login' command with temporary
 		credentials from AWS.

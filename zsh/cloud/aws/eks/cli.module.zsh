@@ -8,7 +8,7 @@ use cloud/aws/eks/zshparse
 #####################################################################
 
 ${scwryptsmodule}() {
-	eval "$(USAGE__reset)"
+	eval "$(USAGE.reset)"
 	local USAGE__description='
 		Context wrapper for kubernetes CLI commands on AWS EKS. This
 		will automatically attempt login for first-time connections,

@@ -48,7 +48,7 @@ MAIN() {
 	esac
 }
 
-MAIN__parse() {
+MAIN.parse() {
 	local PARSED=0
 
 	case $1 in
@@ -60,10 +60,10 @@ MAIN__parse() {
 	return $PARSED
 }
 
-MAIN__parse__usage() {
+MAIN.parse.usage() {
 }
 
-MAIN__parse__validate() {
+MAIN.parse.validate() {
 	case $MODE in
 		single-variable )
 			[[ ${#VARIABLE_NAMES[@]} -gt 0 ]] \

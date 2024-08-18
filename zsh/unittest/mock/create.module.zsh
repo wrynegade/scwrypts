@@ -6,7 +6,7 @@ DEPENDENCIES+=(sed)
 
 MOCKS=()
 ${scwryptsmodule}() {
-	eval "$(USAGE__reset)"
+	eval "$(USAGE.reset)"
 	local USAGE__description="
 		(beta) generates a function mock for basic ZSH unit testing
 	"

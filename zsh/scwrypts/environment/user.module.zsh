@@ -3,18 +3,19 @@
 use scwrypts/environment/common
 
 use scwrypts/environment/template
+use scwrypts/cache-output
 
 #####################################################################
 
 SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
-	eval "$(USAGE__reset)"
+	eval "$(USAGE.reset)"
 	local USAGE__description="
 		Generates a metadata-enriched environment YAML for the target environment.
 	" \
 		CACHE_ARGS=() \
 		ENVIRONMENT_NAME \
 		PARSERS=(
-			SCWRYPTS__CACHED_OUTPUT__ARGS
+			scwrypts.cache-output.zshparse.args
 			SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME
 			)
 
@@ -22,7 +23,7 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 
 	##########################################
 
-	SCWRYPTS__CACHED_OUTPUT ${CACHE_ARGS[@]} \
+	scwrypts.cache-output ${CACHE_ARGS[@]} \
 		--cache-file environment.user.yaml \
 		-- \
 		_SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT "$ENVIRONMENT_NAME" \
@@ -31,7 +32,7 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 
 
 SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_SHELL_VALUES() {
-	eval "$(USAGE__reset)"
+	eval "$(USAGE.reset)"
 	local USAGE__description="
 		used primarily by __CHECK_ENV_VAR in scwrypts environments
 
@@ -43,7 +44,7 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_SHELL_VALUES() {
 		CACHE_ARGS=() \
 		ENVIRONMENT_NAME \
 		PARSERS=(
-			SCWRYPTS__CACHED_OUTPUT__ARGS
+			scwrypts.cache-output.zshparse.args
 			SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME
 			)
 
@@ -51,7 +52,7 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_SHELL_VALUES() {
 
 	##########################################
 
-	SCWRYPTS__CACHED_OUTPUT ${CACHE_ARGS[@]} \
+	scwrypts.cache-output ${CACHE_ARGS[@]} \
 		--cache-file environment.shell.yaml \
 		-- \
 		_SCWRYPTS_ENVIRONMENT__CONVERT_SHELL_VALUES \
@@ -60,7 +61,7 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_SHELL_VALUES() {
 }
 
 SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_JSON() {
-	eval "$(USAGE__reset)"
+	eval "$(USAGE.reset)"
 	local USAGE__description="
 		returns a JSON object containing live environment configurations
 		for the target environment
@@ -70,7 +71,7 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_JSON() {
 		CACHE_ARGS=() \
 		ENVIRONMENT_NAME \
 		PARSERS=(
-			SCWRYPTS__CACHED_OUTPUT__ARGS
+			scwrypts.cache-output.zshparse.args
 			SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME
 			)
 
@@ -78,7 +79,7 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_JSON() {
 
 	##########################################
 
-	SCWRYPTS__CACHED_OUTPUT ${CACHE_ARGS[@]} \
+	scwrypts.cache-output ${CACHE_ARGS[@]} \
 		--cache-file environment.user.json \
 		-- \
 		_SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_JSON \
@@ -103,14 +104,14 @@ SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME() {
 	return $PARSED
 }
 
-SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME__usage() {
+SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME.usage() {
 	USAGE__options+="\n
 		--environment-name <string>   name of a scwrypts environment (default: $SCWRYPTS_ENV)
 		                              using this flag will bypass cache
 	"
 }
 
-SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME__validate() {
+SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME.validate() {
 	[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$SCWRYPTS_ENV"
 }
 
@@ -198,10 +199,10 @@ _SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 		do
 			GROUP_CONFIG_FILENAME="$(SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME "$ENVIRONMENT_NAME" "$GROUP")"
 
-			[ -f "$GROUP_CONFIG_FILENAME" ] && {
-				[[ $(head -n1 "$GROUP_CONFIG_FILENAME") =~ ^---$ ]] || echo ---
-				cat "$GROUP_CONFIG_FILENAME"
-			}
+			[ -f "${GROUP_CONFIG_FILENAME}" ] || touch "${GROUP_CONFIG_FILENAME}"
+
+			[[ $(head -n1 "$GROUP_CONFIG_FILENAME") =~ ^---$ ]] || echo ---
+			cat "$GROUP_CONFIG_FILENAME"
 		done
 	} \
 		| _SCWRYPTS_ENVIRONMENT__COMBINE_TEMPLATE_FILES \

@@ -1,7 +1,7 @@
 #####################################################################
 
 ${scwryptsmodule}() {
-	eval "$(USAGE__reset)"
+	eval "$(USAGE.reset)"
 	local USAGE__description="
 		allows batch operations against existing mocks for lib/test/unittest
 	"

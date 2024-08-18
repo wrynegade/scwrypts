@@ -7,7 +7,6 @@ use scwrypts/environment/template
 
 #####################################################################
 
-
 [ $SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE ] \
 	|| export SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE=basic
 

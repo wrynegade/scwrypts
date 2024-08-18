@@ -3,7 +3,7 @@
 MOCKED_ENV=()
 
 ${scwryptsmodule}() {
-	eval "$(USAGE__reset)"
+	eval "$(USAGE.reset)"
 	local USAGE__description="
 		(beta) mocks an environment variable for testing
 	"

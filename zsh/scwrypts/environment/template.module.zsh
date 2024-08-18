@@ -1,12 +1,13 @@
 #####################################################################
 
 use scwrypts/environment/common
+
 use scwrypts/cache-output
 
 #####################################################################
 
 SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE() {
-	eval "$(USAGE__reset)"
+	eval "$(USAGE.reset)"
 	local USAGE__description="
 		Provies the combined YAML of all available scwrypts group 'template.yaml' files.
 
@@ -16,7 +17,7 @@ SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE() {
 	local \
 		CACHE_ARGS=() \
 		PARSERS=(
-			scwrypts.cache-output.parsers.args
+			scwrypts.cache-output.zshparse.args
 			)
 
 	eval "$ZSHPARSEARGS"
@@ -30,7 +31,7 @@ SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE() {
 }
 
 SCWRYPTS_ENVIRONMENT__GET_ENVVAR_LOOKUP_MAP() {
-	eval "$(USAGE__reset)"
+	eval "$(USAGE.reset)"
 	local USAGE__description="
 		outputs a JSON map which can be used to lookup config-file query
 		paths from environment variable names; GET_FULL_TEMPLATE flags OK
@@ -41,7 +42,7 @@ SCWRYPTS_ENVIRONMENT__GET_ENVVAR_LOOKUP_MAP() {
 
 	local \
 		PARSERS=(
-			scwrypts.cache-output.parsers.args  # passthrough
+			scwrypts.cache-output.zshparse.args  # passthrough
 			)
 
 	eval "$ZSHPARSEARGS"

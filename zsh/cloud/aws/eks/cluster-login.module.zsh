@@ -8,7 +8,7 @@ use cloud/aws/eks/zshparse
 #####################################################################
 
 ${scwryptsmodule}() {
-	eval "$(USAGE__reset)"
+	eval "$(USAGE.reset)"
 	local USAGE__description='
 		Interactively sets the default kubeconfig to match the selected
 		cluster in EKS. Also creates the kubeconfig entry if it does not

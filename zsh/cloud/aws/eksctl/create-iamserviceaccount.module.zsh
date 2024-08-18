@@ -5,7 +5,7 @@ use cloud/aws/eksctl/create-iamserviceaccount.zshparse
 #####################################################################
 
 EKSCTL__CREATE_IAMSERVICEACCOUNT() {
-	eval "$(USAGE__reset)"
+	eval "$(USAGE.reset)"
 	local USAGE__description="
 		Safe context wrapper for eksctl commands; prevents accidental local environment
 		bleed-through, but otherwise works exactly like 'eksctl'.

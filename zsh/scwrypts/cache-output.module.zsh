@@ -1,5 +1,7 @@
+#####################################################################
+
 ${scwryptsmodule}() {
-	eval "$(USAGE__reset)"
+	eval "$(USAGE.reset)"
 	local USAGE__description="
 		Caches any successful shell operation for the current scwrypts runtime;
 		useful for operations which require heavy processing, but frequent access.
@@ -111,7 +113,7 @@ ${scwryptsmodule}.parse.validate() {
 
 #####################################################################
 
-${scwryptsmodule}.parsers.args() {
+${scwryptsmodule}.zshparse.args() {
 	# local CACHE_ARGS=()
 	local PARSED=0
 	case $1 in
@@ -128,7 +130,7 @@ ${scwryptsmodule}.parsers.args() {
 	return $PARSED
 }
 
-${scwryptsmodule}.parsers.args.usage() {
+${scwryptsmodule}.zshparse.args.usage() {
 	USAGE__options+="\n
 		--use-cache   (default true) one of {'true', 'reset', 'bypass'}
 	"

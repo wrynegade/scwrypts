@@ -69,8 +69,8 @@ USAGE() { # formatter for USAGE variable
 		>&2
 }
 
-USAGE__reset() {
-	# eval "$(USAGE__reset)" to setup local usage defaults
+USAGE.reset() {
+	# eval "$(USAGE.reset)" to setup local usage defaults
 	echo "
 	local USAGE__usage=${funcstack[2]}
 	local USAGE__options
