@@ -258,7 +258,12 @@ jobs:
           name: install dependencies
           command: |
             : \
-              && apk add zsh fzf jo jq \
+              && apk add \
+                  fzf \
+                  jo \
+                  jq \
+                  uuidgen \
+                  zsh \
               ;
       - run:
           name: scwrypts zsh/unittest
