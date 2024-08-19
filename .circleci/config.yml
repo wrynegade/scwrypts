@@ -22,6 +22,11 @@ executors:
       - image: node:18
     resource_class: medium
 
+  zsh:
+    docker:
+      - image: alpine:3
+    resource_class: small
+
 
 commands:
   archlinux-run:
@@ -243,6 +248,24 @@ jobs:
       - run: pip install build && python -m build
       - run: pip install twine && twine upload dist/*
 
+  zsh-test:
+    executor: zsh
+    working_directory: ~/scwrypts
+    steps:
+      - checkout:
+          path: ~/scwrypts
+      - run:
+          name: install dependencies
+          command: |
+            : \
+              && apk add zsh fzf jo jq \
+              ;
+      - run:
+          name: scwrypts zsh/unittest
+          command: |
+            ~/scwrypts/scwrypts run unittest \
+            ;
+
 
 workflows:
   test:
@@ -255,6 +278,7 @@ workflows:
 
       - python-test: *dev-filters
       - nodejs-test: *dev-filters
+      - zsh-test: *dev-filters
 
   publish:
     jobs:
@@ -285,6 +309,7 @@ workflows:
             - aur-test
             - python-publish
             - nodejs-publish
+            - zsh-test
 
       - python-test: *only-publish-for-full-semver
       - python-publish:
@@ -292,6 +317,7 @@ workflows:
           context: [pypi-yage]
           requires:
             - python-test
+            - zsh-test
 
       - nodejs-test: *only-publish-for-full-semver
       - nodejs-publish:
@@ -299,3 +325,6 @@ workflows:
           context: [npm-wrynegade]
           requires:
             - nodejs-test
+            - zsh-test
+
+      - zsh-test: *only-publish-for-full-semver
