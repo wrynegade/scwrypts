@@ -45,7 +45,7 @@ utils.dependencies.check-coreutils() {
 
 	[[ ${NON_GNU_DEPENDENCY_COUNT} -gt 0 ]] && {
 		echo.warning 'scripts rely on GNU coreutils; compatibility may vary'
-		IS_MACOS && echo.reminder 'GNU coreutils can be installed and linked through Homebrew'
+		utils.os.is-macos && echo.reminder 'GNU coreutils can be installed and linked through Homebrew'
 	}
 
 	return ${MISSING_DEPENDENCY_COUNT}

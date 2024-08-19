@@ -259,10 +259,18 @@ jobs:
           command: |
             : \
               && apk add \
+                  coreutils \
+                  findutils \
                   fzf \
+                  perl \
+                  sed \
+                  gawk \
+                  git \
                   jo \
                   jq \
+                  util-linux \
                   uuidgen \
+                  yq \
                   zsh \
               ;
       - run:

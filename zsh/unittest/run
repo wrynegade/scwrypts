@@ -1,6 +1,10 @@
 #!/bin/zsh
 #####################################################################
 
+use scwrypts/meta
+
+#####################################################################
+
 USAGE__description="
 	runs tests across scwrypts zsh modules (beta)
 "
@@ -39,7 +43,7 @@ MAIN() {
 		TEST_FILES+=($(find "$(scwrypts.config.group ${GROUP} root)" ${FIND_ARGS[@]}))
 	done
 
-	local SCWRYPTS_CONFIG="$(scwrypts --config)"
+	local SCWRYPTS_CONFIG="$(SCWRYPTS__RUN --config)"
 	local TEST_FILE
 	for TEST_FILE in ${TEST_FILES[@]}
 	do
