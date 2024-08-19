@@ -7,7 +7,7 @@ use cloud/aws/zshparse
 #####################################################################
 
 ${scwryptsmodule}() {
-	eval "$(USAGE.reset)"
+	eval "$(usage.reset)"
 	local USAGE__description="
 		Safe context wrapper for aws cli commands; prevents accidental local environment
 		bleed-through, but otherwise works exactly like 'aws'. For help with awscli, try

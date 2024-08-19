@@ -19,5 +19,5 @@ MAIN() {
 	DATESTRING="## $(date '+%A, %B %-d, %Y')"
 	grep -q "$DATESTRING" "$MEMO_FILE" || echo "$DATESTRING" >> "$MEMO_FILE"
 
-	EDIT "$MEMO_FILE"
+	utils.io.edit "$MEMO_FILE"
 }

@@ -10,20 +10,20 @@ USAGE__options="
 
 USAGE__args="
 	  \$1      must be the name of the environment variable
-	  \$2...   any additional arguments to forward to __CHECK_ENV_VAR
+	  \$2...   any additional arguments to forward to utils.environment.check
 "
 
 USAGE__description="
-	Wrapper API for __CHECK_ENV_VAR to get environment variable values
+	Wrapper API for utils.environment.check to get environment variable values
 	from non-zsh scwrypts environments. Value of the variable is written
 	to stdout, and returns an error status if the variable is required
 	and missing.
 
-	------ __CHECK_ENV_VAR help ------
+	------ utils.environment.check help ------
 
-	$(__CHECK_ENV_VAR --help 2>&1 | sed 's/^/ > /g' | grep -v 'usage')
+	$(utils.environment.check --help 2>&1 | sed 's/^/ > /g' | grep -v 'usage')
 
-	------ __CHECK_ENV_VAR help ------
+	------ utils.environment.check help ------
 "
 
 #####################################################################
@@ -39,7 +39,7 @@ MAIN() {
 			local VARIABLE_NAME
 			for VARIABLE_NAME in ${VARIABLE_NAMES[@]}
 			do
-				__CHECK_ENV_VAR $VARIABLE_NAME $@ --print-value
+				utils.environment.check $VARIABLE_NAME $@ --print-value
 			done
 			;;
 		all )

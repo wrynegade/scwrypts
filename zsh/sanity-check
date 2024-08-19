@@ -41,7 +41,7 @@ MAIN() {
 		shift 1
 	done
 
-	CHECK_ERRORS
+	utils.check-errors
 
 	##########################################
 

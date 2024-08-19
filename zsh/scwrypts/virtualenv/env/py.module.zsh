@@ -5,7 +5,7 @@ SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS+=(py)
 
 CREATE_VIRTUALENV__scwrypts__py() {
 	[ ${CI} ] && return 0
-	DEPENDENCIES=(virtualenv) CHECK_ENVIRONMENT || return 1
+	utils.dependencies.check virtualenv || return 1
 	##########################################
 
 	local VIRTUALENV_PATH="$1"

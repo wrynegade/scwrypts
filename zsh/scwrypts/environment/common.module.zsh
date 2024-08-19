@@ -60,7 +60,7 @@ _SCWRYPTS_ENVIRONMENT__FIND_ENV_FILES_BY_NAME() {
 }
 
 _SCWRYPTS_ENVIRONMENT__COMBINE_TEMPLATE_FILES() {
-	YQ eval-all '. as $item ireduce ({}; . * $item)' \
+	utils.yq eval-all '. as $item ireduce ({}; . * $item)' \
 		| sed 's/: {}$/:/' \
-		| YQ 'sort_keys(...)' \
+		| utils.yq 'sort_keys(...)' \
 }

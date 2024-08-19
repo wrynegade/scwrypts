@@ -17,5 +17,5 @@ MAIN() {
 			;
 	done
 
-	CHECK_ERRORS
+	utils.check-errors
 }

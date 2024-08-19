@@ -3,5 +3,5 @@ use system/vim/vundle
 #####################################################################
 
 MAIN() {
-	EDIT "$VUNDLE__BUILD_DEFINITIONS"
+	utils.io.edit "$VUNDLE__BUILD_DEFINITIONS"
 }

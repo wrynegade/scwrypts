@@ -7,7 +7,7 @@ DEPENDENCIES+=(
 
 REQUIRED_ENV+=()
 
-__CHECK_ENV_VAR SCWRYPTS_KUBECTL_REDIS --default managed
+utils.environment.check SCWRYPTS_KUBECTL_REDIS --default managed
 
 #####################################################################
 

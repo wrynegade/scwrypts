@@ -52,14 +52,12 @@ utils.io.print() {
 				;;
 
 			( * )
-				[ "$MESSAGE" ] && MESSAGE+=" $1" || MESSAGE="$1"
+				[ "${MESSAGE}" ] && MESSAGE+=" $1" || MESSAGE="$1"
 				;;
 		esac
 
 		[[ ${_S} -le $# ]] && shift ${_S} || { echo "echo.error : missing argument for '$1'" >&2; return 1; }
 	done
-
-	[ "${MESSAGE}" ] || return 1
 
 	: \
 		&& [ "${MINIMUM_LOG_LEVEL}" ] \

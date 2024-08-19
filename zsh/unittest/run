@@ -51,7 +51,7 @@ MAIN() {
 			$SCWRYPTS_CONFIG
 			source '$TEST_FILE'
 			use unittest/execute-test-file
-			CHECK_ENVIRONMENT
+			utils.check-environment
 			SCWRYPTS_TEST_MODULE_STRING=\"${TEST_SUITE_NAME} : \" unittest.execute-test-file
 		}
 		"

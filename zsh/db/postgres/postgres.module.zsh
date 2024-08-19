@@ -120,7 +120,7 @@ PG_RESTORE() {
 #####################################################################
 
 POSTGRES__LOGIN_INTERACTIVE() {
-	DEPENDENCIES=(pgcli) CHECK_ENVIRONMENT --optional \
+	utils.dependencies.check pgcli --optional \
 		&& COMMAND=pgcli || COMMAND=psql
 
 	[[ $COMMAND =~ psql ]] && echo.warning "using 'psql' instead"
@@ -164,7 +164,7 @@ POSTGRES__SET_LOGIN_ARGS() {
 	[ $PSQL_FILE ] && [ ! -f "$PSQL_FILE" ] \
 		&& echo.error "no such file available:\n'$PSQL_FILE'"
 
-	CHECK_ERRORS
+	utils.check-errors
 
 	##########################################
 

@@ -89,7 +89,7 @@ _SCWRYPTS_ENVIRONMENT__CONVERT__V4_TO_V5__TEMPLATE_FILE() {
 
 	"$SCWRYPTS_ROOT__scwrypts/.config/create-new-env" "$GROUP_ROOT/.config" "$GROUP" &>/dev/null
 
-	EDIT "$GROUP_TEMPLATE_FILENAME"
+	utils.io.edit "$GROUP_TEMPLATE_FILENAME"
 
 	echo.reminder "the file '$GROUP_TEMPLATE_FILENAME' should be committed to the appropriate repository"
 }
@@ -111,19 +111,19 @@ _SCWRYPTS_ENVIRONMENT__CONVERT__V4_TO_V5__CONFIG_FILE() {
 		| sed "s/^\\[.*\\]$/'&'/" \
 		| sed -z "s/\\n'\[/'[/g" \
 		| sed 's/^export \([^=]\+\)=/\1: /' \
-		| YQ --unwrapScalar=false '..style="double"' \
+		| utils.yq --unwrapScalar=false '..style="double"' \
 	)"
 
 	local ENV_VAR NEW_TEMPLATE_KEY NEW_TEMPLATE="$(SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE --reset-cache)"
-	for ENV_VAR in $(echo "$LEGACY_CONFIG_VALUES" | YQ -r 'keys | .[]')
+	for ENV_VAR in $(echo "$LEGACY_CONFIG_VALUES" | utils.yq -r 'keys | .[]')
 	do
-		NEW_TEMPLATE_KEY=$(SCWRYPTS_ENVIRONMENT__GET_ENVVAR_LOOKUP_MAP | YQ -r ".$ENV_VAR")
-		NEW_TEMPLATE_VALUE="$(echo "$LEGACY_CONFIG_VALUES" | YQ -r ".$ENV_VAR")"
+		NEW_TEMPLATE_KEY=$(SCWRYPTS_ENVIRONMENT__GET_ENVVAR_LOOKUP_MAP | utils.yq -r ".$ENV_VAR")
+		NEW_TEMPLATE_VALUE="$(echo "$LEGACY_CONFIG_VALUES" | utils.yq -r ".$ENV_VAR")"
 		echo "$NEW_TEMPLATE_VALUE" | grep -q '^[[].*[]]$' \
 			|| NEW_TEMPLATE_VALUE="\"$NEW_TEMPLATE_VALUE\""
 
 		NEW_TEMPLATE="$(
-			echo "$NEW_TEMPLATE" | YQ "$NEW_TEMPLATE_KEY = $NEW_TEMPLATE_VALUE"
+			echo "$NEW_TEMPLATE" | utils.yq "$NEW_TEMPLATE_KEY = $NEW_TEMPLATE_VALUE"
 		)"
 	done
 

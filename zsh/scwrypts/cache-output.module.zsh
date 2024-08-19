@@ -1,7 +1,7 @@
 #####################################################################
 
 ${scwryptsmodule}() {
-	eval "$(USAGE.reset)"
+	eval "$(usage.reset)"
 	local USAGE__description="
 		Caches any successful shell operation for the current scwrypts runtime;
 		useful for operations which require heavy processing, but frequent access.

@@ -5,7 +5,7 @@ SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS+=(zx)
 
 CREATE_VIRTUALENV__scwrypts__zx() {
 	[ ${CI} ] && return 0
-	DEPENDENCIES=(nodeenv) CHECK_ENVIRONMENT || return 1
+	utils.dependencies.check nodeenv || return 1
 	##########################################
 
 	local VIRTUALENV_PATH="$1"

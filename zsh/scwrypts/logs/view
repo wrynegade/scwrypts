@@ -2,12 +2,12 @@
 #####################################################################
 
 MAIN() {
-	cd $SCWRYPTS_ROOT
+	cd ${SCWRYPTS_ROOT}
 	PROMPT 'select a script log'
-	LOG_FILE=$(ls -t $SCWRYPTS_LOG_PATH | FZF 'logfile')
-	[ ! $LOG_FILE ] && { echo.error 'user abort'; exit 1; }
+	LOG_FILE=$(ls -t ${SCWRYPTS_LOG_PATH} | FZF 'logfile')
+	[ ! ${LOG_FILE} ] && { echo.error 'user abort'; exit 1; }
 	
 	echo.status 'opening logfile'
-	LESS "$SCWRYPTS_LOG_PATH/$LOG_FILE"
+	LESS "${SCWRYPTS_LOG_PATH}/${LOG_FILE}"
 	echo.success 'done'
 }

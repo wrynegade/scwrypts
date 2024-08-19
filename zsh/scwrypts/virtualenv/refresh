@@ -51,7 +51,7 @@ MAIN() {
 		)
 	[ $ENV_TYPE ] || echo.error "no environment type selected"
 
-	CHECK_ERRORS
+	utils.check-errors
 
 	##########################################
 	: \

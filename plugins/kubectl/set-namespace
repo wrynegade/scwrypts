@@ -22,7 +22,7 @@ MAIN() {
 		case $1 in
 			--subsession ) SUBSESSION=$2; shift 1 ;;
 
-			-h | --help ) USAGE; return 0 ;;
+			-h | --help ) utils.io.usage; return 0 ;;
 
 			* )
 				[ $NAMESPACE ] && echo.error "unexpected argument '$2'"
@@ -35,7 +35,7 @@ MAIN() {
 	[ $NAMESPACE ] || NAMESPACE=$(KUBECTL__SELECT_NAMESPACE)
 	[ $NAMESPACE ] || echo.error 'must provide or select a valid namespace'
 
-	CHECK_ERRORS
+	utils.check-errors
 
 	KUBECTL__SET_NAMESPACE $NAMESPACE
 }

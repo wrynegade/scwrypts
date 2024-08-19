@@ -33,7 +33,7 @@ MAIN() {
 			--password-secret ) PASSWORD_SECRET=$2; shift 1 ;;
 			--password-key    ) PASSWORD_KEY=$2; shift 1 ;;
 
-			-h | --help ) USAGE; return 0 ;;
+			-h | --help ) utils.io.usage; return 0 ;;
 
 			* )
 				[ $SERVICE ] && echo.error "unexpected argument '$2'"
@@ -43,7 +43,7 @@ MAIN() {
 		shift 1
 	done
 
-	CHECK_ERRORS
+	utils.check-errors
 
 	KUBECTL__SERVE 
 }

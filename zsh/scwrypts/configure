@@ -9,7 +9,7 @@ MAIN() {
 		echo.status 'first-time setup detected; creating local configuration override...'
 		cp "$DEFAULT_CONFIG" "$USER_CONFIG_OVERRIDES"
 	
-		EDIT $USER_CONFIG_OVERRIDES
+		utils.io.edit $USER_CONFIG_OVERRIDES
 	
 		echo.status 'attempting first-time build for virtual environments'
 		SCWRYPTS__RUN --name scwrypts/virtualenv/update-all --group scwrypts --type zsh \
@@ -24,7 +24,7 @@ MAIN() {
 			scwrypts --name scwrypts/virtualenv/update-all --group scwrypts --type zsh
 		'
 	} || {
-		EDIT "$USER_CONFIG_OVERRIDES"
+		utils.io.edit "$USER_CONFIG_OVERRIDES"
 	}
 	
 	

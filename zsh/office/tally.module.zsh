@@ -48,8 +48,6 @@ TALLY() {
 
 			--raw ) RAW=true ;;
 
-			-h | --help ) USAGE; return 0 ;;
-
 			* ) echo.error "unknown argument '$1'" ;;
 		esac
 		shift 1
@@ -60,7 +58,7 @@ TALLY() {
 
 	local TALLY_FILENAME="$TALLY_PATH/$TALLY_NAME.txt"
 
-	CHECK_ERRORS --no-fail || return 1
+	utils.check-errors --no-fail || return 1
 
 	##########################################
 

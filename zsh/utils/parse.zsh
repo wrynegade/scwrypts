@@ -10,7 +10,9 @@
 # parsing the args.
 #
 ZSHPARSEARGS='
-ZSHPARSEARGS $@ || {
+[[ ${(t)PARSERS} =~ array ]] || local PARSERS=()
+
+utils.parse $@ || {
 	local ERROR_CODE=$?
 	case $ERROR_CODE in
 		-1 ) return 0 ;;  # -h | --help
@@ -19,7 +21,7 @@ ZSHPARSEARGS $@ || {
 }
 '
 
-ZSHPARSEARGS() {
+utils.parse() {
 	#
 	# Parses all arguments using PARSERS array; return value breaks the typical
 	# success/failure code paradigm:
@@ -45,30 +47,30 @@ ZSHPARSEARGS() {
 	#
 	# If variable values are set in the caller function, proper usage requires
 	# declaration of "local VARIABLE_NAME" in that parent caller _before_
-	# invoking 'ZSHPARSEARGS $@'
+	# invoking 'utils.zshparseargs $@'
 	#
 	local PARSER VALID_PARSERS=()
 	local DEFAULT_PARSERS=()
-	[ $NO_DEFAULT_PARSERS ] || {
+	[ ${NO_DEFAULT_PARSERS} ] || {
 
 		# automatically includes 'MY_FUNCTION.parse()' as 1st parser when parsing for 'MY_FUNCTION()'
 		[[ ${funcstack[2]} =~ ^[(]eval[)]$ ]] \
-			&& PARSERS=(${funcstack[3]}.parse $PARSERS) \
-			|| PARSERS=(${funcstack[2]}.parse $PARSERS) \
+			&& PARSERS=(${funcstack[3]}.parse ${PARSERS}) \
+			|| PARSERS=(${funcstack[2]}.parse ${PARSERS}) \
 			;
 
-		PARSERS+=(ZSHPARSERS.ARGS ZSHPARSERS.HELP)
+		PARSERS+=(utils.parse.args utils.parse.help)
 	}
 
 	for PARSER in ${PARSERS[@]}
 	do
 		command -v ${PARSER} &>/dev/null || continue
 		command -v ${PARSER}.safety &>/dev/null || {
-			VALID_PARSERS+=($PARSER)
+			VALID_PARSERS+=(${PARSER})
 			continue
 		}
 
-		${PARSER}.safety && VALID_PARSERS+=($PARSER)
+		${PARSER}.safety && VALID_PARSERS+=(${PARSER})
 	done
 
 	for PARSER in ${VALID_PARSERS[@]}
@@ -82,24 +84,24 @@ ZSHPARSEARGS() {
 		_S=0
 		for PARSER in ${VALID_PARSERS[@]}
 		do
-			$PARSER $@
+			${PARSER} $@
 			((_S+=$?))
 
-			[ $EARLY_ESCAPE_CODE ] && return $EARLY_ESCAPE_CODE
+			[ ${EARLY_ESCAPE_CODE} ] && return ${EARLY_ESCAPE_CODE}
 
-			[[ $_S -gt 0 ]] && break
+			[[ ${_S} -gt 0 ]] && break
 		done
 
-		[[ $_S -gt 0 ]] \
+		[[ ${_S} -gt 0 ]] \
 			|| echo.error "unknown argument '$1'" \
 			|| ((_S+=1))
 
 
-		[[ $_S -le $# ]] \
+		[[ ${_S} -le $# ]] \
 			|| echo.error "invalid value(s) for '$1'" \
 			|| _S=$#
 
-		shift $_S
+		shift ${_S}
 	done
 
 	for PARSER in ${VALID_PARSERS[@]}
@@ -109,7 +111,7 @@ ZSHPARSEARGS() {
 		${PARSER}.validate
 	done
 
-	CHECK_ERRORS --no-fail
+	utils.check-errors --no-fail
 }
 
 #####################################################################

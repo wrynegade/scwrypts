@@ -27,7 +27,7 @@ HELM__VALIDATE() {
 		return 1
 	}
 
-	CHART_NAME=$(YQ -r .name "$CHART_ROOT/Chart.yaml")
+	CHART_NAME=$(utils.yq -r .name "$CHART_ROOT/Chart.yaml")
 
 	[[ $TEMPLATE_FILENAME =~ values.*.yaml$ ]] && {
 		HELM_ARGS+=(--values $TEMPLATE_FILENAME)
@@ -72,7 +72,7 @@ _HELM__GET_DEFAULT_VALUES_ARGS() {
 
 	for LOCAL_REPOSITORY in $(\
 		cat "$CHART_ROOT/Chart.yaml" \
-			| YQ -r '.dependencies[] | .repository' \
+			| utils.yq -r '.dependencies[] | .repository' \
 			| grep '^file://' \
 			| sed 's|file://||' \
 		)

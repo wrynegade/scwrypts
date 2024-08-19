@@ -3,5 +3,5 @@ use system/config
 #####################################################################
 
 MAIN() {
-	EDIT "$CONFIG__USER_SETTINGS"
+	utils.io.edit "$CONFIG__USER_SETTINGS"
 }

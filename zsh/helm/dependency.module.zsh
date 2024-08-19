@@ -30,7 +30,7 @@ HELM__DEPENDENCY__UPDATE() {
 	done
 
 	HELM__VALIDATE
-	CHECK_ERRORS || return 1
+	utils.check-errors || return 1
 
 	##########################################
 

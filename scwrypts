@@ -57,12 +57,12 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 	### cli argument parsing and global configuration ###################
 	#####################################################################
 
-	local ENV_NAME="$SCWRYPTS_ENV"
+	local ENV_NAME="${SCWRYPTS_ENV}"
 	local SEARCH_PATTERNS=()
 
 	local VARSPLIT SEARCH_GROUP SEARCH_TYPE SEARCH_NAME
 
-	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=3
+	[ ! ${SCWRYPTS_LOG_LEVEL} ] && local SCWRYPTS_LOG_LEVEL=3
 
 	local SHIFT_COUNT
 	while [[ $# -gt 0 ]]
@@ -71,13 +71,13 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 		case $1 in
 			-[a-z][a-z]* )
 				VARSPLIT=$(echo "$1 " | sed 's/^\(-.\)\(.*\) /\1 -\2/')
-				set -- throw-away $(echo " $VARSPLIT ") ${@:2}
+				set -- throw-away $(echo " ${VARSPLIT} ") ${@:2}
 				;;
 
 			### alternate commands ###################
 
 			-h | --help )
-				USAGE
+				utils.io.usage
 				return 0
 				;;
 
@@ -99,7 +99,7 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 				;;
 
 			--version )
-				case $SCWRYPTS_INSTALLATION_TYPE in
+				case ${SCWRYPTS_INSTALLATION_TYPE} in
 					manual ) echo "scwrypts $(GIT_SCWRYPTS describe --tags) (via GIT)" ;;
 					     * ) echo "scwrypts $(cat "$(scwrypts.config.group scwrypts root)/VERSION")" ;;
 				esac
@@ -113,13 +113,13 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 
 			--config )
 				echo "source '$(scwrypts.config.group scwrypts root)/zsh/import.driver.zsh'"
-				echo "CHECK_ENVIRONMENT --no-fail --no-usage"
+				echo "utils.check-environment --no-fail --no-usage"
 				echo "unset __SCWRYPT"
 				return 0
 				;;
 
 			--update )
-				case $SCWRYPTS_INSTALLATION_TYPE in
+				case ${SCWRYPTS_INSTALLATION_TYPE} in
 					aur )
 						SCWRYPTS_LOG_LEVEL=3 echo.reminder "
 							This installation is built from the AUR. Update through 'makepkg' or use
@@ -139,7 +139,7 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 						GIT_SCWRYPTS diff --exit-code origin/main -- . >/dev/null 2>&1
 						local DIFF_STATUS=$?
 
-						[[ $SYNC_echo.status -eq 0 ]] && [[ $DIFF_echo.status -eq 0 ]] && {
+						[[ ${SYNC_STATUS} -eq 0 ]] && [[ ${DIFF_STATUS} -eq 0 ]] && {
 							echo.success 'already up-to-date with origin/main'
 						} || {
 							GIT_SCWRYPTS rebase --autostash origin/main \
@@ -200,9 +200,9 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 			-o | --output )
 				((SHIFT_COUNT+=1))
 				export SCWRYPTS_OUTPUT_FORMAT=$2
-				case $SCWRYPTS_OUTPUT_FORMAT in
+				case ${SCWRYPTS_OUTPUT_FORMAT} in
 					pretty | json ) ;;
-					* ) echo.error "unsupported format '$SCWRYPTS_OUTPUT_FORMAT'" ;;
+					* ) echo.error "unsupported format '${SCWRYPTS_OUTPUT_FORMAT}'" ;;
 				esac
 				;;
 
@@ -210,10 +210,10 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 				((SHIFT_COUNT+=1))
 				[ $2 ] || { echo.error "missing value for argument $1"; break; }
 
-				[ $ENV_NAME ] && echo.debug 'overwriting session environment'
+				[ ${ENV_NAME} ] && echo.debug 'overwriting session environment'
 
 				ENV_NAME="$2"
-				echo.status "using CLI environment '$ENV_NAME'"
+				echo.status "using CLI environment '${ENV_NAME}'"
 				;;
 
 			##########################################
@@ -222,21 +222,21 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 			--* ) echo.error "unrecognized argument '$1'" ;;
 			*   ) SEARCH_PATTERNS+=($1) ;;
 		esac
-		shift $SHIFT_COUNT
+		shift ${SHIFT_COUNT}
 	done
 
-	[ $SCWRYPTS_OUTPUT_FORMAT ] || export SCWRYPTS_OUTPUT_FORMAT=pretty
+	[ ${SCWRYPTS_OUTPUT_FORMAT} ] || export SCWRYPTS_OUTPUT_FORMAT=pretty
 
-	[ $SEARCH_NAME ] && {
-		[ $SEARCH_TYPE  ] || echo.error '--name requires --type argument'
-		[ $SEARCH_GROUP ] || echo.error '--name requires --group argument'
+	[ ${SEARCH_NAME} ] && {
+		[ ${SEARCH_TYPE}  ] || echo.error '--name requires --type argument'
+		[ ${SEARCH_GROUP} ] || echo.error '--name requires --group argument'
 	}
 
-	CHECK_ERRORS
+	utils.check-errors
 
-	use utils
 	use scwrypts/run
 	use scwrypts/environment
+
 	SCWRYPTS_LOG_LEVEL=4 SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS \
 		|| echo.error "failed to initialize scwrypts environments (see above)"
 
@@ -249,145 +249,145 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 
 	##########################################
 
-	[ $SEARCH_NAME ] && SCWRYPTS_AVAILABLE=$({
-		echo $SCWRYPTS_AVAILABLE | head -n1
-		echo $SCWRYPTS_AVAILABLE | sed -e 's/\x1b\[[0-9;]*m//g' | grep "^$SEARCH_NAME *$SEARCH_TYPE *$SEARCH_GROUP\$"
+	[ ${SEARCH_NAME} ] && SCWRYPTS_AVAILABLE=$({
+		echo ${SCWRYPTS_AVAILABLE} | head -n1
+		echo ${SCWRYPTS_AVAILABLE} | sed -e 's/\x1b\[[0-9;]*m//g' | grep "^${SEARCH_NAME} *${SEARCH_TYPE} *${SEARCH_GROUP}\$"
 	}) || {
-		[ $SEARCH_TYPE ] && {
+		[ ${SEARCH_TYPE} ] && {
 			SCWRYPTS_AVAILABLE=$(\
 				{
-					echo $SCWRYPTS_AVAILABLE | head -n1
-					echo $SCWRYPTS_AVAILABLE | grep ' [^/]*'$SEARCH_TYPE'[^/]* '
+					echo ${SCWRYPTS_AVAILABLE} | head -n1
+					echo ${SCWRYPTS_AVAILABLE} | grep ' [^/]*'${SEARCH_TYPE}'[^/]* '
 				} \
-				| sed 's/ \+$/'$(printf $__COLOR_RESET)'/; s/ \+/^/g'  \
+				| sed 's/ \+$/'$(utils.colors.reset)'/; s/ \+/^/g'  \
 				| column -ts '^'
 			)
 		}
 
-		[ $SEARCH_GROUP ] && {
+		[ ${SEARCH_GROUP} ] && {
 			SCWRYPTS_AVAILABLE=$(
 				{
-					echo $SCWRYPTS_AVAILABLE | head -n1
-					echo $SCWRYPTS_AVAILABLE | grep "$SEARCH_GROUP"'[^/ 	]*$'
+					echo ${SCWRYPTS_AVAILABLE} | head -n1
+					echo ${SCWRYPTS_AVAILABLE} | grep "${SEARCH_GROUP}"'[^/ 	]*$'
 				} \
-				| sed 's/ \+$/'$(printf $__COLOR_RESET)'/; s/ \+/^/g'  \
+				| sed 's/ \+$/'$(utils.colors.reset)'/; s/ \+/^/g'  \
 				| column -ts '^'
 			)
 		}
 
 		[[ ${#SEARCH_PATTERNS[@]} -gt 0 ]] && {
-			POTENTIAL_ERROR+="\n   PATTERNS : $SEARCH_PATTERNS"
+			POTENTIAL_ERROR+="\n   PATTERNS : ${SEARCH_PATTERNS}"
 			local P
 			for P in ${SEARCH_PATTERNS[@]}
 			do
 				SCWRYPTS_AVAILABLE=$(
 					{
-						echo $SCWRYPTS_AVAILABLE | head -n1
-						echo $SCWRYPTS_AVAILABLE | grep $P
+						echo ${SCWRYPTS_AVAILABLE} | head -n1
+						echo ${SCWRYPTS_AVAILABLE} | grep ${P}
 					}
 				)
 			done
 		}
 	}
 
-	[[ $(echo $SCWRYPTS_AVAILABLE | wc -l) -lt 2 ]] && {
+	[[ $(echo ${SCWRYPTS_AVAILABLE} | wc -l) -lt 2 ]] && {
 		FAIL 1 "$(echo "
 		no such scwrypt exists
-		  NAME     : '$SEARCH_NAME'
-		  TYPE     : '$SEARCH_TYPE'
-		  GROUP    : '$SEARCH_GROUP'
-		  PATTERNS : '$SEARCH_PATTERNS'
+		  NAME     : '${SEARCH_NAME}'
+		  TYPE     : '${SEARCH_TYPE}'
+		  GROUP    : '${SEARCH_GROUP}'
+		  PATTERNS : '${SEARCH_PATTERNS}'
 		" | sed "1d; \$d; /''$/d")"
 	}
 
 	##########################################
 
-	[[ $(echo $SCWRYPTS_AVAILABLE | wc -l) -eq 2 ]] \
-		&& SCWRYPT_SELECTION=$(echo $SCWRYPTS_AVAILABLE | tail -n1) \
-		|| SCWRYPT_SELECTION=$(echo $SCWRYPTS_AVAILABLE | FZF "select a script to run" --header-lines 1) \
+	[[ $(echo ${SCWRYPTS_AVAILABLE} | wc -l) -eq 2 ]] \
+		&& SCWRYPT_SELECTION=$(echo ${SCWRYPTS_AVAILABLE} | tail -n1) \
+		|| SCWRYPT_SELECTION=$(echo ${SCWRYPTS_AVAILABLE} | utils.io.fzf "select a script to run" --header-lines 1) \
 		;
 
-	[ $SCWRYPT_SELECTION ] || exit 2
+	[ ${SCWRYPT_SELECTION} ] || exit 2
 
 	##########################################
 
 	local NAME TYPE GROUP
-	SCWRYPTS__SEPARATE_SCWRYPT_SELECTION $SCWRYPT_SELECTION
+	SCWRYPTS__SEPARATE_SCWRYPT_SELECTION ${SCWRYPT_SELECTION}
 
-	export SCWRYPT_NAME=$NAME
-	export SCWRYPT_TYPE=$TYPE
-	export SCWRYPT_GROUP=$GROUP
+	export SCWRYPT_NAME=${NAME}
+	export SCWRYPT_TYPE=${TYPE}
+	export SCWRYPT_GROUP=${GROUP}
 
 	#####################################################################
 	### environment variables and configuration validation ##############
 	#####################################################################
 
 	local ENV_REQUIRED=true \
-		&& [ ! $CI ] \
-		&& [[ ! $SCWRYPT_NAME =~ scwrypts/logs ]] \
-		&& [[ ! $SCWRYPT_NAME =~ scwrypts/environment ]] \
+		&& [ ! ${CI} ] \
+		&& [[ ! ${SCWRYPT_NAME} =~ scwrypts/logs ]] \
+		&& [[ ! ${SCWRYPT_NAME} =~ scwrypts/environment ]] \
 		|| ENV_REQUIRED=false
 
 	local REQUIRED_ENVIRONMENT_REGEX="$(scwrypts.config.group ${SCWRYPT_GROUP} required_environment_regex)"
 
-	[ $ENV_NAME ] && [ $REQUIRED_ENVIRONMENT_REGEX ] && {
-		[[ $ENV_NAME =~ $REQUIRED_ENVIRONMENT_REGEX ]] \
-			|| FAIL 5 "group '$SCWRYPT_GROUP' requires current environment name to match '$REQUIRED_ENVIRONMENT_REGEX' (currently $ENV_NAME)"
+	[ ${ENV_NAME} ] && [ ${REQUIRED_ENVIRONMENT_REGEX} ] && {
+		[[ ${ENV_NAME} =~ ${REQUIRED_ENVIRONMENT_REGEX} ]] \
+			|| FAIL 5 "group '${SCWRYPT_GROUP}' requires current environment name to match '${REQUIRED_ENVIRONMENT_REGEX}' (currently ${ENV_NAME})"
 	}
 
-	[[ $ENV_REQUIRED =~ true ]] && {
-		[ ! $ENV_NAME ] && ENV_NAME=$(SCWRYPTS_ENVIRONMENT__SELECT_ENV)
-		[ ! $ENV_NAME ] && ABORT
+	[[ ${ENV_REQUIRED} =~ true ]] && {
+		[ ! ${ENV_NAME} ] && ENV_NAME=$(SCWRYPTS_ENVIRONMENT__SELECT_ENV)
+		[ ! ${ENV_NAME} ] && ABORT
 
 		export ENV_NAME
-		export SCWRYPTS_ENV=$ENV_NAME
+		export SCWRYPTS_ENV=${ENV_NAME}
 
 		for GROUP in ${SCWRYPTS_GROUPS[@]}
 		do
 			local REQUIRED_REGEX="$(scwrypts.config.group ${GROUP} required_environment_regex)"
-			[ $REQUIRED_REGEX ] && {
-				[[ $ENV_NAME =~ $REQUIRED_REGEX ]] || continue
+			[ ${REQUIRED_REGEX} ] && {
+				[[ ${ENV_NAME} =~ ${REQUIRED_REGEX} ]] || continue
 			}
 
-			for f in $(eval echo '$SCWRYPTS_STATIC_CONFIG__'$GROUP)
+			for f in $(eval echo '$SCWRYPTS_STATIC_CONFIG__'${GROUP})
 			do
-				source "$f" || FAIL 5 "invalid static config '$f'"
+				source "${f}" || FAIL 5 "invalid static config '${f}'"
 			done
 		done
 	}
 
-	[ $REQUIRED_ENVIRONMENT_REGEX ] && {
-		[[ $ENV_NAME =~ $REQUIRED_ENVIRONMENT_REGEX ]] \
-			|| FAIL 5 "group '$SCWRYPT_GROUP' requires current environment name to match '$REQUIRED_ENVIRONMENT_REGEX' (currently $ENV_NAME)"
+	[ ${REQUIRED_ENVIRONMENT_REGEX} ] && {
+		[[ ${ENV_NAME} =~ ${REQUIRED_ENVIRONMENT_REGEX} ]] \
+			|| FAIL 5 "group '${SCWRYPT_GROUP}' requires current environment name to match '${REQUIRED_ENVIRONMENT_REGEX}' (currently ${ENV_NAME})"
 	}
 
 
 	##########################################
 
-	[ ! $SUBSCWRYPT ] && export SUBSCWRYPT=0
+	[ ! ${SUBSCWRYPT} ] && export SUBSCWRYPT=0
 
-	[[ $SCWRYPTS_INSTALLATION_TYPE =~ ^manual$ ]] && {
-		[[ $SUBSCWRYPT -eq 0 ]] && [[ $ENV_NAME =~ prod ]] && [[ $SCWRYPTS_LOG_LEVEL -gt 0 ]] && {
-			echo.status "on '$ENV_NAME'; checking diff against origin/main"
+	[[ ${SCWRYPTS_INSTALLATION_TYPE} =~ ^manual$ ]] && {
+		[[ ${SUBSCWRYPT} -eq 0 ]] && [[ ${ENV_NAME} =~ prod ]] && [[ ${SCWRYPTS_LOG_LEVEL} -gt 0 ]] && {
+			echo.status "on '${ENV_NAME}'; checking diff against origin/main"
 
 			local WARNING_MESSAGE
 
-			[ ! $WARNING_MESSAGE ] && {
+			[ ! ${WARNING_MESSAGE} ] && {
 				GIT_SCWRYPTS fetch --quiet origin main \
 					|| WARNING_MESSAGE='I am unable to verify your scwrypts version'
 			}
 
-			[ ! $WARNING_MESSAGE ] && {
+			[ ! ${WARNING_MESSAGE} ] && {
 				GIT_SCWRYPTS diff --exit-code origin/main -- . >/dev/null 2>&1 \
 					|| WARNING_MESSAGE='your scwrypts is currently out-of-date'
 			}
 
-			[ $WARNING_MESSAGE ] && {
-				[[ $SCWRYPTS_LOG_LEVEL -lt 3 ]] && {
-					echo.reminder "you are running in ${__BRIGHT_RED}production${__BRIGHT_MAGENTA} and $WARNING_MESSAGE"
+			[ ${WARNING_MESSAGE} ] && {
+				[[ ${SCWRYPTS_LOG_LEVEL} -lt 3 ]] && {
+					echo.reminder "you are running in $(utils.colors.bright-red)production$(utils.colors.bright-magenta) and ${WARNING_MESSAGE}"
 				} || {
 					GIT_SCWRYPTS diff --exit-code origin/main -- . >&2
-					echo.warning "you are trying to run in ${__BRIGHT_RED}production${__YELLOW} but $WARNING_MESSAGE (relevant diffs and errors above)"
+					echo.warning "you are trying to run in ${__BRIGHT_RED}production${__YELLOW} but ${WARNING_MESSAGE} (relevant diffs and errors above)"
 					yN 'continue?' || {
 						echo.reminder "you can use 'scwrypts --update' to quickly update scwrypts to latest"
 						ABORT
@@ -399,37 +399,37 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 
 	##########################################
 
-	local RUN_STRING=$(SCWRYPTS__GET_RUNSTRING $SCWRYPT_NAME $SCWRYPT_TYPE $SCWRYPT_GROUP)
-	[ "$RUN_STRING" ] || return 42
+	local RUN_STRING=$(SCWRYPTS__GET_RUNSTRING ${SCWRYPT_NAME} ${SCWRYPT_TYPE} ${SCWRYPT_GROUP})
+	[ "${RUN_STRING}" ] || return 42
 
 	#####################################################################
 	### logging and pretty header/footer setup ##########################
 	#####################################################################
 
 	local LOGFILE \
-		&& [[ $SCWRYPTS_LOG_LEVEL -gt 0 ]] \
-		&& [[ $SUBSCWRYPT -eq 0 ]] \
-		&& [[ ! $SCWRYPT_NAME =~ scwrypts/logs ]] \
-		&& [[ ! $SCWRYPT_NAME =~ interactive ]] \
-		&& LOGFILE="$SCWRYPTS_LOG_PATH/$(echo $GROUP/$TYPE/$NAME | sed 's/^\.\///; s/\//\%/g').log" \
+		&& [[ ${SCWRYPTS_LOG_LEVEL} -gt 0 ]] \
+		&& [[ ${SUBSCWRYPT} -eq 0 ]] \
+		&& [[ ! ${SCWRYPT_NAME} =~ scwrypts/logs ]] \
+		&& [[ ! ${SCWRYPT_NAME} =~ interactive ]] \
+		&& LOGFILE="${SCWRYPTS_LOG_PATH}/$(echo ${GROUP}/${TYPE}/${NAME} | sed 's/^\.\///; s/\//\%/g').log" \
 		|| LOGFILE='/dev/null' \
 		;
 
 	local RUN_MODE=normal
-	[[ $LOGFILE      =~ ^/dev/null$ ]] && RUN_MODE=no-logfile
-	[[ $SCWRYPT_NAME =~ interactive ]] && RUN_MODE=interactive
+	[[ ${LOGFILE}      =~ ^/dev/null$ ]] && RUN_MODE=no-logfile
+	[[ ${SCWRYPT_NAME} =~ interactive ]] && RUN_MODE=interactive
 
 	local HEADER FOOTER
-	[[ $SCWRYPTS_LOG_LEVEL -ge 2 ]] && {
-		case $SCWRYPTS_OUTPUT_FORMAT in
+	[[ ${SCWRYPTS_LOG_LEVEL} -ge 2 ]] && {
+		case ${SCWRYPTS_OUTPUT_FORMAT} in
 			pretty )
 				HEADER=$(
 					echo "
 						=====================================================================
-						scwrypt   : $SCWRYPT_GROUP $SCWRYPT_TYPE $SCWRYPT_NAME
+						scwrypt   : ${SCWRYPT_GROUP} ${SCWRYPT_TYPE} ${SCWRYPT_NAME}
 						run at    : $(date)
-						config    : $ENV_NAME
-						log level : $SCWRYPTS_LOG_LEVEL
+						config    : ${ENV_NAME}
+						log level : ${SCWRYPTS_LOG_LEVEL}
 						\\033[1;33m--- SCWRYPT BEGIN ---------------------------------------------------\\033[0m
 					" | sed 's/^\s\+//; 1d'
 				)
@@ -439,21 +439,21 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 			json )
 				HEADER=$(echo '{}' | jq -c ".
 					| .timestamp  = \"$(date +%s)\"
-					| .runtime    = \"$SCWRYPTS_RUNTIME_ID\"
-					| .scwrypt    = \"start of $SCWRYPT_NAME $SCWRYPT_GROUP $SCWRYPT_TYPE\"
-					| .config     = \"$ENV_NAME\"
-					| .logLevel   = \"$SCWRYPTS_LOG_LEVEL\"
-					| .subscwrypt = $SUBSCWRYPT
+					| .runtime    = \"${SCWRYPTS_RUNTIME_ID}\"
+					| .scwrypt    = \"start of ${SCWRYPT_NAME} ${SCWRYPT_GROUP} ${SCWRYPT_TYPE}\"
+					| .config     = \"${ENV_NAME}\"
+					| .logLevel   = \"${SCWRYPTS_LOG_LEVEL}\"
+					| .subscwrypt = ${SUBSCWRYPT}
 					")
 				;;
 		esac
 	}
 
-	[[ $SUBSCWRYPT -eq 0 ]] || {
-		case $SCWRYPTS_OUTPUT_FORMAT in
+	[[ ${SUBSCWRYPT} -eq 0 ]] || {
+		case ${SCWRYPTS_OUTPUT_FORMAT} in
 			pretty )
-				HEADER="\\033[0;33m--- ($SUBSCWRYPT) BEGIN $SCWRYPT_GROUP $SCWRYPT_TYPE $SCWRYPT_NAME ---"
-				FOOTER="\\033[0;33m--- ($SUBSCWRYPT) END   $SCWRYPT_GROUP $SCWRYPT_TYPE $SCWRYPT_NAME ---"
+				HEADER="\\033[0;33m--- (${SUBSCWRYPT}) BEGIN ${SCWRYPT_GROUP} ${SCWRYPT_TYPE} ${SCWRYPT_NAME} ---"
+				FOOTER="\\033[0;33m--- (${SUBSCWRYPT}) END   ${SCWRYPT_GROUP} ${SCWRYPT_TYPE} ${SCWRYPT_NAME} ---"
 				;;
 		esac
 	}
@@ -464,36 +464,36 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 
 	set -o pipefail
 	{
-		[ $HEADER ] && echo $HEADER
-		case $RUN_MODE in
+		[ ${HEADER} ] && echo ${HEADER}
+		case ${RUN_MODE} in
 			normal )
-				(eval "$RUN_STRING $(printf "%q " "$@")")
+				(eval "${RUN_STRING} $(printf "%q " "$@")")
 				EXIT_CODE=$?
 				;;
 			no-logfile )
-				eval "$RUN_STRING $(printf "%q " "$@")"
+				eval "${RUN_STRING} $(printf "%q " "$@")"
 				EXIT_CODE=$?
 				;;
 			interactive )
-				eval "$RUN_STRING $(printf "%q " "$@")" </dev/tty >/dev/tty 2>&1
+				eval "${RUN_STRING} $(printf "%q " "$@")" </dev/tty >/dev/tty 2>&1
 				EXIT_CODE=$?
 				;;
 		esac
-		[ $FOOTER ] && echo $FOOTER
-		[[ $EXIT_CODE -eq 0 ]] && EXIT_COLOR='32m' || EXIT_COLOR='31m'
+		[ ${FOOTER} ] && echo ${FOOTER}
+		[[ ${EXIT_CODE} -eq 0 ]] && EXIT_COLOR='32m' || EXIT_COLOR='31m'
 
-		[[ $SCWRYPTS_LOG_LEVEL -ge 2 ]] && [ ! $SUBSCWRYPT ] \
-			&& echo "terminated with\\033[1;$EXIT_COLOR code $EXIT_CODE\\033[0m"
+		[[ ${SCWRYPTS_LOG_LEVEL} -ge 2 ]] && [ ! ${SUBSCWRYPT} ] \
+			&& echo "terminated with\\033[1;${EXIT_COLOR} code ${EXIT_CODE}\\033[0m"
 
-		return $EXIT_CODE
-	} | tee --append "$LOGFILE"
+		return ${EXIT_CODE}
+	} | tee --append "${LOGFILE}"
 } $@
 
 EXIT_CODE=$?
 
-[ "$SCWRYPTS_TEMP_PATH" ] && [ -d "$SCWRYPTS_TEMP_PATH" ] \
+[ "${SCWRYPTS_TEMP_PATH}" ] && [ -d "${SCWRYPTS_TEMP_PATH}" ] \
 	&& {
-		rm -- $(find "$SCWRYPTS_TEMP_PATH" -mindepth 1 -maxdepth 1 -type f)
-		rmdir "$SCWRYPTS_TEMP_PATH"
+		rm -- $(find "${SCWRYPTS_TEMP_PATH}" -mindepth 1 -maxdepth 1 -type f)
+		rmdir "${SCWRYPTS_TEMP_PATH}"
 	}	&>/dev/null
-return $EXIT_CODE
+return ${EXIT_CODE}

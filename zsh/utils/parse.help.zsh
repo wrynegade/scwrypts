@@ -3,7 +3,7 @@
 # by emitting EARLY_ESCAPE_CODE=-1
 #
 
-ZSHPARSERS.HELP() {
+zsh.parse.help() {
 	local PARSED=0
 
 	case $1 in
@@ -13,7 +13,7 @@ ZSHPARSERS.HELP() {
 			EARLY_ESCAPE_CODE=-1
 
 			# setting 'EARLY_ESCAPE_CODE=' will stop ALL argument parsing, forcing
-			# ZSHPARSEARGS to immediately return the value $EARLY_ESCAPE_CODE
+			# ZSHPARSEARGS to immediately return the value ${EARLY_ESCAPE_CODE}
 			#
 			# negative EARLY_ESCAPE_CODE values are _not_ processed automatically;
 			# however, this special case, 'EARLY_ESCAPE_CODE=-1' is handled in the
@@ -25,7 +25,7 @@ ZSHPARSERS.HELP() {
 	# return value breaks the conventional "0" = success and "non-0" = failure
 	# in "parser" functions, the return value must declare _how many arguments were
 	# parsed_ rather than success/failure status
-	return $PARSED
+	return ${PARSED}
 }
 
 
@@ -39,12 +39,12 @@ ZSHPARSERS.HELP() {
 #
 # when the '.safety()' function does not exist, the parser is used
 #
-ZSHPARSERS.HELP.safety() {
+zsh.parse.help.safety() {
 	# skip this parser with NO_DEFAULT_HELP=true
-	[[ $NO_DEFAULT_HELP =~ true ]] && return 1
+	[[ ${NO_DEFAULT_HELP} =~ true ]] && return 1
 
 	# skip this parser if no usage value + function are defined
-	[ "$USAGE" ] && command -v USAGE &>/dev/null || return 1
+	[ "${USAGE}" ] && command -v utils.io.usage &>/dev/null || return 1
 }
 
 
@@ -53,7 +53,7 @@ ZSHPARSERS.HELP.safety() {
 # updates 'USAGE__*' values. Usage functions are run _after_ safety functions,
 # and are ignored if the safety function causes the parser to be skipped.
 #
-ZSHPARSERS.HELP.usage() {
+zsh.parse.help.usage() {
 	#
 	# PARSER.usage functions can be declared to automatically inject the
 	# proper usage values when the parser is used.
@@ -76,7 +76,7 @@ ZSHPARSERS.HELP.usage() {
 # Note that the return value of this function _is ignored_. You must use the 'ERROR()'
 # function to emit errors up to ZSHPARSEARGS
 #
-# The ZSHPARSERS.HELP parser does not require any validate function, so consider
+# The zsh.parse.help parser does not require any validate function, so consider
 # the following example:
 #
 # ------------------------------------------
@@ -92,11 +92,11 @@ ZSHPARSERS.HELP.usage() {
 #			;;
 #	esac
 #
-#	return $PARSED
+#	return ${PARSED}
 # }
 #
 # MY_PARSER.validate() {
-#	[ "$REQUIRED_OPTION" ] \
+#	[ "${REQUIRED_OPTION}" ] \
 #		|| echo.error "missing required option '--my-required-option'"
 # }
 #

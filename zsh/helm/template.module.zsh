@@ -33,7 +33,7 @@ HELM__TEMPLATE__GET() {
 			-t | --template-filename ) TEMPLATE_FILENAME="$(SCWRYPTS__GET_REALPATH "$2")"; shift 1 ;;
 
 			--colorize )
-				DEPENDENCIES=(bat) CHECK_ENVIRONMENT || return 1
+				utils.dependencies.check bat || return 1
 				COLORIZE=1
 				;;
 
@@ -51,7 +51,7 @@ HELM__TEMPLATE__GET() {
 	while [[ $# -gt 0 ]]; do HELM_ARGS+=($1); shift 1; done
 
 	HELM__VALIDATE
-	CHECK_ERRORS || return 1
+	utils.check-errors || return 1
 
 	##########################################
 

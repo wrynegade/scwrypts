@@ -26,7 +26,7 @@ DELETE_VIRTUALENV() {
 	[ "$GROUP" ] || echo.error 'missing group argument'
 	[ "$TYPE"  ] || echo.error 'missing type argument'
 
-	CHECK_ERRORS --no-fail || return $?
+	utils.check-errors --no-fail || return $?
 
 	##########################################
 

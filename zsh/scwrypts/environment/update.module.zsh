@@ -39,7 +39,7 @@ SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG() {
 	do
 		_S=1
 		case $1 in
-			-h | --help ) USAGE; return 0 ;;
+			-h | --help ) utils.io.usage; return 0 ;;
 
 			--environment-name )
 				[ $2 ] && ((_S+=1)) || echo.error "missing environment name" || break
@@ -79,7 +79,7 @@ SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG() {
 			;;
 	esac
 
-	CHECK_ERRORS --no-fail || return $?
+	utils.check-errors --no-fail || return $?
 
 	local TEMP_CONFIG_FILE="$SCWRYPTS_TEMP_PATH/environment.temp.yaml"
 
@@ -104,7 +104,7 @@ _SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__basic() {
 		--environment-name $ENVIRONMENT_NAME \
 		> "$TEMP_CONFIG_FILE"
 
-	EDIT "$TEMP_CONFIG_FILE"
+	utils.io.edit "$TEMP_CONFIG_FILE"
 
 	_SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIGS "$(cat "$TEMP_CONFIG_FILE")" "$ENVIRONMENT_NAME"
 }
@@ -113,7 +113,7 @@ _SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__quiet() {
 	echo "---  # $ENVIRONMENT_NAME" > "$TEMP_CONFIG_FILE"
 	SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT \
 			--environment-name $ENVIRONMENT_NAME \
-		| YQ '.
+		| utils.yq '.
 			| del(.. | select(has(".ENVIRONMENT")).".ENVIRONMENT")
 			| del(.. | select(has(".GROUP")).".GROUP")
 			| del(.. | select(has(".DESCRIPTION")).".DESCRIPTION")
@@ -123,7 +123,7 @@ _SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__quiet() {
 			' \
 		>> "$TEMP_CONFIG_FILE"
 
-	EDIT "$TEMP_CONFIG_FILE"
+	utils.io.edit "$TEMP_CONFIG_FILE"
 
 	_SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIGS "$(cat "$TEMP_CONFIG_FILE")" "$ENVIRONMENT_NAME"
 }
@@ -227,7 +227,7 @@ _SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIGS() {
 	for GROUP in ${SCWRYPTS_GROUPS[@]}
 	do
 		local GROUP_CONFIG="$(echo "$NEW_CONFIGURATION" \
-			| YQ ".
+			| utils.yq ".
 					| del(.. | select(has(\".PARENTVALUE\") and has(\"value\") and .\".PARENTVALUE\" == .value))
 					| del(.. | select(has(\".PARENTSELECTION\") and has(\"selection\") and .\".PARENTSELECTION\" == .selection))
 					| del(.. | select(has(\".GROUP\") and .\".GROUP\" != \"$GROUP\"))
@@ -239,7 +239,7 @@ _SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIGS() {
 
 		while echo "$GROUP_CONFIG" | grep -q '{}'
 		do
-			GROUP_CONFIG="$(echo "$GROUP_CONFIG" | YQ 'del(.. | select(tag == "!!map" and length == 0))')"
+			GROUP_CONFIG="$(echo "$GROUP_CONFIG" | utils.yq 'del(.. | select(tag == "!!map" and length == 0))')"
 		done
 
 		[ "$GROUP_CONFIG" ] || GROUP_CONFIG='# no configuration set'

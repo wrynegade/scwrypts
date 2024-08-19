@@ -29,5 +29,5 @@ MAIN() {
 
 	echo.status "discovered dependencies: ($DEPENDENCIES)"
 	echo $DEPENDENCIES | sed 's/ /\n/g'
-	CHECK_ENVIRONMENT && echo.success "all dependencies satisfied"
+	utils.check-environment && echo.success "all dependencies satisfied"
 }

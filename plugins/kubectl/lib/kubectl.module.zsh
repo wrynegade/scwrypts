@@ -96,7 +96,7 @@ KUBECTL__SERVE() {
 	[ $NAMESPACE ] || local NAMESPACE=$(KUBECTL__GET_NAMESPACE)
 	[ $NAMESPACE ] || echo.error 'must configure a namespace in which to serve'
 
-	CHECK_ERRORS --no-fail --no-usage || return 1
+	utils.check-errors --no-fail --no-usage || return 1
 
 	[ $SERVICE ] && SERVICE=$(KUBECTL__LIST_SERVICES | jq -c "select (.service == \"$SERVICE\")" || echo $SERVICE)
 	[ $SERVICE ] || local SERVICE=$(KUBECTL__SELECT_SERVICE)
@@ -105,7 +105,7 @@ KUBECTL__SERVE() {
 	KUBECTL__LIST_SERVICES | grep -q "^$SERVICE$"\
 		|| echo.error "no service '$SERVICE' in '$CONFIG/$NAMESPACE'"
 
-	CHECK_ERRORS --no-fail --no-usage || return 1
+	utils.check-errors --no-fail --no-usage || return 1
 
 	##########################################
 

@@ -22,8 +22,6 @@ MAIN() {
 		case $1 in
 			--subsession ) SUBSESSION=$2; shift 1 ;;
 
-			-h | --help ) USAGE; return 0 ;;
-
 			* )
 				[ $CONTEXT ] && echo.error "unexpected argument '$2'"
 				CONTEXT=$1
@@ -35,7 +33,7 @@ MAIN() {
 	[ $CONTEXT ] || CONTEXT=$(KUBECTL__SELECT_CONTEXT)
 	[ $CONTEXT ] || echo.error 'must provide or select a valid kube context'
 
-	CHECK_ERRORS
+	utils.check-errors
 
 	KUBECTL__SET_CONTEXT $CONTEXT
 }

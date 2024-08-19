@@ -5,7 +5,7 @@ use cloud/aws/eksctl/create-iamserviceaccount.zshparse
 #####################################################################
 
 EKSCTL__CREATE_IAMSERVICEACCOUNT() {
-	eval "$(USAGE.reset)"
+	eval "$(usage.reset)"
 	local USAGE__description="
 		Safe context wrapper for eksctl commands; prevents accidental local environment
 		bleed-through, but otherwise works exactly like 'eksctl'.
@@ -20,7 +20,10 @@ EKSCTL__CREATE_IAMSERVICEACCOUNT() {
 		$(eksctl create iamserviceaccount --help 2>&1 | grep -v -- '--name' | grep -v -- '--namespace' | grep -v -- '--role-name' | sed 's/^/  /')
 	"
 
-	REQUIRED_ENV=(AWS_REGION AWS_ACCOUNT) CHECK_ENVIRONMENT || return 1
+	: \
+		&& utils.environment.check AWS_REGION \
+		&& utils.environment.check AWS_ACCOUNT \
+		|| return 1
 
 	local \
 		SERVICEACCOUNT NAMESPACE ROLE_NAME ARGS=() FORCE=false \
@@ -65,7 +68,7 @@ _EKS__CHECK_IAMSERVICEACCOUNT_EXISTS() {
 	echo.status "checking for existing role-arn"
 	local CURRENT_ROLE_ARN=$(
 		EKS__KUBECTL --namespace $NAMESPACE get serviceaccount $SERVICEACCOUNT -o yaml \
-			| YQ -r '.metadata.annotations["eks.amazonaws.com/role-arn"]' \
+			| utils.yq -r '.metadata.annotations["eks.amazonaws.com/role-arn"]' \
 			| grep -v '^null$' \
 	)
 

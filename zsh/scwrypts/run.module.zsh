@@ -25,7 +25,7 @@ SCWRYPTS__GET_AVAILABLE_SCWRYPTS() {
 
 		{
 		${LOOKUP} \
-			| sed "s|\\([^/]*\\)/\(.*\)$|$(printf ${__COLOR_RESET})\\2^$(printf ${TYPE_COLOR})\\1^$(printf ${GROUP_COLOR})${GROUP}$(printf ${__COLOR_RESET})|" \
+			| sed "s|\\([^/]*\\)/\(.*\)$|$(utils.colors.reset)\\2^$(printf ${TYPE_COLOR})\\1^$(printf ${GROUP_COLOR})${GROUP}$(utils.colors.reset)|" \
 		} &
 		LOOKUP_PIDS+=($!)
 	done
@@ -109,7 +109,7 @@ SCWRYPTS__GET_RUNSTRING() {
 }
 
 SCWRYPTS__GET_RUNSTRING__zsh() {
-	__CHECK_DEPENDENCY zsh || return 1
+	utils.dependencies.check zsh || return 1
 
 	local SCWRYPT_FILENAME
 
@@ -141,7 +141,7 @@ SCWRYPTS__GET_RUNSTRING__zsh__generic() {
 	}
 	printf "
 		source '${SCWRYPT_FILENAME}'
-		CHECK_ENVIRONMENT
+		utils.check-environment
 		ERRORS=0
 
 		export USAGE=\"
@@ -167,7 +167,7 @@ SCWRYPTS__GET_RUNSTRING__zsh__generic() {
 						VARSPLIT=\$(echo \"\$1 \" | sed 's/^\\\\(-.\\\\)\\\\(.*\\\\) /\\\\1 -\\\\2/')
 						set -- throw-away \$(echo \" \$VARSPLIT \") \${@:2}
 						;;
-					-h | --help    ) USAGE; exit 0 ;;
+					-h | --help    ) utils.io.usage; exit 0 ;;
 					* ) MAIN_ARGS+=(\$1) ;;
 				esac
 				shift 1
@@ -177,7 +177,7 @@ SCWRYPTS__GET_RUNSTRING__zsh__generic() {
 }
 
 SCWRYPTS__GET_RUNSTRING__py() {
-	__CHECK_DEPENDENCY python || return 1
+	utils.dependencies.check python || return 1
 	CURRENT_PYTHON_VERSION=$(python --version | sed 's/^[^0-9]*\(3\.[^.]*\).*$/\1/')
 	echo ${SCWRYPTS_PREFERRED_PYTHON_VERSIONS__scwrypts} | grep -q ${CURRENT_PYTHON_VERSION} || {
 		echo.warning "only tested on the following python versions: $(printf ', %s.x' ${SCWRYPTS_PREFERRED_PYTHON_VERSIONS__scwrypts[@]} | sed 's/^, //')"
@@ -188,7 +188,7 @@ SCWRYPTS__GET_RUNSTRING__py() {
 }
 
 SCWRYPTS__GET_RUNSTRING__zx() {
-	__CHECK_DEPENDENCY zx || return 1
+	utils.dependencies.check zx || return 1
 
 	echo "export FORCE_COLOR=3; cd ${GROUP_ROOT}; ./${SCWRYPT_TYPE}/${SCWRYPT_NAME}.js"
 }

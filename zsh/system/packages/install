@@ -36,7 +36,7 @@ MAIN() {
 			-p | --only-pull  ) SKIP_BUILD=1 ;;
 			-c | --clean      ) CLEAN=1 ;;
 
-			-h | --help ) USAGE; exit 0 ;;
+			-h | --help ) utils.io.usage; exit 0 ;;
 
 			-* ) echo.error "unknown argument '$1'" ;;
 
@@ -60,7 +60,7 @@ MAIN() {
 		}
 	}
 
-	CHECK_ERRORS
+	utils.check-errors
 
 	####################################################
 

@@ -4,6 +4,5 @@ use scwrypts
 #####################################################################
 
 MAIN() {
-	unset USAGE
 	HELM__TEMPLATE__GET $@
 }

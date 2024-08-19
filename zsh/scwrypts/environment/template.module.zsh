@@ -7,7 +7,7 @@ use scwrypts/cache-output
 #####################################################################
 
 SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE() {
-	eval "$(USAGE.reset)"
+	eval "$(usage.reset)"
 	local USAGE__description="
 		Provies the combined YAML of all available scwrypts group 'template.yaml' files.
 
@@ -31,7 +31,7 @@ SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE() {
 }
 
 SCWRYPTS_ENVIRONMENT__GET_ENVVAR_LOOKUP_MAP() {
-	eval "$(USAGE.reset)"
+	eval "$(usage.reset)"
 	local USAGE__description="
 		outputs a JSON map which can be used to lookup config-file query
 		paths from environment variable names; GET_FULL_TEMPLATE flags OK
@@ -48,7 +48,7 @@ SCWRYPTS_ENVIRONMENT__GET_ENVVAR_LOOKUP_MAP() {
 	eval "$ZSHPARSEARGS"
 	##########################################
 	SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE $@ \
-		| YQ -P '
+		| utils.yq -P '
 			..
 				| select(. == "*") 
 				| {(.): "." + (path | join(".") + ".value")}
@@ -71,7 +71,7 @@ _SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE() {
 		[ -f "$GROUP_TEMPLATE_FILENAME" ] && {
 			[[ $(head -n1 "$GROUP_TEMPLATE_FILENAME") =~ ^---$ ]] || echo ---
 				cat "$GROUP_TEMPLATE_FILENAME" \
-					| YQ "(.. | select(has(\".ENVIRONMENT\"))) += {\".GROUP\":\"$GROUP\"}"
+					| utils.yq "(.. | select(has(\".ENVIRONMENT\"))) += {\".GROUP\":\"$GROUP\"}"
 		}
 	done
 	} | _SCWRYPTS_ENVIRONMENT__COMBINE_TEMPLATE_FILES

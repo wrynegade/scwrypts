@@ -14,7 +14,8 @@
 #   -r, --library-root   fully qualified path to a library root     #
 #                                                                   #
 #   --check-environment  check environment immediately rather than  #
-#                        wait for downstream CHECK_ENVIRONMENT call #
+#                        wait for downstream call to                #
+#                                          utils.check-environment  #
 #                                                                   #
 #                                                                   #
 # Allows for import-style library loading in zsh. No matter what    #
@@ -103,7 +104,7 @@ use() {
 
 	#####################################################################
 
-	CHECK_ERRORS --no-fail || {
+	utils.check-errors --no-fail || {
 		((IMPORT_ERRORS+=1))
 		return 1
 	}
@@ -123,7 +124,7 @@ use() {
 	}
 
 	[[ ${DEFER_ENVIRONMENT_CHECK} =~ false ]] && {
-		CHECK_ENVIRONMENT || {
+		utils.check-environment || {
 			((IMPORT_ERRORS+=1))
 			echo.error "import error for '${SCWRYPTS_LIBRARY_GROUP}/${SCWRYPTS_LIBRARY}'"
 			return 1
@@ -175,8 +176,8 @@ IS_LOADED() {
 #####################################################################
 
 # temporary definitions for first load
-CHECK_ERRORS()      { return 0; unset -f CHECK_ERRORS; }
-CHECK_ENVIRONMENT() { return 0; unset -f CHECK_ENVIRONMENT; }
+utils.check-errors()      { return 0; unset -f utils.check-errors; }
+utils.check-environment() { return 0; unset -f utils.check-environment; }
 ERROR()             { echo $@ >&2; exit 1; }
 
 #####################################################################

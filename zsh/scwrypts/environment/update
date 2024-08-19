@@ -65,7 +65,7 @@ MAIN() {
 		shift $_S
 	done
 
-	CHECK_ERRORS
+	utils.check-errors
 
 	case $MODE in
 		edit )
@@ -140,7 +140,7 @@ MAIN() {
 			;;
 	esac
 
-	CHECK_ERRORS --no-usage
+	utils.check-errors --no-usage
 
 	##########################################
 

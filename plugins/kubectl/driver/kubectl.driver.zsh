@@ -134,9 +134,9 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 	while [[ $# -gt 0 ]]; do USER_ARGS+=($1); shift 1; done
 
 
-	CHECK_ERRORS --no-fail || return 1
+	utils.check-errors --no-fail || return 1
 
-	[[ $HELP -eq 1 ]] && { USAGE; return 0; }
+	[[ $HELP -eq 1 ]] && { utils.io.usage; return 0; }
 
 	#####################################################################
 
@@ -157,7 +157,7 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 				[ $CONTEXT   ] || echo.error "missing kubectl 'context'"
 				[ $NAMESPACE ] || echo.error "missing kubectl 'namespace'"
 
-				CHECK_ERRORS --no-fail --no-usage || {
+				utils.check-errors --no-fail --no-usage || {
 					echo.error "with 'strict' settings enabled, context and namespace must be set!"
 					echo.reminder "
 						these values can be set directly with

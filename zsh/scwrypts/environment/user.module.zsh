@@ -8,7 +8,7 @@ use scwrypts/cache-output
 #####################################################################
 
 SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
-	eval "$(USAGE.reset)"
+	eval "$(usage.reset)"
 	local USAGE__description="
 		Generates a metadata-enriched environment YAML for the target environment.
 	" \
@@ -32,9 +32,9 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 
 
 SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_SHELL_VALUES() {
-	eval "$(USAGE.reset)"
+	eval "$(usage.reset)"
 	local USAGE__description="
-		used primarily by __CHECK_ENV_VAR in scwrypts environments
+		used primarily by utils.environment.check in scwrypts environments
 
 		returns yaml which contains shell-compatible lookup values
 		  - moving inherited .PARENTVALUE to value (if value is empty)
@@ -61,7 +61,7 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_SHELL_VALUES() {
 }
 
 SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_JSON() {
-	eval "$(USAGE.reset)"
+	eval "$(usage.reset)"
 	local USAGE__description="
 		returns a JSON object containing live environment configurations
 		for the target environment
@@ -137,7 +137,7 @@ _SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 		shift $_S
 	done
 
-	CHECK_ERRORS --no-fail || return $?
+	utils.check-errors --no-fail || return $?
 
 	local ENVIRONMENT_NAME="$1"
 	[ $ENVIRONMENT_NAME ] || ENVIRONMENT_NAME=$SCWRYPTS_ENV
@@ -187,7 +187,7 @@ _SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 					| sed '
 						s/^\(\s\+\)\(value\|selection\):/\1.PARENT\U\2:/
 						' \
-					| YQ '.
+					| utils.yq '.
 						| del(.. | select(has(".PARENTVALUE") and .".PARENTVALUE" == null).".PARENTVALUE")
 						| del(.. | select(has(".PARENTSELECTION") and (.".PARENTSELECTION" | length) == 0).".PARENTSELECTION")
 						| del(.. | select(has(".PARENTSELECTION") and has(".PARENTVALUE")).".PARENTSELECTION")
@@ -206,7 +206,7 @@ _SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 		done
 	} \
 		| _SCWRYPTS_ENVIRONMENT__COMBINE_TEMPLATE_FILES \
-		| YQ -P \
+		| utils.yq -P \
 		| sed -z 's/\n[a-z]/\n&/g' \
 		| sed 's/value: null$/value:/; /\svalue:/G' \
 		;
@@ -214,7 +214,7 @@ _SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 
 _SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE_WITH_VALUE_KEYS() {
 	SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE \
-		| YQ '(.. | select(has(".ENVIRONMENT"))) += {
+		| utils.yq '(.. | select(has(".ENVIRONMENT"))) += {
 				"selection": [],
 				"value": null
 			}
@@ -226,22 +226,22 @@ _SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE_WITH_VALUE_KEYS() {
 
 _SCWRYPTS_ENVIRONMENT__CONVERT_SHELL_VALUES() {
 	SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT $@ \
-		| YQ '..
+		| utils.yq '..
 			|= select(
 				((has ("value") | not) or .value == null) and has (".PARENTVALUE")
 				).value = .".PARENTVALUE"
 			' \
-		| YQ '..
+		| utils.yq '..
 			|= select(
 				((has ("selection") | not) or .selection == null or .selection | length == 0) and has (".PARENTVALUE")
 				).value = .".PARENTVALUE"
 			' \
-		| YQ '..
+		| utils.yq '..
 			|= select(
 				has("value") and .value | type == "!!seq" and .value | length != 0
 				).value = "(" + (.value | join " ") + ")"
 			' \
-		| YQ '.
+		| utils.yq '.
 			| del(.. | select(has(".PARENTVALUE")).".PARENTVALUE")
 			| del(.. | select(has(".ENVIRONMENT")).".ENVIRONMENT")
 			| del(.. | select(has(".GROUP")).".GROUP")
@@ -263,10 +263,10 @@ _SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_JSON() {
 		local ENVIRONMENT_VARIABLE
 		for ENVIRONMENT_VARIABLE in $(\
 			SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE \
-				| YQ '.. | select(has(".ENVIRONMENT")) | .".ENVIRONMENT"' \
+				| utils.yq '.. | select(has(".ENVIRONMENT")) | .".ENVIRONMENT"' \
 			)
 		do
-			echo "$ENVIRONMENT_VARIABLE: $(echo "$SHELL_VALUES" | YQ -r "$(echo "$LOOKUP_MAP" | YQ -r ".$ENVIRONMENT_VARIABLE")")"
+			echo "$ENVIRONMENT_VARIABLE: $(echo "$SHELL_VALUES" | utils.yq -r "$(echo "$LOOKUP_MAP" | utils.yq -r ".$ENVIRONMENT_VARIABLE")")"
 		done
-	} | YQ -oj
+	} | utils.yq -oj
 }

@@ -52,7 +52,7 @@ RDS__GET_DATABASE_CREDENTIALS() {
 		shift 1
 	done
 
-	CHECK_ERRORS
+	utils.check-errors
 
 	##########################################
 

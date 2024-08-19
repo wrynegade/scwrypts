@@ -5,7 +5,7 @@ use cloud/aws/eks
 #####################################################################
 
 EKSCTL() {
-	eval "$(USAGE.reset)"
+	eval "$(usage.reset)"
 	local USAGE__description="
 		Context wrapper for eksctl commands; prevents accidental local environment
 		bleed-through, but otherwise works exactly like 'eksctl'.
