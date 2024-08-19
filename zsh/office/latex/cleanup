@@ -11,5 +11,5 @@ MAIN() {
 	cd $DIRECTORY
 	rm $(ls | grep '\.\(aux\)\|\(log\)\|\(pdf\)\|\(out\)\|\(dvi\)$')
 
-	SUCCESS "cleaned up latex artifacts in '$DIRECTORY'"
+	echo.success "cleaned up latex artifacts in '$DIRECTORY'"
 }

@@ -11,7 +11,7 @@ Doing so will *also* check for path dependencies and required environment variab
 ```shell
 #!/bin/zsh
 source ./path/to/utils.plugin.zsh
-SUCCESS 'ZSH utilities online!'
+echo.success 'ZSH utilities online!'
 ```
 
 Checkout [io](./io.zsh) and [os](./os.zsh) for available simple functions.
@@ -33,7 +33,7 @@ DEPENDENCIES+=(
 	/path/to/arbitrary/program
 )
 source ./path/to/utils.plugin.zsh
-echo "missing $DEP_ERROR required dependencies"
+echo "missing $DEP_echo.error required dependencies"
 ```
 
 ### Environment

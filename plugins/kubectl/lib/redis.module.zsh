@@ -80,7 +80,7 @@ REDIS() {
 
 REDIS ping | grep -qi pong || {
 	RPID=$(docker ps -a | grep scwrypts-kubectl-redis | awk '{print $1;}')
-	[ $RPID ] && STATUS 'refreshing redis instance' && docker rm -f $RPID
+	[ $RPID ] && echo.status 'refreshing redis instance' && docker rm -f $RPID
 	unset RPID
 
 	docker run \
@@ -89,6 +89,6 @@ REDIS ping | grep -qi pong || {
 		--publish $SCWRYPTS_KUBECTL_REDIS_PORT__managed:6379 \
 		redis >/dev/null 2>&1
 
-	STATUS 'awaiting redis connection'
+	echo.status 'awaiting redis connection'
 	until REDIS ping 2>/dev/null | grep -qi pong; do sleep 0.5; done
 }

@@ -9,7 +9,7 @@ MAIN() {
 	GETSUDO || exit 1
 	[ ! -d $AWS__EFS__LOCAL_MOUNT_POINT ] && {
 		sudo mkdir $AWS__EFS__LOCAL_MOUNT_POINT \
-			&& STATUS "created local mount point '$AWS__EFS__LOCAL_MOUNT_POINT'"
+			&& echo.status "created local mount point '$AWS__EFS__LOCAL_MOUNT_POINT'"
 	}
 
 	local FS_ID=$(\
@@ -22,7 +22,7 @@ MAIN() {
 	local MOUNT_POINT="$AWS__EFS__LOCAL_MOUNT_POINT/$FS_ID"
 	[ -d "$MOUNT_POINT" ] && sudo rmdir "$MOUNT_POINT" >/dev/null 2>&1
 	[ -d "$MOUNT_POINT" ] && {
-		STATUS "$FS_ID is already mounted"
+		echo.status "$FS_ID is already mounted"
 		exit 0
 	}
 
@@ -40,13 +40,13 @@ MAIN() {
 		| head -n1 \
 	)
 
-	SUCCESS 'ready to mount!'
-	REMINDER 'for private file-systems, you must be connected to the appropriate VPN'
+	echo.success 'ready to mount!'
+	echo.reminder 'for private file-systems, you must be connected to the appropriate VPN'
 
-	STATUS "file system id    : $FS_ID"
-	STATUS "availability zone : $ZONE"
-	STATUS "file system ip    : $MOUNT_IP"
-	STATUS "local mount point : $MOUNT_POINT"
+	echo.status "file system id    : $FS_ID"
+	echo.status "availability zone : $ZONE"
+	echo.status "file system ip    : $MOUNT_IP"
+	echo.status "local mount point : $MOUNT_POINT"
 
 	Yn 'proceed?' || ABORT
 
@@ -56,7 +56,7 @@ MAIN() {
 			-o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport \
 			$MOUNT_IP:/ \
 			"$MOUNT_POINT" \
-		&& SUCCESS "mounted at '$MOUNT_POINT'" \
+		&& echo.success "mounted at '$MOUNT_POINT'" \
 		|| {
 		sudo rmdir $MOUNT_POINT >/dev/null 2>&1
 		FAIL 2 "unable to mount '$FS_ID'"

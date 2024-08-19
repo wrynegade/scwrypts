@@ -40,13 +40,13 @@ use() {
 	do
 		case $1 in
 			-g | --group )
-				[ "${SCWRYPTS_LIBRARY_ROOT}" ] && ERROR 'specify only one of {(-g), (-r)}'
+				[ "${SCWRYPTS_LIBRARY_ROOT}" ] && echo.error 'specify only one of {(-g), (-r)}'
 				SCWRYPTS_LIBRARY_GROUP=$2
 				shift 1
 				;;
 
 			-r | --library-root )
-				[ "${SCWRYPTS_LIBRARY_GROUP}" ] && ERROR 'specify only one of {(-g), (-r)}'
+				[ "${SCWRYPTS_LIBRARY_GROUP}" ] && echo.error 'specify only one of {(-g), (-r)}'
 				SCWRYPTS_LIBRARY_ROOT=$2
 				shift 1
 				;;
@@ -58,14 +58,14 @@ use() {
 			* )
 				[ ! "${SCWRYPTS_LIBRARY}" ] \
 					&& SCWRYPTS_LIBRARY=$1 \
-					|| ERROR 'too many arguments; expected exactly 1 argument' \
+					|| echo.error 'too many arguments; expected exactly 1 argument' \
 
 				;;
 		esac
 		shift 1
 	done
 
-	[ ! "${SCWRYPTS_LIBRARY}" ] && ERROR 'no library specified for import'
+	[ ! "${SCWRYPTS_LIBRARY}" ] && echo.error 'no library specified for import'
 
 	: \
 		&& [ ! "${SCWRYPTS_LIBRARY_GROUP}" ] \
@@ -73,7 +73,7 @@ use() {
 		&& SCWRYPTS_LIBRARY_GROUP=scwrypts
 
 	[ ! "${SCWRYPTS_LIBRARY_ROOT}" ] && SCWRYPTS_LIBRARY_ROOT="$(GET_SCWRYPTS_LIBRARY_ROOT)"
-	[ ! "${SCWRYPTS_LIBRARY_ROOT}" ] && ERROR "unable to determine library root from group name '${SCWRYPTS_LIBRARY_GROUP}'"
+	[ ! "${SCWRYPTS_LIBRARY_ROOT}" ] && echo.error "unable to determine library root from group name '${SCWRYPTS_LIBRARY_GROUP}'"
 
 	#####################################################################
 
@@ -91,7 +91,7 @@ use() {
 	done
 
 	[ "${LIBRARY_FILE}" ] \
-		|| ERROR "no such library '${SCWRYPTS_LIBRARY_GROUP}/${SCWRYPTS_LIBRARY}'"
+		|| echo.error "no such library '${SCWRYPTS_LIBRARY_GROUP}/${SCWRYPTS_LIBRARY}'"
 
 	#####################################################################
 
@@ -117,7 +117,7 @@ use() {
 
 	source "${LIBRARY_FILE}" || {
 		((IMPORT_ERRORS+=1))
-		ERROR "import error for '${SCWRYPTS_LIBRARY_GROUP}/${SCWRYPTS_LIBRARY}'"
+		echo.error "import error for '${SCWRYPTS_LIBRARY_GROUP}/${SCWRYPTS_LIBRARY}'"
 		export scwryptsmodule=${SCWRYPTS_MODULE_BEFORE}
 		return 1
 	}
@@ -125,7 +125,7 @@ use() {
 	[[ ${DEFER_ENVIRONMENT_CHECK} =~ false ]] && {
 		CHECK_ENVIRONMENT || {
 			((IMPORT_ERRORS+=1))
-			ERROR "import error for '${SCWRYPTS_LIBRARY_GROUP}/${SCWRYPTS_LIBRARY}'"
+			echo.error "import error for '${SCWRYPTS_LIBRARY_GROUP}/${SCWRYPTS_LIBRARY}'"
 			return 1
 		}
 	}
@@ -158,7 +158,7 @@ GET_SCWRYPTS_LIBRARY_ROOT() {
 	[ -d "${ROOT}" ] || ROOT="$(dirname -- "${ROOT}")"
 
 	[ "${ROOT}" ] && [ -d "${ROOT}" ] \
-		|| ERROR "unable to determine library root" \
+		|| echo.error "unable to determine library root" \
 		|| return 1
 
 	echo "${ROOT}"

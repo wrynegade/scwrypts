@@ -45,22 +45,22 @@ MAIN() {
 				;;
 
 			-m | --mode )
-				[ $2 ] && ((_S+=1)) || ERROR "missing mode name" || break
+				[ $2 ] && ((_S+=1)) || echo.error "missing mode name" || break
 				case $2 in
 					edit | copy | delete | recursive | advanced )
 						MODE="$2"
 						;;
-					* ) ERROR "invalid mode '$MODE'" ;;
+					* ) echo.error "invalid mode '$MODE'" ;;
 				esac
 				;;
 
 			-n | --name )
-				[ $2 ] && ((_S+=1)) || ERROR "missing environment name" || break
+				[ $2 ] && ((_S+=1)) || echo.error "missing environment name" || break
 				ENVIRONMENT_NAME="$2"
 				;;
 
 			-- ) shift 1; ADVANCED_ARGS=($@); break ;;
-			 * ) ERROR "unknown argument '$1'" ;;
+			 * ) echo.error "unknown argument '$1'" ;;
 		esac
 		shift $_S
 	done
@@ -96,7 +96,7 @@ MAIN() {
 			case $ENVIRONMENT_EXISTS in
 				true ) ;;
 				false )
-					WARNING "environment $ENVIRONMENT_NAME does not exist"
+					echo.warning "environment $ENVIRONMENT_NAME does not exist"
 					Yn "create new environment '$ENVIRONMENT_NAME'?" || ABORT
 					;;
 			esac
@@ -106,7 +106,7 @@ MAIN() {
 			ARGS+=(--create-from-existing "$SOURCE_ENVIRONMENT")
 			case $ENVIRONMENT_EXISTS in
 				true )
-					ERROR "target environment '$ENVIRONMENT_NAME' already exists; refusing to copy"
+					echo.error "target environment '$ENVIRONMENT_NAME' already exists; refusing to copy"
 					;;
 				false ) ;;
 			esac
@@ -116,11 +116,11 @@ MAIN() {
 			ARGS+=(--mode delete)
 			case $ENVIRONMENT_EXISTS in
 				true )
-					REMINDER 'deleting an environment is PERMANENT\nmake sure your credentials are backed up!'
+					echo.reminder 'deleting an environment is PERMANENT\nmake sure your credentials are backed up!'
 					yN "are you sure you want to delete '$ENVIRONMENT_NAME'?" || ABORT
 					;;
 				false )
-					ERROR "environment '$ENVIRONMENT_NAME' does not exist (can't delete it if it's not there)"
+					echo.error "environment '$ENVIRONMENT_NAME' does not exist (can't delete it if it's not there)"
 					;;
 			esac
 			;;
@@ -130,13 +130,13 @@ MAIN() {
 			case $ENVIRONMENT_EXISTS in
 				true ) ;;
 				false )
-					ERROR "environment '$ENVIRONMENT_NAME' does not exist; please create it before attempting recursive edit"
+					echo.error "environment '$ENVIRONMENT_NAME' does not exist; please create it before attempting recursive edit"
 					;;
 			esac
 			;;
 
 		advanced )
-			WARNING "operating in advanced mode; I hope you know what you are doing!"
+			echo.warning "operating in advanced mode; I hope you know what you are doing!"
 			;;
 	esac
 

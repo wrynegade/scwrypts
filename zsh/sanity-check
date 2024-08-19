@@ -19,7 +19,7 @@ MAIN() {
 	local EXIT_CODE=0
 	local MESSAGE='Hello, world!'
 
-	ARGUMENT_REQUIRED() { ERROR "'$1' requires an argument"; }
+	ARGUMENT_REQUIRED() { echo.error "'$1' requires an argument"; }
 
 	while [[ $# -gt 0 ]]
 	do
@@ -36,7 +36,7 @@ MAIN() {
 				MESSAGE="$2"
 				[ $2 ] && shift 1 || ARGUMENT_REQUIRED
 				;;
-			* ) ERROR "unknown argument '$1'" ;;
+			* ) echo.error "unknown argument '$1'" ;;
 		esac
 		shift 1
 	done

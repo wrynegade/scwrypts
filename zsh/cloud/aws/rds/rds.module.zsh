@@ -45,7 +45,7 @@ RDS__GET_DATABASE_CREDENTIALS() {
 		case $1 in
 			--print-password ) PRINT_PASSWORD=1 ;;
 			* )
-				WARNING "unrecognized argument $1"
+				echo.warning "unrecognized argument $1"
 				ERRORS+=1
 				;;
 		esac
@@ -60,7 +60,7 @@ RDS__GET_DATABASE_CREDENTIALS() {
 	[ ! $DATABASE ] && ABORT
 
 	DB_HOST="$(echo $DATABASE | jq -r '.host')"
-	[ ! $DB_HOST ] && { ERROR 'unable to find host'; return 2; }
+	[ ! $DB_HOST ] && { echo.error 'unable to find host'; return 2; }
 
 	DB_PORT="$(echo $DATABASE | jq -r '.port')"
 	[ ! $DB_PORT ] && DB_PORT=5432
@@ -80,7 +80,7 @@ RDS__GET_DATABASE_CREDENTIALS() {
 		user-input     ) _RDS_AUTH__userinput ;;
 	esac
 
-	[[ $PRINT_PASSWORD -eq 1 ]] && DEBUG "password : $DB_PASS"
+	[[ $PRINT_PASSWORD -eq 1 ]] && echo.debug "password : $DB_PASS"
 
 	return 0
 }

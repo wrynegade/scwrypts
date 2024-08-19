@@ -3,7 +3,7 @@ use scwrypts/virtualenv/update
 #####################################################################
 
 MAIN() {
-	STATUS 'beginning update for all environments'
+	echo.status 'beginning update for all environments'
 	
 	FAILED_COUNT=0
 	
@@ -16,6 +16,6 @@ MAIN() {
 	done
 	
 	[[ $FAILED_COUNT -eq 0 ]] \
-		&& SUCCESS 'all environments up-to-date' \
+		&& echo.success 'all environments up-to-date' \
 		|| FAIL $FAILED_COUNT "failed to update $FAILED_COUNT more environment(s)"
 }

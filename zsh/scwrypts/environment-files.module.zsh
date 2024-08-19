@@ -26,26 +26,26 @@ SCWRYPTS__GET_ENV_FILES() {
 	echo $FILENAMES | grep -v 'environments/scwrypts/' | sort
 
 	SCWRYPTS__GET_ENV_NAMES | grep -q $NAME \
-		|| { ERROR "no environment '$NAME' exists"; return 1; }
+		|| { echo.error "no environment '$NAME' exists"; return 1; }
 }
 
 SCWRYPTS__GET_ENV_FILE() {
 	local NAME="$1"
 	local GROUP="$2"
 
-	[ ! $GROUP ] && { ERROR 'must provide group'; return 1; }
+	[ ! $GROUP ] && { echo.error 'must provide group'; return 1; }
 
 	echo "$SCWRYPTS_ENV_PATH/$GROUP/$NAME"
 
 	SCWRYPTS__GET_ENV_NAMES | grep -q $NAME \
-		|| { ERROR "no environment '$NAME' exists"; return 1; }
+		|| { echo.error "no environment '$NAME' exists"; return 1; }
 
 	[ -f "$SCWRYPTS_ENV_PATH/$GROUP/$NAME" ] || {
 		mkdir -p "$SCWRYPTS_ENV_PATH/$GROUP"
 		touch "$SCWRYPTS_ENV_PATH/$GROUP/$NAME"
 	}
 	[ -f "$SCWRYPTS_ENV_PATH/$GROUP/$NAME" ] \
-		|| { ERROR "missing environment file for '$GROUP/$NAME'"; return 2; }
+		|| { echo.error "missing environment file for '$GROUP/$NAME'"; return 2; }
 }
 
 SCWRYPTS__GET_ENV_TEMPLATE_FILES() {
@@ -58,7 +58,7 @@ SCWRYPTS__GET_ENV_TEMPLATE_FILES() {
 
 SCWRYPTS__GET_ENV_NAMES() {
 	SCWRYPTS__INIT_ENVIRONMENTS || {
-		ERROR 'environment initialization error'
+		echo.error 'environment initialization error'
 		return 1
 	}
 	[ $REQUIRED_ENVIRONMENT_REGEX ] && {
@@ -72,7 +72,7 @@ SCWRYPTS__INIT_ENVIRONMENTS() {
 	[ ! -d "$SCWRYPTS_ENV_PATH" ] && mkdir -p "$SCWRYPTS_ENV_PATH"
 	[[ $(ls "$SCWRYPTS_ENV_PATH" | wc -l) -gt 0 ]] && return 0
 
-	STATUS "initializing environments for scwrypts"
+	echo.status "initializing environments for scwrypts"
 
 	local BASIC_ENV
 	for BASIC_ENV in local dev prod
@@ -90,7 +90,7 @@ SCWRYPTS__INIT_ENVIRONMENTS() {
 _SED() { sed --follow-symlinks $@; }
 
 GENERATE_TEMPLATE() {
-    [ ! $GROUP ] && { ERROR 'must provide GROUP'; return 1; }
+    [ ! $GROUP ] && { echo.error 'must provide GROUP'; return 1; }
     DIVIDER='#####################################################################'
     HEADER='### scwrypts runtime configuration '
     [[ GROUP =~ ^scwrypts$ ]] || HEADER="${HEADER}(group '$GROUP') "

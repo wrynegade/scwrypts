@@ -12,8 +12,8 @@ MAIN() {
 	for TERMINFO_FILE in $(find $TERMINFO_PATH -type f)
 	do
 		tic -x $TERMINFO_FILE >/dev/null 2>&1 \
-			&& SUCCESS "added '$(basename $TERMINFO_FILE)'" \
-			|| ERROR "failed to add '$(basename $TERMINFO_FILE)'" \
+			&& echo.success "added '$(basename $TERMINFO_FILE)'" \
+			|| echo.error "failed to add '$(basename $TERMINFO_FILE)'" \
 			;
 	done
 

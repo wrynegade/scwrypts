@@ -17,13 +17,13 @@ HELM__VALIDATE() {
 	"
 
 	[ $TEMPLATE_FILENAME ] && [ -f "$TEMPLATE_FILENAME" ] || {
-		ERROR 'must provide a template filename'
+		echo.error 'must provide a template filename'
 		return 1
 	}
 
 	_HELM__GET_CHART_ROOT
 	[ $CHART_ROOT ] && [ -d "$CHART_ROOT" ] || {
-		ERROR 'unable to determine helm root; is this a helm template file?'
+		echo.error 'unable to determine helm root; is this a helm template file?'
 		return 1
 	}
 

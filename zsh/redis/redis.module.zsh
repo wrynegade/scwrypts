@@ -31,7 +31,7 @@ REDIS__SET_LOGIN_ARGS() {
 	done
 
 	[ $_FILE ] && [ ! -f "$_FILE" ] && {
-		ERROR "no such file '$_FILE'"
+		echo.error "no such file '$_FILE'"
 		exit 1
 	}
 

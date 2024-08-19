@@ -38,25 +38,25 @@ MAIN() {
 
 			-h | --help ) USAGE; exit 0 ;;
 
-			-* ) ERROR "unknown argument '$1'" ;;
+			-* ) echo.error "unknown argument '$1'" ;;
 
 			* ) [ ! $TARGET ] && TARGET="$1" \
-					|| ERROR "extra positional argument '$1'" \
+					|| echo.error "extra positional argument '$1'" \
 					;
 				;;
 		esac
 		shift 1
 	done
 
-	[[ $SKIP_PULL -eq 1 ]] && [[ $SKIP_BUILD -eq 1 ]] && ERROR 'only one of [-b | -p] can be specified'
+	[[ $SKIP_PULL -eq 1 ]] && [[ $SKIP_BUILD -eq 1 ]] && echo.error 'only one of [-b | -p] can be specified'
 
 	[ ! $TARGET ] && [ ! $NAME ] && {
 		[[ $SKIP_BUILD -eq 1 ]] && {
-			ERROR 'cannot skip build without specifying package local-name'
+			echo.error 'cannot skip build without specifying package local-name'
 		} || {
 			UPDATE=1
 			NAME=$(ls "$PACKAGE_INSTALL_DIR" | FZF 'select a package to update')
-			[ ! $NAME ] && ERROR 'target-url required'
+			[ ! $NAME ] && echo.error 'target-url required'
 		}
 	}
 
@@ -66,7 +66,7 @@ MAIN() {
 
 	[ ! $NAME ] && {
 		NAME=$(echo $TARGET | sed 's/.*\///; s/\.git$//')
-		DEBUG "using default name '$NAME'"
+		echo.debug "using default name '$NAME'"
 	}
 
 	[ -d "$PACKAGE_INSTALL_DIR/$NAME" ] && [[ $SKIP_PULL -eq 0 ]] && {

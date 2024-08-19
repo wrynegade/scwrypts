@@ -25,7 +25,7 @@ PG_DUMP() {
 
 
 
-	STATUS "
+	echo.status "
 	making backup of : $DB_USER@$DB_HOST:$DB_PORT/$DB_NAME
 
 	    (compressed) : '$OUTPUT_FILE.dump'
@@ -34,21 +34,21 @@ PG_DUMP() {
 	"
 
 	: \
-		&& STATUS "creating compressed backup..." \
+		&& echo.status "creating compressed backup..." \
 		&& eval PGPASSWORD=$(printf '%q ' "$DB_PASS") psql ${PSQL_ARGS[@]} \
 			--format custom \
 			--file "$OUTPUT_FILE.dump" \
 			--verbose \
-		&& SUCCESS "completed compressed backup" \
-		&& STATUS "creating raw backup..." \
+		&& echo.success "completed compressed backup" \
+		&& echo.status "creating raw backup..." \
 		&& pg_restore -f "$OUTPUT_FILE.raw.sql" "$OUTPUT_FILE.dump" \
-		&& SUCCESS "completed raw backup" \
-		&& STATUS "creating single-transaction raw backup..." \
+		&& echo.success "completed raw backup" \
+		&& echo.status "creating single-transaction raw backup..." \
 		&& { echo "BEGIN;\n"; cat "$OUTPUT_FILE.raw.sql"; echo "\nEND;" } > "$OUTPUT_FILE.sql" \
-		&& SUCCESS "completed single-transaction raw backup" \
-		|| { ERROR "error creating backup for '$DB_HOST/$DB_NAME' (see above)"; return 1; }
+		&& echo.success "completed single-transaction raw backup" \
+		|| { echo.error "error creating backup for '$DB_HOST/$DB_NAME' (see above)"; return 1; }
 
-	SUCCESS "
+	echo.success "
 	completed backup : $DB_USER@$DB_HOST:$DB_PORT/$DB_NAME
 
 	    (compressed) : '$OUTPUT_FILE.dump'
@@ -67,8 +67,8 @@ PG_RESTORE() {
 	local INPUT_FILE=$(find "$DATA_DIR"/backup.* -type f | FZF 'select database file to restore')
 
 	[ $INPUT_FILE ] && [ -f "$INPUT_FILE" ] || {
-		ERROR 'no file selected or missing backup file; aborting'
-		REMINDER "
+		echo.error 'no file selected or missing backup file; aborting'
+		echo.reminder "
 			backups must be *.sql or *.dump files starting with the prefix 'backup.'
 			in the following directory:
 
@@ -80,7 +80,7 @@ PG_RESTORE() {
 	local RAW=1
 	[[ $INPUT_FILE =~ \\.dump$ ]] && RAW=0
 
-	STATUS "
+	echo.status "
 	loading backup for : $DB_USER@$DB_HOST:$DB_PORT/$DB_NAME
 
 	              file : '$INPUT_FILE'
@@ -88,7 +88,7 @@ PG_RESTORE() {
 
 	local EXIT_CODE
 	[[ $RAW -eq 1 ]] && {
-		REMINDER "
+		echo.reminder "
 			loading a backup from a raw sql dump may result in data loss
 
 			make sure your database is ready to accept the database file!
@@ -110,8 +110,8 @@ PG_RESTORE() {
 	}
 
 	[[ $EXIT_CODE -eq 0 ]] \
-		&& SUCCESS "finished restoring backup for '$DB_HOST/$DB_NAME'" \
-		|| ERROR "error restoring backup for '$DB_HOST/$DB_NAME' (see above)" \
+		&& echo.success "finished restoring backup for '$DB_HOST/$DB_NAME'" \
+		|| echo.error "error restoring backup for '$DB_HOST/$DB_NAME' (see above)" \
 		;
 
 	return $EXIT_CODE
@@ -123,11 +123,11 @@ POSTGRES__LOGIN_INTERACTIVE() {
 	DEPENDENCIES=(pgcli) CHECK_ENVIRONMENT --optional \
 		&& COMMAND=pgcli || COMMAND=psql
 
-	[[ $COMMAND =~ psql ]] && WARNING "using 'psql' instead"
+	[[ $COMMAND =~ psql ]] && echo.warning "using 'psql' instead"
 
 	POSTGRES__SET_LOGIN_ARGS $@
 
-	STATUS "
+	echo.status "
 	performing login  : $DB_USER@$DB_HOST:$DB_PORT/$DB_NAME
 	working directory : $DATA_DIR
 	 "
@@ -162,7 +162,7 @@ POSTGRES__SET_LOGIN_ARGS() {
 	done
 
 	[ $PSQL_FILE ] && [ ! -f "$PSQL_FILE" ] \
-		&& ERROR "no such file available:\n'$PSQL_FILE'"
+		&& echo.error "no such file available:\n'$PSQL_FILE'"
 
 	CHECK_ERRORS
 

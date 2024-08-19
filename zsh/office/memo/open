@@ -9,9 +9,9 @@ MAIN() {
 	MEMO_FILE="$MEMO__DIR/$MEMO_NAME.$MEMO__FILETYPE"
 
 	[ ! -f $MEMO_FILE ] && {
-		STATUS "creating memo '$MEMO_NAME'"
+		echo.status "creating memo '$MEMO_NAME'"
 		echo "# $MEMO_NAME" > "$MEMO_FILE" \
-			&& SUCCESS "created memo '$MEMO_NAME'" \
+			&& echo.success "created memo '$MEMO_NAME'" \
 			|| FAIL 1 "failed to create '$MEMO_FILE'" \
 			;
 	}

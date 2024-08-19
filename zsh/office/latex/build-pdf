@@ -11,13 +11,13 @@ MAIN() {
 
 	cd "$(dirname $FILENAME)"
 
-	STATUS 'running compile (1/2)'
+	echo.status 'running compile (1/2)'
 	pdflatex ${ARGS[@]} \
 		|| FAIL 2 'first compile failed (see above)'
 
-	STATUS 'running compile (2/2)'
+	echo.status 'running compile (2/2)'
 	pdflatex ${ARGS[@]} >/dev/null 2>&1 \
 		|| FAIL 3 'second compile failed :c'
 
-	SUCCESS "created '$(echo $FILENAME | sed 's/\.[^.]*$/.pdf/')'"
+	echo.success "created '$(echo $FILENAME | sed 's/\.[^.]*$/.pdf/')'"
 }

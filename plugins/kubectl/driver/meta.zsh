@@ -40,7 +40,7 @@ SCWRYPTS_KUBECTL_CUSTOM_COMMAND_PARSE__meta() {
 						return $?
 						;;
 
-					* ) ERROR "cannot set '$2'" ;;
+					* ) echo.error "cannot set '$2'" ;;
 				esac
 				shift 1
 				;;
@@ -54,7 +54,7 @@ SCWRYPTS_KUBECTL_CUSTOM_COMMAND_PARSE__meta() {
 
 					-h | --help ) HELP=1 ;;
 
-					* ) ERROR "cannot get '$2'" ;;
+					* ) echo.error "cannot get '$2'" ;;
 				esac
 				shift 1
 				;;
@@ -66,14 +66,14 @@ SCWRYPTS_KUBECTL_CUSTOM_COMMAND_PARSE__meta() {
 				case $2 in
 					[0-9] ) USER_ARGS+=($1 $2) ;;
 					-h | --help ) HELP=1 ;;
-					* ) ERROR "target session must be a number [0-9]" ;;
+					* ) echo.error "target session must be a number [0-9]" ;;
 				esac
 				shift 1
 				;;
 
 			clear | show | hide | strict | loose ) USER_ARGS+=($1) ;;
 
-			* ) ERROR "no meta command '$1'"
+			* ) echo.error "no meta command '$1'"
 		esac
 		shift 1
 	done
@@ -102,41 +102,41 @@ SCWRYPTS_KUBECTL_CUSTOM_COMMAND__meta() {
 
 		set )
 			scwrypts -n --name set-$2 --type zsh --group kubectl -- $3 --subsession $SUBSESSION >/dev/null \
-				&& SUCCESS "$2 set"
+				&& echo.success "$2 set"
 			;;
 
 		copy )
 			: \
-				&& STATUS "copying $1 to $2" \
+				&& echo.status "copying $1 to $2" \
 				&& scwrypts -n --name set-context --type zsh --group kubectl -- --subsession $2 $(k meta get context | grep . || echo 'reset') \
 				&& scwrypts -n --name set-namespace --type zsh --group kubectl -- --subsession $2 $(k meta get namespace | grep . || echo 'reset') \
-				&& SUCCESS "subsession $1 copied to $2" \
+				&& echo.success "subsession $1 copied to $2" \
 				;
 			;;
 
 		clear )
 			scwrypts -n --name set-context --type zsh --group kubectl -- --subsession $SUBSESSION reset >/dev/null \
-				&& SUCCESS "subsession $SUBSESSION reset to default"
+				&& echo.success "subsession $SUBSESSION reset to default"
 			;;
 
 		show )
 			_SCWRYPTS_KUBECTL_SETTINGS set context show >/dev/null \
-				&& SUCCESS "now showing full command context"
+				&& echo.success "now showing full command context"
 			;;
 
 		hide )
 			_SCWRYPTS_KUBECTL_SETTINGS set context hide >/dev/null \
-				&& SUCCESS "now hiding command context"
+				&& echo.success "now hiding command context"
 			;;
 
 		loose )
 			_SCWRYPTS_KUBECTL_SETTINGS set strict 0 >/dev/null \
-				&& WARNING "now running in 'loose' mode"
+				&& echo.warning "now running in 'loose' mode"
 			;;
 
 		strict )
 			_SCWRYPTS_KUBECTL_SETTINGS set strict 1 >/dev/null \
-				&& SUCCESS "now running in 'strict' mode"
+				&& echo.success "now running in 'strict' mode"
 			;;
 	esac
 }

@@ -129,7 +129,7 @@ _SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 			* )
 				: \
 					&& [ ! $ENVIRONMENT_NAME ] \
-					|| ERROR "unknown argument '$1'" \
+					|| echo.error "unknown argument '$1'" \
 					|| break
 
 				[ $ENVIRONMENT_NAME ] || { ENVIRONMENT_NAME="$1"; break; }

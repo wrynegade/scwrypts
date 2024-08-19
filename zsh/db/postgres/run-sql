@@ -3,7 +3,7 @@ use db/postgres
 #####################################################################
 
 MAIN() {
-	WARNING " \nthis function is in a beta state\n "
+	echo.warning " \nthis function is in a beta state\n "
 	local _PASS _ARGS=()
 	POSTGRES__SET_LOGIN_ARGS $@
 
@@ -15,8 +15,8 @@ MAIN() {
 	cd $SQL_DIR
 
 	[[ $(ls "*.sql" 2>&1 | wc -l) -eq 0 ]] && {
-		ERROR "you haven't made any SQL commands yet"
-		REMINDER "add '.sql' files here: '$SQL_DIR/'"
+		echo.error "you haven't made any SQL commands yet"
+		echo.reminder "add '.sql' files here: '$SQL_DIR/'"
 		return 1
 	}
 
@@ -25,17 +25,17 @@ MAIN() {
 
 	[ ! -f "$INPUT_FILE" ] && FAIL 2 "no such sql file '$SQL_DIR/$INPUT_FILE'"
 
-	STATUS "loading '$INPUT_FILE' preview..."
+	echo.status "loading '$INPUT_FILE' preview..."
 	LESS "$INPUT_FILE"
 
-	STATUS "login   : $_USER@$_HOST:$_PORT/$_NAME"
-	STATUS "command : '$INPUT_FILE'"
+	echo.status "login   : $_USER@$_HOST:$_PORT/$_NAME"
+	echo.status "command : '$INPUT_FILE'"
 
 	yN 'run this command?' || ABORT
 
-	STATUS "running '$INPUT_FILE'"
+	echo.status "running '$INPUT_FILE'"
 
 	PSQL < $INPUT_FILE \
-		&& SUCCESS "finished running '$INPUT_FILE'" \
+		&& echo.success "finished running '$INPUT_FILE'" \
 		|| FAIL 3 "something went wrong running '$INPUT_FILE' (see above)"
 }

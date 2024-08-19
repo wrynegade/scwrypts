@@ -19,7 +19,7 @@ SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME() {  # provides the fully qualified path
 	local NAME="$1"
 	local GROUP="$2"
 	[ $NAME ] && [ $GROUP ] \
-		|| ERROR 'cannot determine environment filename without name ($1) and group ($2)' \
+		|| echo.error 'cannot determine environment filename without name ($1) and group ($2)' \
 		|| return 1
 
 	echo "$SCWRYPTS_ENV_PATH/$NAME.$GROUP.env.yaml"

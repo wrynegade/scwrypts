@@ -11,7 +11,7 @@ MAIN() {
 		GROUP_HOME="$(eval 'echo $SCWRYPTS_ROOT__'$group)"
 		[ $GROUP_HOME ] && [ -d "$GROUP_HOME" ] || continue
 
-		STATUS "checking dependencies for $group"
+		echo.status "checking dependencies for $group"
 		DEPENDENCIES+=($(
 			for file in $(
 				{
@@ -27,7 +27,7 @@ MAIN() {
 
 	DEPENDENCIES=(zsh $(echo $DEPENDENCIES | sed 's/ /\n/g' | sort -u | grep '^[-_a-zA-Z]\+$'))
 
-	STATUS "discovered dependencies: ($DEPENDENCIES)"
+	echo.status "discovered dependencies: ($DEPENDENCIES)"
 	echo $DEPENDENCIES | sed 's/ /\n/g'
-	CHECK_ENVIRONMENT && SUCCESS "all dependencies satisfied"
+	CHECK_ENVIRONMENT && echo.success "all dependencies satisfied"
 }

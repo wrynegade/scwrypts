@@ -17,22 +17,22 @@ UPDATE_VIRTUALENV() {
 				case $POSITIONAL_ARGS in
 					1 ) GROUP="$1" ;;
 					2 ) TYPE="$1" ;;
-					* ) ERROR "unknown argument '$1'" ;;
+					* ) echo.error "unknown argument '$1'" ;;
 				esac
 				;;
 		esac
 		shift $_S
 	done
 
-	[ "$GROUP" ] || ERROR 'missing group argument'
-	[ "$TYPE"  ] || ERROR 'missing type argument'
+	[ "$GROUP" ] || echo.error 'missing group argument'
+	[ "$TYPE"  ] || echo.error 'missing type argument'
 
 	CHECK_ERRORS --no-fail || return $?
 
 	##########################################
 
 	_SCWRYPTS_VIRTUALENV__VALIDATE_ENVIRONMENT_CONTROLLER "$GROUP" "$TYPE" || {
-		STATUS "no environment controller exists for $GROUP/$TYPE"
+		echo.status "no environment controller exists for $GROUP/$TYPE"
 		return 0
 	}
 
@@ -41,6 +41,6 @@ UPDATE_VIRTUALENV() {
 		&&   ACTIVATE_VIRTUALENV__${GROUP}__${TYPE} "$VIRTUALENV_PATH" \
 		&&     UPDATE_VIRTUALENV__${GROUP}__${TYPE} "$VIRTUALENV_PATH" \
 		&& DEACTIVATE_VIRTUALENV__${GROUP}__${TYPE} "$VIRTUALENV_PATH" \
-		&& SUCCESS "$GROUP/$TYPE virtualenv up-to-date" \
-		|| ERROR "failed to update $GROUP/$TYPE virtualenv (see errors above)"
+		&& echo.success "$GROUP/$TYPE virtualenv up-to-date" \
+		|| echo.error "failed to update $GROUP/$TYPE virtualenv (see errors above)"
 }

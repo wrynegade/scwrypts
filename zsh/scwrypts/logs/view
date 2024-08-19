@@ -5,9 +5,9 @@ MAIN() {
 	cd $SCWRYPTS_ROOT
 	PROMPT 'select a script log'
 	LOG_FILE=$(ls -t $SCWRYPTS_LOG_PATH | FZF 'logfile')
-	[ ! $LOG_FILE ] && { ERROR 'user abort'; exit 1; }
+	[ ! $LOG_FILE ] && { echo.error 'user abort'; exit 1; }
 	
-	STATUS 'opening logfile'
+	echo.status 'opening logfile'
 	LESS "$SCWRYPTS_LOG_PATH/$LOG_FILE"
-	SUCCESS 'done'
+	echo.success 'done'
 }

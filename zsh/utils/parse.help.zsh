@@ -97,7 +97,7 @@ ZSHPARSERS.HELP.usage() {
 #
 # MY_PARSER.validate() {
 #	[ "$REQUIRED_OPTION" ] \
-#		|| ERROR "missing required option '--my-required-option'"
+#		|| echo.error "missing required option '--my-required-option'"
 # }
 #
 # ------------------------------------------

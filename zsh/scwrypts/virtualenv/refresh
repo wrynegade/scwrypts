@@ -25,7 +25,7 @@ MAIN() {
 		case $1 in
 			-g | --group )
 				[ $2 ] && ((_S+=1)) \
-					|| ERROR "missing group name" \
+					|| echo.error "missing group name" \
 					|| break
 
 				ENV_GROUP="$2"
@@ -33,7 +33,7 @@ MAIN() {
 
 			-t | --type  )
 				[ $2 ] && ((_S+=1)) \
-					|| ERROR "missing env type" \
+					|| echo.error "missing env type" \
 					|| break
 
 				ENV_TYPE="$2"
@@ -49,7 +49,7 @@ MAIN() {
 			| sed 's/ \+/\n/' \
 			| FZF 'select an environment to refresh' \
 		)
-	[ $ENV_TYPE ] || ERROR "no environment type selected"
+	[ $ENV_TYPE ] || echo.error "no environment type selected"
 
 	CHECK_ERRORS
 

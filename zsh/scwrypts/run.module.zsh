@@ -60,21 +60,21 @@ SCWRYPTS__GET_RUNSTRING() {
 	local GROUP_ROOT=$(scwrypts.config.group ${SCWRYPT_GROUP} root)
 	local RUNSTRING
 
-	DEBUG "$SCWRYPT_NAME : $SCWRYPT_TYPE : $SCWRYPT_GROUP"
+	echo.debug "$SCWRYPT_NAME : $SCWRYPT_TYPE : $SCWRYPT_GROUP"
 	[ ${SCWRYPT_NAME} ] && [ ${SCWRYPT_TYPE} ] && [ ${SCWRYPT_GROUP} ] || {
-		ERROR 'missing required information to get runstring'
+		echo.error 'missing required information to get runstring'
 		return 1
 	}
 
 	[ ${ENV_REQUIRED} ] && [[ ${ENV_REQUIRED} -eq 1 ]] && [ ! ${ENV_NAME} ] && {
-		ERROR 'missing required information to get runstring'
+		echo.error 'missing required information to get runstring'
 		return 1
 	}
 
 	[ ! ${RUNSTRING} ] && typeset -f SCWRYPTS__GET_RUNSTRING__${SCWRYPT_GROUP}__${SCWRYPT_TYPE} >/dev/null 2>&1 && {
 		RUNSTRING=$(SCWRYPTS__GET_RUNSTRING__${SCWRYPT_GROUP}__${SCWRYPT_TYPE})
 		[ ! ${RUNSTRING} ] && {
-			ERROR "SCWRYPTS__GET_RUNSTRING__${SCWRYPT_GROUP}__${SCWRYPT_TYPE} error"
+			echo.error "SCWRYPTS__GET_RUNSTRING__${SCWRYPT_GROUP}__${SCWRYPT_TYPE} error"
 			return 2
 		}
 	}
@@ -82,13 +82,13 @@ SCWRYPTS__GET_RUNSTRING() {
 	[ ! ${RUNSTRING} ] && typeset -f SCWRYPTS__GET_RUNSTRING__${SCWRYPT_TYPE} >/dev/null 2>&1 && {
 		RUNSTRING=$(SCWRYPTS__GET_RUNSTRING__${SCWRYPT_TYPE})
 		[ ! ${RUNSTRING} ] && {
-			ERROR "SCWRYPTS__GET_RUNSTRING__${SCWRYPT_TYPE} error"
+			echo.error "SCWRYPTS__GET_RUNSTRING__${SCWRYPT_TYPE} error"
 			return 3
 		}
 	}
 
 	[ ! ${RUNSTRING} ] && {
-		ERROR "type ${SCWRYPT_TYPE} (group ${SCWRYPT_GROUP}) has no supported runstring generator"
+		echo.error "type ${SCWRYPT_TYPE} (group ${SCWRYPT_GROUP}) has no supported runstring generator"
 		return 4
 	}
 
@@ -133,7 +133,7 @@ SCWRYPTS__GET_RUNSTRING__zsh__generic() {
 	# (e.g. my-group.scwrypts.zsh)
 	local ZSH_FILENAME="$1"
 	[ ${ZSH_FILENAME} ] || {
-		ERROR '
+		echo.error '
 			to use SCWRYPTS__GET_RUNSTRING__zsh__generic, you must provide a
 			ZSH_FILENAME (arg $1) where the MAIN function is defined
 			'
@@ -180,8 +180,8 @@ SCWRYPTS__GET_RUNSTRING__py() {
 	__CHECK_DEPENDENCY python || return 1
 	CURRENT_PYTHON_VERSION=$(python --version | sed 's/^[^0-9]*\(3\.[^.]*\).*$/\1/')
 	echo ${SCWRYPTS_PREFERRED_PYTHON_VERSIONS__scwrypts} | grep -q ${CURRENT_PYTHON_VERSION} || {
-		WARNING "only tested on the following python versions: $(printf ', %s.x' ${SCWRYPTS_PREFERRED_PYTHON_VERSIONS__scwrypts[@]} | sed 's/^, //')"
-		WARNING 'compatibility may vary'
+		echo.warning "only tested on the following python versions: $(printf ', %s.x' ${SCWRYPTS_PREFERRED_PYTHON_VERSIONS__scwrypts[@]} | sed 's/^, //')"
+		echo.warning 'compatibility may vary'
 	}
 
 	echo "cd ${GROUP_ROOT}; python -m $(echo ${SCWRYPT_TYPE}/${SCWRYPT_NAME} | sed 's/\//./g; s/\.py$//; s/\.\.//')"

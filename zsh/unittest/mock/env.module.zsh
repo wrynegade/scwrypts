@@ -75,8 +75,8 @@ ${scwryptsmodule}.parse.usage() {
 
 ${scwryptsmodule}.parse.validate() {
 	[ "$ENVIRONMENT_VARIABLE_NAME" ] \
-		|| ERROR "no environment variable specified"
+		|| echo.error "no environment variable specified"
 
 	echo "$MOCKED_ENV" | sed 's/\s\+/\n/g' | grep -q "^$ENVIRONMENT_VARIABLE_NAME$" \
-		&& ERROR "environment variable '$ENVIRONMENT_VARIABLE_NAME' has already been mocked"
+		&& echo.error "environment variable '$ENVIRONMENT_VARIABLE_NAME' has already been mocked"
 }

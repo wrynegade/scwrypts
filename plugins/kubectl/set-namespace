@@ -25,7 +25,7 @@ MAIN() {
 			-h | --help ) USAGE; return 0 ;;
 
 			* )
-				[ $NAMESPACE ] && ERROR "unexpected argument '$2'"
+				[ $NAMESPACE ] && echo.error "unexpected argument '$2'"
 				NAMESPACE=$1
 				;;
 		esac
@@ -33,7 +33,7 @@ MAIN() {
 	done
 
 	[ $NAMESPACE ] || NAMESPACE=$(KUBECTL__SELECT_NAMESPACE)
-	[ $NAMESPACE ] || ERROR 'must provide or select a valid namespace'
+	[ $NAMESPACE ] || echo.error 'must provide or select a valid namespace'
 
 	CHECK_ERRORS
 

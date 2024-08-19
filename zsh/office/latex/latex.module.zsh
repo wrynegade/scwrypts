@@ -17,17 +17,17 @@ LATEX__GET_MAIN_FILENAME() {
 	do
 		CHECK_IS_MAIN_LATEX_FILE && return 0
 		DIRNAME="$(dirname "$FILENAME")"
-		STATUS "checking '$DIRNAME'"
+		echo.status "checking '$DIRNAME'"
 		[[ $DIRNAME =~ ^$HOME$ ]] && break
 		FILENAME=$(
 			rg -l --max-depth 1 'documentclass' "$DIRNAME/" \
 				| grep '\.tex$' \
 				| head -n1 \
 		)
-		STATUS "here is '$FILENAME'"
+		echo.status "here is '$FILENAME'"
 	done
 
-	WARNING 'unable to find documentclass; pdflatex will probably fail'
+	echo.warning 'unable to find documentclass; pdflatex will probably fail'
 	echo "$1"
 }
 
@@ -39,6 +39,6 @@ LATEX__CHECK_IS_MAIN_FILE() {
 LATEX__GET_PDF() {
 	local FILENAME=$(LATEX__GET_MAIN_FILENAME "$1" | sed 's/\.[^.]*$/.pdf/')
 	[ $FILENAME ] && [ -f $FILENAME ] || FAIL 1 "no compiled pdf found for '$1'; have you run 'build-pdf'?"
-	SUCCESS 'found main pdf'
+	echo.success 'found main pdf'
 	echo $FILENAME
 }

@@ -7,6 +7,6 @@ OPEN() {
 		command -v open     && OPEN=open
 	} >/dev/null 2>&1
 
-	[ ! $OPEN ] && { ERROR 'unable to detect default open command (e.g. xdg-open)'; return 1 }
+	[ ! $OPEN ] && { echo.error 'unable to detect default open command (e.g. xdg-open)'; return 1 }
 	$OPEN $@
 }

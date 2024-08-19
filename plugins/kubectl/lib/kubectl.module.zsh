@@ -91,19 +91,19 @@ KUBECTL__LIST_NAMESPACES() {
 
 KUBECTL__SERVE() {
 	[ $CONTEXT ] || local CONTEXT=$(KUBECTL__GET_CONTEXT)
-	[ $CONTEXT ] || ERROR 'must configure a context in which to serve'
+	[ $CONTEXT ] || echo.error 'must configure a context in which to serve'
 
 	[ $NAMESPACE ] || local NAMESPACE=$(KUBECTL__GET_NAMESPACE)
-	[ $NAMESPACE ] || ERROR 'must configure a namespace in which to serve'
+	[ $NAMESPACE ] || echo.error 'must configure a namespace in which to serve'
 
 	CHECK_ERRORS --no-fail --no-usage || return 1
 
 	[ $SERVICE ] && SERVICE=$(KUBECTL__LIST_SERVICES | jq -c "select (.service == \"$SERVICE\")" || echo $SERVICE)
 	[ $SERVICE ] || local SERVICE=$(KUBECTL__SELECT_SERVICE)
-	[ $SERVICE ] || ERROR 'must provide or select a service'
+	[ $SERVICE ] || echo.error 'must provide or select a service'
 
 	KUBECTL__LIST_SERVICES | grep -q "^$SERVICE$"\
-		|| ERROR "no service '$SERVICE' in '$CONFIG/$NAMESPACE'"
+		|| echo.error "no service '$SERVICE' in '$CONFIG/$NAMESPACE'"
 
 	CHECK_ERRORS --no-fail --no-usage || return 1
 
@@ -112,8 +112,8 @@ KUBECTL__SERVE() {
 	SERVICE_PASSWORD="$(KUBECTL__GET_SERVICE_PASSWORD)"
 	KUBECTL__SERVICE_PARSE
 
-	REMINDER "attempting to serve ${NAMESPACE}/${SERVICE_NAME}:${SERVICE_PORT}"
-	[ $SERVICE_PASSWORD ] && REMINDER "password : $SERVICE_PASSWORD"
+	echo.reminder "attempting to serve ${NAMESPACE}/${SERVICE_NAME}:${SERVICE_PORT}"
+	[ $SERVICE_PASSWORD ] && echo.reminder "password : $SERVICE_PASSWORD"
 
 	KUBECTL port-forward service/$SERVICE_NAME $SERVICE_PORT
 }

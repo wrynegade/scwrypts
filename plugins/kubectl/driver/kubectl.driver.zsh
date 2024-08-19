@@ -7,7 +7,7 @@ f() { _SCWRYPTS_KUBECTL_DRIVER flux $@; }
 
 _SCWRYPTS_KUBECTL_DRIVER() {
 	[ ! $SCWRYPTS_ENV ] && {
-		ERROR "must set SCWRYPTS_ENV in order to use '$(echo $CLI | head -c1)'"
+		echo.error "must set SCWRYPTS_ENV in order to use '$(echo $CLI | head -c1)'"
 		return 1
 	}
 
@@ -154,12 +154,12 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 			[ $CONTEXT ] && [[ $CLI =~ ^flux$    ]] && CLI_ARGS+=(--context $CONTEXT)
 
 			[[ $STRICT -eq 1 ]] && {
-				[ $CONTEXT   ] || ERROR "missing kubectl 'context'"
-				[ $NAMESPACE ] || ERROR "missing kubectl 'namespace'"
+				[ $CONTEXT   ] || echo.error "missing kubectl 'context'"
+				[ $NAMESPACE ] || echo.error "missing kubectl 'namespace'"
 
 				CHECK_ERRORS --no-fail --no-usage || {
-					ERROR "with 'strict' settings enabled, context and namespace must be set!"
-					REMINDER "
+					echo.error "with 'strict' settings enabled, context and namespace must be set!"
+					echo.reminder "
 						these values can be set directly with
 							$(echo $CLI | head -c1) meta set (namespace|context)
 					"
@@ -170,16 +170,16 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 
 			[ $NAMESPACE ] && CLI_ARGS+=(--namespace $NAMESPACE)
 			[[ $VERBOSE -eq 1 ]] && {
-				REMINDER "
+				echo.reminder "
 					context '$CONTEXT'
 					namespace '$NAMESPACE'
 					environment '$SCWRYPTS_ENV'
 					subsession '$SUBSESSION'
 					"
-				STATUS "running $CLI ${CLI_ARGS[@]} ${USER_ARGS[@]}"
+				echo.status "running $CLI ${CLI_ARGS[@]} ${USER_ARGS[@]}"
 			} || {
 				[[ $(_SCWRYPTS_KUBECTL_SETTINGS get context) =~ ^show$ ]] && {
-					REMINDER "$SCWRYPTS_ENV.$SUBSESSION : $CLI ${CLI_ARGS[@]} ${USER_ARGS[@]}"
+					echo.reminder "$SCWRYPTS_ENV.$SUBSESSION : $CLI ${CLI_ARGS[@]} ${USER_ARGS[@]}"
 				}
 			}
 			$CLI ${CLI_ARGS[@]} ${USER_ARGS[@]}

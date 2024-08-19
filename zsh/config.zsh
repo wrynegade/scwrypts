@@ -65,9 +65,9 @@ source "${0:a:h}/config.global.zsh"
 
 SCWRYPTS_GROUPS=()
 
-command -v WARNING &>/dev/null || WARNING() { echo "WARNING : $@" >&2; }
-command -v ERROR   &>/dev/null || ERROR()   { echo "ERROR   : $@" >&2; return 1; }
-command -v FAIL    &>/dev/null || FAIL()    { ERROR "${@:2}"; exit $1; }
+command -v echo.warning &>/dev/null || WARNING() { echo "echo.warning : $@" >&2; }
+command -v echo.error   &>/dev/null || ERROR()   { echo "echo.error   : $@" >&2; return 1; }
+command -v FAIL    &>/dev/null || FAIL()    { echo.error "${@:2}"; exit $1; }
 
 __SCWRYPTS_GROUP_LOADERS=(
 	"${__SCWRYPTS_ROOT}/scwrypts.scwrypts.zsh"
@@ -101,7 +101,7 @@ do
 	__SCWRYPTS_GROUP_LOADER_REALPATH="$(readlink -f -- "${__SCWRYPTS_GROUP_LOADER}")"
 
 	[ -f "${__SCWRYPTS_GROUP_LOADER_REALPATH}" ] || {
-		WARNING "error loading group '${__SCWRYPTS_GROUP_LOADER}': cannot read file"
+		echo.warning "error loading group '${__SCWRYPTS_GROUP_LOADER}': cannot read file"
 		continue
 	}
 
@@ -111,12 +111,12 @@ do
 	)"
 
 	[ "$__SCWRYPTS_GROUP_NAME" ] || {
-		WARNING "unable to load group '${__SCWRYPTS_GROUP_LOADER_REALPATH}': invalid group name" >&2
+		echo.warning "unable to load group '${__SCWRYPTS_GROUP_LOADER_REALPATH}': invalid group name" >&2
 		continue
 	}
 
 	[[ $(scwrypts.config.group "$__SCWRYPTS_GROUP_NAME" loaded) =~ true ]] && {
-		WARNING "unable to load group '${__SCWRYPTS_GROUP_NAME}': duplicate name"
+		echo.warning "unable to load group '${__SCWRYPTS_GROUP_NAME}': duplicate name"
 		continue
 	}
 
@@ -128,7 +128,7 @@ do
 		&& source "${__SCWRYPTS_GROUP_LOADER_REALPATH}" \
 		&& SCWRYPTS_GROUPS+=(${__SCWRYPTS_GROUP_NAME}) \
 		&& readonly ${scwryptsgroup}__loaded=true \
-		|| WARNING "error encountered when loading group '${__SCWRYPTS_GROUP_NAME}'" \
+		|| echo.warning "error encountered when loading group '${__SCWRYPTS_GROUP_NAME}'" \
 		;
 done
 

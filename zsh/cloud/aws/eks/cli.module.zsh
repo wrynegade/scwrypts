@@ -48,7 +48,7 @@ ${scwryptsmodule}() {
 					${AWS_PASSTHROUGH[@]} \
 					--cluster-name ${CLUSTER_NAME} \
 					>/dev/null \
-				|| ERROR "unable to login to cluster '${CLUSTER_NAME}'" \
+				|| echo.error "unable to login to cluster '${CLUSTER_NAME}'" \
 				|| return 1
 			;;
 	esac
@@ -88,5 +88,5 @@ ${scwryptsmodule}.parse.validate() {
 	ARGS=(${ARGS[@]:1})
 
 	[ ${KUBECLI} ] \
-		|| ERROR "missing argument for 'kubecli'"
+		|| echo.error "missing argument for 'kubecli'"
 }

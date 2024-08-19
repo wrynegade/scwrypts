@@ -33,14 +33,14 @@ ${scwryptsmodule}() {
 			| FZF "select an eks cluster (${ACCOUNT}/${REGION})"
 	)
 
-	[ ${CLUSTER_NAME} ] || ERROR 'must select a valid cluster or use --cluster-name'
+	[ ${CLUSTER_NAME} ] || echo.error 'must select a valid cluster or use --cluster-name'
 
 	CHECK_ERRORS --no-fail || return $?
 
 	##########################################
 
-	STATUS 'updating kubeconfig for EKS cluster '${CLUSTER_NAME}''
+	echo.status 'updating kubeconfig for EKS cluster '${CLUSTER_NAME}''
 	${AWS} eks update-kubeconfig --name ${CLUSTER_NAME} \
-		&& SUCCESS "kubeconfig updated with '${CLUSTER_NAME}'" \
-		|| ERROR "failed to update kubeconfig; do you have permission to access '${CLUSTER_NAME}'?"
+		&& echo.success "kubeconfig updated with '${CLUSTER_NAME}'" \
+		|| echo.error "failed to update kubeconfig; do you have permission to access '${CLUSTER_NAME}'?"
 }

@@ -36,19 +36,19 @@ EKSCTL__CREATE_IAMSERVICEACCOUNT() {
 	[[ $FORCE =~ false ]] && {
 		_EKS__CHECK_IAMSERVICEACCOUNT_EXISTS
 		case $? in
-			0 ) SUCCESS "'$NAMESPACE/$SERVICEACCOUNT' already configured with '$ROLE_NAME'"
+			0 ) echo.success "'$NAMESPACE/$SERVICEACCOUNT' already configured with '$ROLE_NAME'"
 				return 0
 				;;
 			1 ) # role does not exist yet; continue with rollout
 				;;
-			2 ) ERROR "'$NAMESPACE/$SERVICEACCOUNT' has been configured with a different role than '$ROLE_NAME'"
-				REMINDER "must use --force flag to overwrite"
+			2 ) echo.error "'$NAMESPACE/$SERVICEACCOUNT' has been configured with a different role than '$ROLE_NAME'"
+				echo.reminder "must use --force flag to overwrite"
 				return 2
 				;;
 		esac
 	}
 
-	STATUS "creating iamserviceaccount" \
+	echo.status "creating iamserviceaccount" \
 		&& EKSCTL create iamserviceaccount \
 			--cluster $CLUSTER_NAME \
 			--namespace $NAMESPACE \
@@ -57,12 +57,12 @@ EKSCTL__CREATE_IAMSERVICEACCOUNT() {
 			--override-existing-serviceaccounts \
 			--approve \
 			${ARGS[@]} \
-		&& SUCCESS "successfully configured '$NAMESPACE/$SERVICEACCOUNT' with IAM role '$ROLE_NAME'" \
-		|| { ERROR "unable to configure '$NAMESPACE/$SERVICEACCOUNT' with IAM role '$ROLE_NAME' (check cloudformation dashboard for details)"; return 3; }
+		&& echo.success "successfully configured '$NAMESPACE/$SERVICEACCOUNT' with IAM role '$ROLE_NAME'" \
+		|| { echo.error "unable to configure '$NAMESPACE/$SERVICEACCOUNT' with IAM role '$ROLE_NAME' (check cloudformation dashboard for details)"; return 3; }
 }
 
 _EKS__CHECK_IAMSERVICEACCOUNT_EXISTS() {
-	STATUS "checking for existing role-arn"
+	echo.status "checking for existing role-arn"
 	local CURRENT_ROLE_ARN=$(
 		EKS__KUBECTL --namespace $NAMESPACE get serviceaccount $SERVICEACCOUNT -o yaml \
 			| YQ -r '.metadata.annotations["eks.amazonaws.com/role-arn"]' \
@@ -70,18 +70,18 @@ _EKS__CHECK_IAMSERVICEACCOUNT_EXISTS() {
 	)
 
 	[ $CURRENT_ROLE_ARN ] || {
-		STATUS "serviceaccount does not exist or has no configured role"
+		echo.status "serviceaccount does not exist or has no configured role"
 		return 1
 	}
 
 	[[ $CURRENT_ROLE_ARN =~ "$ROLE_NAME$" ]] || {
-		STATUS "serviceaccount current role does not match desired role:
+		echo.status "serviceaccount current role does not match desired role:
 			  CURRENT : $CURRENT_ROLE_ARN
 			  DESIRED : arn:aws:iam::${AWS_ACCOUNT}:role/$ROLE_NAME
 			  "
 		return 2
 	}
 
-	STATUS "serviceaccount current role matches desired role"
+	echo.status "serviceaccount current role matches desired role"
 	return 0
 }

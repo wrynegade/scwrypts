@@ -25,7 +25,7 @@ MAIN() {
 			-h | --help ) USAGE; return 0 ;;
 
 			* )
-				[ $CONTEXT ] && ERROR "unexpected argument '$2'"
+				[ $CONTEXT ] && echo.error "unexpected argument '$2'"
 				CONTEXT=$1
 				;;
 		esac
@@ -33,7 +33,7 @@ MAIN() {
 	done
 
 	[ $CONTEXT ] || CONTEXT=$(KUBECTL__SELECT_CONTEXT)
-	[ $CONTEXT ] || ERROR 'must provide or select a valid kube context'
+	[ $CONTEXT ] || echo.error 'must provide or select a valid kube context'
 
 	CHECK_ERRORS
 

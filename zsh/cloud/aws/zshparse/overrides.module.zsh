@@ -29,7 +29,7 @@ ${scwryptsmodule}.validate() {
 	[ $ACCOUNT ] \
 		&& AWS_EVAL_PREFIX+="AWS_ACCOUNT=$ACCOUNT " \
 		&& AWS_PASSTHROUGH+=(--account $ACCOUNT) \
-		|| ERROR "missing either --account or AWS_ACCOUNT" \
+		|| echo.error "missing either --account or AWS_ACCOUNT" \
 		;
 
 	[ $REGION ] || { __CHECK_ENV_VAR AWS_REGION &>/dev/null && REGION=$AWS_REGION; }
@@ -37,7 +37,7 @@ ${scwryptsmodule}.validate() {
 		&& AWS_EVAL_PREFIX+="AWS_REGION=$REGION AWS_DEFAULT_REGION=$REGION " \
 		&& AWS_CONTEXT_ARGS+=(--region $REGION) \
 		&& AWS_PASSTHROUGH+=(--region $REGION) \
-		|| ERROR "missing either --region  or AWS_REGION" \
+		|| echo.error "missing either --region  or AWS_REGION" \
 		;
 
 	__CHECK_ENV_VAR AWS_PROFILE &>/dev/null
@@ -50,10 +50,10 @@ ${scwryptsmodule}.validate() {
 
 	[ ! $CI ] && {
 		# non-CI must use PROFILE authentication
-		[ $AWS_PROFILE ] || ERROR "missing either --profile or AWS_PROFILE";
+		[ $AWS_PROFILE ] || echo.error "missing either --profile or AWS_PROFILE";
 
 		[[ $AWS_PROFILE =~ ^default$ ]] \
-			&& WARNING "it is HIGHLY recommended to NOT use the 'default' profile for aws operations\nconsider using '$USER.$SCWRYPTS_ENV' instead"
+			&& echo.warning "it is HIGHLY recommended to NOT use the 'default' profile for aws operations\nconsider using '$USER.$SCWRYPTS_ENV' instead"
 	}
 
 	[ $CI ] && {
@@ -65,6 +65,6 @@ ${scwryptsmodule}.validate() {
 			&& AWS_EVAL_PREFIX+="AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY " \
 			&& return 0
 
-		ERROR "running in CI, but missing both profile and access-key configuration\n(one AWS authentication method *must* be used)"
+		echo.error "running in CI, but missing both profile and access-key configuration\n(one AWS authentication method *must* be used)"
 	}
 }

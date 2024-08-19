@@ -42,25 +42,25 @@ SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG() {
 			-h | --help ) USAGE; return 0 ;;
 
 			--environment-name )
-				[ $2 ] && ((_S+=1)) || ERROR "missing environment name" || break
+				[ $2 ] && ((_S+=1)) || echo.error "missing environment name" || break
 				ENVIRONMENT_NAME="$2"
 				;;
 
 			--create-from-existing )
-				[ $2 ] && ((_S+=1)) || ERROR "must provide environment name to copy" || break
+				[ $2 ] && ((_S+=1)) || echo.error "must provide environment name to copy" || break
 				EDIT_MODE=copy
 				FROM_EXISTING="$2"
 				;;
 
 			--mode )
-				[ $2 ] && ((_S+=1)) || ERROR "missing mode" || break
+				[ $2 ] && ((_S+=1)) || echo.error "missing mode" || break
 				EDIT_MODE="$2"
 				command -v _SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__$EDIT_MODE &>/dev/null \
-					|| ERROR "invalid mode '$EDIT_MODE'"
+					|| echo.error "invalid mode '$EDIT_MODE'"
 
 				;;
 
-			* ) ERROR "unknown argument '$1'" ;;
+			* ) echo.error "unknown argument '$1'" ;;
 		esac
 		shift $_S
 	done
@@ -68,14 +68,14 @@ SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG() {
 	case $EDIT_MODE in
 		copy )
 			[ $FROM_EXISTING ] || FROM_EXISTING=$(SCWRYPTS_ENVIRONMENT__SELECT_ENV)
-			[ $FROM_EXISTING ] || ERROR "cannot work in '$EDIT_MODE' without existing target"
+			[ $FROM_EXISTING ] || echo.error "cannot work in '$EDIT_MODE' without existing target"
 
 			[[ $(_SCWRYPTS_ENVIRONMENT__FIND_ENV_FILES_BY_NAME "$FROM_EXISTING" | wc -l) -gt 0 ]] \
-				|| ERROR "no such environment '$FROM_EXISTING' exists"
+				|| echo.error "no such environment '$FROM_EXISTING' exists"
 			;;
 
 		* )
-			[ ! $FROM_EXISTING ] || ERROR "cannot work in '$EDIT_MODE' with --create-from-existing"
+			[ ! $FROM_EXISTING ] || echo.error "cannot work in '$EDIT_MODE' with --create-from-existing"
 			;;
 	esac
 
@@ -84,8 +84,8 @@ SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG() {
 	local TEMP_CONFIG_FILE="$SCWRYPTS_TEMP_PATH/environment.temp.yaml"
 
 	[ -f "$TEMP_CONFIG_FILE" ] && {
-		ERROR "temp config file already exists at '$TEMP_CONFIG_FILE'\nis another environment update in-progress?"
-		REMINDER "if you are certain no other environment update is in progress, you can resolve with\n  rm -- '$TEMP_CONFIG_FILE'"
+		echo.error "temp config file already exists at '$TEMP_CONFIG_FILE'\nis another environment update in-progress?"
+		echo.reminder "if you are certain no other environment update is in progress, you can resolve with\n  rm -- '$TEMP_CONFIG_FILE'"
 		return 1
 	}
 
@@ -139,7 +139,7 @@ _SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__recursive() {
 		$ENVIRONMENT_NAME
 		;
 	do
-		STATUS "editing environment '$PARENT_ENVIRONMENT_NAME'"
+		echo.status "editing environment '$PARENT_ENVIRONMENT_NAME'"
 		SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG \
 			--environment-name $PARENT_ENVIRONMENT_NAME \
 			--mode $RECURSIVE_EDIT_MODE \
@@ -183,13 +183,13 @@ _SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__delete() {
 	do
 		local GROUP_CONFIG_FILENAME="$(SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME "$ENVIRONMENT_NAME" "$GROUP")"
 		[ -f "$GROUP_CONFIG_FILENAME" ] || {
-			STATUS "nothing to cleanup for $ENVIRONMENT_NAME/$GROUP"
+			echo.status "nothing to cleanup for $ENVIRONMENT_NAME/$GROUP"
 			continue
 		}
 
 		rm -- "$GROUP_CONFIG_FILENAME" \
-			&& SUCCESS "deleted '$GROUP_CONFIG_FILENAME'" \
-			|| ERROR "unable to delete '$GROUP_CONFIG_FILENAME'" \
+			&& echo.success "deleted '$GROUP_CONFIG_FILENAME'" \
+			|| echo.error "unable to delete '$GROUP_CONFIG_FILENAME'" \
 			;
 	done
 
@@ -248,7 +248,7 @@ _SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIGS() {
 	done
 
 	[[ $ENVIRONMENT_NAME =~ ^$SCWRYPTS_ENV$ ]] && [[ $__SCWRYPTS_ENVIRONMENT__WORKFLOW_IS_CHANGE_SAFE =~ false ]] && {
-		WARNING "current scwrypts environment has changed"
+		echo.warning "current scwrypts environment has changed"
 		export __SCWRYPTS_ENVIRONMENT__USER_ENVIRONMENT=
 	}
 

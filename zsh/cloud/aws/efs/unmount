@@ -7,13 +7,13 @@ use cloud/aws/cli
 
 MAIN() {
 	[ ! -d "$AWS__EFS__LOCAL_MOUNT_POINT" ] && {
-		STATUS 'no efs currently mounted'
+		echo.status 'no efs currently mounted'
 		exit 0
 	}
 
 	local MOUNTED=$(ls "$AWS__EFS__LOCAL_MOUNT_POINT")
 	[ ! $MOUNTED ] && {
-		STATUS 'no efs currently mounted'
+		echo.status 'no efs currently mounted'
 		exit 0
 	}
 
@@ -24,9 +24,9 @@ MAIN() {
 	[ ! $SELECTED ] && ABORT
 
 	local EFS="$AWS__EFS__LOCAL_MOUNT_POINT/$SELECTED"
-	STATUS "unmounting '$SELECTED'"
+	echo.status "unmounting '$SELECTED'"
 	sudo umount $EFS >/dev/null 2>&1
 	sudo rmdir $EFS \
-		&& SUCCESS "done" \
+		&& echo.success "done" \
 		|| FAIL 2 "failed to unmount '$EFS'"
 }

@@ -8,7 +8,7 @@ MAIN() {
 	local DOCUMENT_DIR="$EXECUTION_DIR"
 	local TEMPLATE=$(GET_TEMPLATES | FZF 'select a template')
 	[ ! $TEMPLATE ] && ABORT
-	SUCCESS "selected template '$TEMPLATE'"
+	echo.success "selected template '$TEMPLATE'"
 
 	INPUT DOC_TITLE 'document title' || ABORT
 
@@ -31,7 +31,7 @@ MAIN() {
 	[[ ! $TEMPLATE =~ ^basic$ ]] \
 		&& mkdir "$DOCUMENT_DIR/sections" "$DOCUMENT_DIR/graphics"
 
-	SUCCESS "finished generating '$(basename $DOCUMENT_FILE)' from '$TEMPLATE'"
+	echo.success "finished generating '$(basename $DOCUMENT_FILE)' from '$TEMPLATE'"
 }
 
 #####################################################################

@@ -7,19 +7,19 @@ MAIN() {
 	local MEMO_FILE="$MEMO__DIR/$MEMO_NAME.$MEMO__FILETYPE"
 	[ "$MEMO_NAME" ] && [ -f "$MEMO_FILE" ] || ABORT
 
-	STATUS "--- START OF MEMO ---------------------------------------------------"
+	echo.status "--- START OF MEMO ---------------------------------------------------"
 	cat "$MEMO_FILE"
-	STATUS "--- END OF MEMO -----------------------------------------------------"
+	echo.status "--- END OF MEMO -----------------------------------------------------"
 
-	WARNING '
+	echo.warning '
 		memos are not backed up by default; deletion is permanent!
 	'
 
 	yN 'are you sure you want to delete this memo?' || ABORT
 
-	STATUS "deleting memo '$MEMO_FILE'"
+	echo.status "deleting memo '$MEMO_FILE'"
 	rm "$MEMO_FILE" \
-		&& SUCCESS "removed memo '$MEMO_NAME'" \
+		&& echo.success "removed memo '$MEMO_NAME'" \
 		|| FAIL 1 "failed to remove memo '$MEMO_NAME'" \
 		;
 }

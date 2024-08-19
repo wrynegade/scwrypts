@@ -4,17 +4,17 @@
 MAIN() {
 	cd $SCWRYPTS_ROOT
 	
-	STATUS "Found $(ls $SCWRYPTS_LOG_PATH | wc -l) log files"
-	WARNING "
+	echo.status "Found $(ls $SCWRYPTS_LOG_PATH | wc -l) log files"
+	echo.warning "
 		this will permanently clear all local cloud script logs found in
 		'$SCWRYPTS_LOG_PATH'
 	"
 	
 	yN 'continue?' || ABORT
 	
-	STATUS 'removing logfiles'
+	echo.status 'removing logfiles'
 	rm -rf $SCWRYPTS_LOG_PATH/* \
-		&& SUCCESS 'done' \
-		|| { ERROR 'failed :c'; exit 2; }\
+		&& echo.success 'done' \
+		|| { echo.error 'failed :c'; exit 2; }\
 		;
 }

@@ -121,14 +121,14 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 			--update )
 				case $SCWRYPTS_INSTALLATION_TYPE in
 					aur )
-						SCWRYPTS_LOG_LEVEL=3 REMINDER "
+						SCWRYPTS_LOG_LEVEL=3 echo.reminder "
 							This installation is built from the AUR. Update through 'makepkg' or use
 							your preferred AUR package management tool (e.g. 'yay -Syu scwrypts')
 							 "
 						;;
 
 					homebrew )
-						SCWRYPTS_LOG_LEVEL=3 REMINDER "This installation is managed by homebrew. Update me with 'brew update'"
+						SCWRYPTS_LOG_LEVEL=3 echo.reminder "This installation is managed by homebrew. Update me with 'brew update'"
 						;;
 
 					manual )
@@ -139,22 +139,22 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 						GIT_SCWRYPTS diff --exit-code origin/main -- . >/dev/null 2>&1
 						local DIFF_STATUS=$?
 
-						[[ $SYNC_STATUS -eq 0 ]] && [[ $DIFF_STATUS -eq 0 ]] && {
-							SUCCESS 'already up-to-date with origin/main'
+						[[ $SYNC_echo.status -eq 0 ]] && [[ $DIFF_echo.status -eq 0 ]] && {
+							echo.success 'already up-to-date with origin/main'
 						} || {
 							GIT_SCWRYPTS rebase --autostash origin/main \
-								&& SUCCESS 'up-to-date with origin/main' \
+								&& echo.success 'up-to-date with origin/main' \
 								&& GIT_SCWRYPTS log -n1 \
 								|| {
 									GIT_SCWRYPTS rebase --abort
-									ERROR 'unable to update scwrypts; please try manual upgrade'
-									REMINDER "installation in '$(scwrypts.config.group scwrypts root)'"
+									echo.error 'unable to update scwrypts; please try manual upgrade'
+									echo.reminder "installation in '$(scwrypts.config.group scwrypts root)'"
 								}
 						}
 						;;
 
 					* )
-						SCWRYPTS_LOG_LEVEL=3 REMINDER "
+						SCWRYPTS_LOG_LEVEL=3 echo.reminder "
 							This is a managed installation of scwrypts. Please update through your
 							system package manager.
 							 "
@@ -167,20 +167,20 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 
 			-m | --name )
 				((SHIFT_COUNT+=1))
-				[ $2 ] || { ERROR "missing value for argument $1"; break; }
+				[ $2 ] || { echo.error "missing value for argument $1"; break; }
 				SEARCH_NAME=$2
 				;;
 
 			-g | --group )
 				((SHIFT_COUNT+=1))
-				[ $2 ] || { ERROR "missing value for argument $1"; break; }
+				[ $2 ] || { echo.error "missing value for argument $1"; break; }
 				SEARCH_GROUP=$2
 				GROUP=$2
 				;;
 
 			-t | --type )
 				((SHIFT_COUNT+=1))
-				[ $2 ] || { ERROR "missing value for argument $1"; break; }
+				[ $2 ] || { echo.error "missing value for argument $1"; break; }
 				SEARCH_TYPE=$2
 				TYPE=$2
 				;;
@@ -193,7 +193,7 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 
 			-v | --log-level )
 				((SHIFT_COUNT+=1))
-				[[ $2 =~ ^[0-4]$ ]] || ERROR "invalid setting for log-level '$2'"
+				[[ $2 =~ ^[0-4]$ ]] || echo.error "invalid setting for log-level '$2'"
 				SCWRYPTS_LOG_LEVEL=$2
 				;;
 
@@ -202,24 +202,24 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 				export SCWRYPTS_OUTPUT_FORMAT=$2
 				case $SCWRYPTS_OUTPUT_FORMAT in
 					pretty | json ) ;;
-					* ) ERROR "unsupported format '$SCWRYPTS_OUTPUT_FORMAT'" ;;
+					* ) echo.error "unsupported format '$SCWRYPTS_OUTPUT_FORMAT'" ;;
 				esac
 				;;
 
 			-e | --env )
 				((SHIFT_COUNT+=1))
-				[ $2 ] || { ERROR "missing value for argument $1"; break; }
+				[ $2 ] || { echo.error "missing value for argument $1"; break; }
 
-				[ $ENV_NAME ] && DEBUG 'overwriting session environment'
+				[ $ENV_NAME ] && echo.debug 'overwriting session environment'
 
 				ENV_NAME="$2"
-				STATUS "using CLI environment '$ENV_NAME'"
+				echo.status "using CLI environment '$ENV_NAME'"
 				;;
 
 			##########################################
 
 			--  ) shift 1; break ;; # pass arguments after '--' to the scwrypt
-			--* ) ERROR "unrecognized argument '$1'" ;;
+			--* ) echo.error "unrecognized argument '$1'" ;;
 			*   ) SEARCH_PATTERNS+=($1) ;;
 		esac
 		shift $SHIFT_COUNT
@@ -228,8 +228,8 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 	[ $SCWRYPTS_OUTPUT_FORMAT ] || export SCWRYPTS_OUTPUT_FORMAT=pretty
 
 	[ $SEARCH_NAME ] && {
-		[ $SEARCH_TYPE  ] || ERROR '--name requires --type argument'
-		[ $SEARCH_GROUP ] || ERROR '--name requires --group argument'
+		[ $SEARCH_TYPE  ] || echo.error '--name requires --type argument'
+		[ $SEARCH_GROUP ] || echo.error '--name requires --group argument'
 	}
 
 	CHECK_ERRORS
@@ -238,7 +238,7 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 	use scwrypts/run
 	use scwrypts/environment
 	SCWRYPTS_LOG_LEVEL=4 SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS \
-		|| ERROR "failed to initialize scwrypts environments (see above)"
+		|| echo.error "failed to initialize scwrypts environments (see above)"
 
 	#####################################################################
 	### scwrypts selection / filtering ##################################
@@ -368,7 +368,7 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 
 	[[ $SCWRYPTS_INSTALLATION_TYPE =~ ^manual$ ]] && {
 		[[ $SUBSCWRYPT -eq 0 ]] && [[ $ENV_NAME =~ prod ]] && [[ $SCWRYPTS_LOG_LEVEL -gt 0 ]] && {
-			STATUS "on '$ENV_NAME'; checking diff against origin/main"
+			echo.status "on '$ENV_NAME'; checking diff against origin/main"
 
 			local WARNING_MESSAGE
 
@@ -384,12 +384,12 @@ source "$(dirname -- $(readlink -f -- "$0"))/zsh/import.driver.zsh" || exit 42
 
 			[ $WARNING_MESSAGE ] && {
 				[[ $SCWRYPTS_LOG_LEVEL -lt 3 ]] && {
-					REMINDER "you are running in ${__BRIGHT_RED}production${__BRIGHT_MAGENTA} and $WARNING_MESSAGE"
+					echo.reminder "you are running in ${__BRIGHT_RED}production${__BRIGHT_MAGENTA} and $WARNING_MESSAGE"
 				} || {
 					GIT_SCWRYPTS diff --exit-code origin/main -- . >&2
-					WARNING "you are trying to run in ${__BRIGHT_RED}production${__YELLOW} but $WARNING_MESSAGE (relevant diffs and errors above)"
+					echo.warning "you are trying to run in ${__BRIGHT_RED}production${__YELLOW} but $WARNING_MESSAGE (relevant diffs and errors above)"
 					yN 'continue?' || {
-						REMINDER "you can use 'scwrypts --update' to quickly update scwrypts to latest"
+						echo.reminder "you can use 'scwrypts --update' to quickly update scwrypts to latest"
 						ABORT
 					}
 				}

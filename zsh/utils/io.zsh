@@ -2,54 +2,14 @@
 ### basic colorized print messages ##################################
 #####################################################################
 
-source "${0:a:h}/io.print.zsh"
 [ ! $ERRORS ] && ERRORS=0
 
-ERROR() {  # command encountered an error
-	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
-	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
-		&& PREFIX="ERROR    ✖" COLOR=$__RED            PRINT "$@"
-	((ERRORS+=1))
-	return $ERRORS
-}
-
-SUCCESS() {  # command completed successfully
-	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
-	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
-		&& PREFIX="SUCCESS  ✔" COLOR=$__GREEN          PRINT "$@"
-	return 0
-}
-
-REMINDER() {  # include sysadmin reminder or other important notice to users
-	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
-	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
-		&& PREFIX="REMINDER " COLOR=$__BRIGHT_MAGENTA PRINT "$@"
-	return 0
-}
-
-STATUS() {  # general status updates (prefer this to generic 'echo')
-	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
-	[[ $SCWRYPTS_LOG_LEVEL -ge 2 ]] \
-		&& PREFIX="STATUS    " COLOR=$__BLUE           PRINT "$@"
-	return 0
-}
-
-WARNING() {  # warning-level messages; not errors
-	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
-	[[ $SCWRYPTS_LOG_LEVEL -ge 3 ]] \
-		&& PREFIX="WARNING  " COLOR=$__YELLOW         PRINT "$@"
-	return 0
-}
-
-DEBUG() {  # helpful during development or (sparingly) to help others' development
-	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
-	[[ $SCWRYPTS_LOG_LEVEL -ge 4 ]] \
-		&& PREFIX="DEBUG    ℹ" COLOR=$__WHITE          PRINT "$@"
-	return 0
-}
+source "${0:a:h}/io.print.zsh"
+source "${0:a:h}/io.echo.zsh"
 
 PROMPT() {  # you probably want to use yN or INPUT from below
 	[ ! $SCWRYPTS_LOG_LEVEL ] && local SCWRYPTS_LOG_LEVEL=4
+
 	[[ $SCWRYPTS_LOG_LEVEL -ge 1 ]] \
 		&& PREFIX="PROMPT   " COLOR=$__CYAN PRINT "$@" \
 		&& PREFIX="USER     ⌨" COLOR=$__BRIGHT_CYAN PRINT '' --no-line-end \
@@ -57,7 +17,7 @@ PROMPT() {  # you probably want to use yN or INPUT from below
 	return 0
 }
 
-FAIL()  { SCWRYPTS_LOG_LEVEL=1 ERROR "${@:2}"; exit $1; }
+FAIL()  { SCWRYPTS_LOG_LEVEL=1 echo.error "${@:2}"; exit $1; }
 ABORT() { FAIL 69 'user abort'; }
 
 #####################################################################
@@ -111,13 +71,13 @@ source "${0:a:h}/io.fzf.zsh"  # allow user to select from a list of inputs
 
 EDIT() {  # edit a file in user's preferred editor
 	[ $CI ] && {
-		WARNING 'currently in CI, skipping EDIT'
+		echo.warning 'currently in CI, skipping EDIT'
 		return 0
 	}
 
-	STATUS "opening '$1' for editing"
+	echo.status "opening '$1' for editing"
 	$EDITOR $@ </dev/tty >/dev/tty
-	SUCCESS "finished editing '$1'!"
+	echo.success "finished editing '$1'!"
 }
 
 #####################################################################
@@ -155,8 +115,8 @@ CAPTURE() {
 GETSUDO() {
 	echo "\\033[1;36mPROMPT    : checking sudo password...\\033[0m" >&2
 	sudo echo hi >/dev/null 2>&1 </dev/tty \
-		&& SUCCESS '...authenticated!' \
-		|| { ERROR 'failed :c'; return 1; }
+		&& echo.success '...authenticated!' \
+		|| { echo.error 'failed :c'; return 1; }
 }
 
 READ()  {

@@ -27,7 +27,7 @@ ARGS_PARSER__EKSCTL__CREATE_IAMSERVICEACCOUNT.usage() {
 }
 
 ARGS_PARSER__EKSCTL__CREATE_IAMSERVICEACCOUNT.validate() {
-	[ $SERVICEACCOUNT ] || ERROR "--serviceaccount is required"
-	[ $NAMESPACE      ] || ERROR "--namespace is required"
-	[ $ROLE_NAME      ] || ERROR "--role-name is required"
+	[ $SERVICEACCOUNT ] || echo.error "--serviceaccount is required"
+	[ $NAMESPACE      ] || echo.error "--namespace is required"
+	[ $ROLE_NAME      ] || echo.error "--role-name is required"
 }

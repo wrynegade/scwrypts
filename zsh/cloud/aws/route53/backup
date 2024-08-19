@@ -11,10 +11,10 @@ MAIN() {
 	local JOBS=()
 	for DOMAIN in $(ROUTE53_GET_DOMAINS)
 	do
-		( STATUS "creating '$BACKUP_PATH/$DOMAIN.txt'" \
+		( echo.status "creating '$BACKUP_PATH/$DOMAIN.txt'" \
 			&& cli53 export --profile $AWS_PROFILE $DOMAIN > "$BACKUP_PATH/$DOMAIN.txt" \
-			&& SUCCESS "backed up '$DOMAIN'" \
-			|| ERROR "failed to back up '$DOMAIN'" \
+			&& echo.success "backed up '$DOMAIN'" \
+			|| echo.error "failed to back up '$DOMAIN'" \
 		) &
 		JOBS+=$!
 	done

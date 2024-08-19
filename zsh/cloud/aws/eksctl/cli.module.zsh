@@ -29,6 +29,6 @@ EKSCTL() {
 
 	##########################################
 
-	DEBUG "invoking '$(echo "$AWS_EVAL_PREFIX" | sed 's/AWS_\(ACCESS_KEY_ID\|SECRET_ACCESS_KEY\)=[^ ]\+ //g')eksctl ${ARGS[@]}'"
+	echo.debug "invoking '$(echo "$AWS_EVAL_PREFIX" | sed 's/AWS_\(ACCESS_KEY_ID\|SECRET_ACCESS_KEY\)=[^ ]\+ //g')eksctl ${ARGS[@]}'"
 	eval "${AWS_EVAL_PREFIX}eksctl ${ARGS[@]}"
 }

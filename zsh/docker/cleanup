@@ -3,11 +3,11 @@ DEPENDENCIES+=(docker)
 #####################################################################
 
 MAIN() {
-	WARNING 'this will prune all docker resources from the current machine'
-	WARNING 'pruned resources are PERMANENTLY DELETED'
+	echo.warning 'this will prune all docker resources from the current machine'
+	echo.warning 'pruned resources are PERMANENTLY DELETED'
 	yN 'continue?' || return 1
 
-	SUCCESS "CONTAINER : $(docker container prune -f 2>/dev/null | tail -n 1)"
-	SUCCESS "IMAGE     : $(docker image prune -f 2>/dev/null | tail -n 1)"
-	SUCCESS "VOLUME    : $(docker volume prune -f 2>/dev/null | tail -n 1)"
+	echo.success "CONTAINER : $(docker container prune -f 2>/dev/null | tail -n 1)"
+	echo.success "IMAGE     : $(docker image prune -f 2>/dev/null | tail -n 1)"
+	echo.success "VOLUME    : $(docker volume prune -f 2>/dev/null | tail -n 1)"
 }

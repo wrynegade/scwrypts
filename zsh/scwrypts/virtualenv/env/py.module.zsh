@@ -14,7 +14,7 @@ CREATE_VIRTUALENV__scwrypts__py() {
 	[ -f "${VIRTUALENV_PATH}/bin/activate" ] && return 0
 
 
-	STATUS 'creating python virtualenv'
+	echo.status 'creating python virtualenv'
 	local PY PYTHON
 	for PY in $(scwrypts.config python.versions)
 	do
@@ -25,13 +25,13 @@ CREATE_VIRTUALENV__scwrypts__py() {
 	done
 
 	[ "${PYTHON}" ] \
-		|| ERROR 'python>=3.10 not available; skipping python env' \
+		|| echo.error 'python>=3.10 not available; skipping python env' \
 		|| return 1
 
-	STATUS 'setting up virtualenv'
+	echo.status 'setting up virtualenv'
 	virtualenv "${VIRTUALENV_PATH}" --python="${PYTHON}" \
-		&& SUCCESS 'python virtualenv created' \
-		|| ERROR "unable to create '${VIRTUALENV_PATH}' with '${PYTHON}'" \
+		&& echo.success 'python virtualenv created' \
+		|| echo.error "unable to create '${VIRTUALENV_PATH}' with '${PYTHON}'" \
 		;
 }
 
@@ -44,7 +44,7 @@ ACTIVATE_VIRTUALENV__scwrypts__py() {
 	[ "${VIRTUALENV_PATH}" ] || return 1
 
 	source "${VIRTUALENV_PATH}/bin/activate" \
-		|| ERROR "failed to activate virtualenv ${GROUP}/${TYPE}; did create fail?"
+		|| echo.error "failed to activate virtualenv ${GROUP}/${TYPE}; did create fail?"
 }
 
 

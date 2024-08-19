@@ -91,12 +91,12 @@ ZSHPARSEARGS() {
 		done
 
 		[[ $_S -gt 0 ]] \
-			|| ERROR "unknown argument '$1'" \
+			|| echo.error "unknown argument '$1'" \
 			|| ((_S+=1))
 
 
 		[[ $_S -le $# ]] \
-			|| ERROR "invalid value(s) for '$1'" \
+			|| echo.error "invalid value(s) for '$1'" \
 			|| _S=$#
 
 		shift $_S

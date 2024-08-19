@@ -42,7 +42,7 @@ ${scwryptsmodule}() {
 				0 ) cat "$CACHE_FILE_FULLPATH"
 					;;
 				* ) cat "$CACHE_FILE_FULLPATH" 2>/dev/null
-					ERROR "error running '${ARGS[@]}'"
+					echo.error "error running '${ARGS[@]}'"
 					rm -- "$CACHE_FILE_FULLPATH" &>/dev/null
 					;;
 			esac
@@ -65,7 +65,7 @@ ${scwryptsmodule}.parse() {
 					((CACHE_ARGS_COUNT+=1))
 					USE_CACHE=$2
 					;;
-				* ) ERROR "cannot set USE_CACHE to '$2'" ;;
+				* ) echo.error "cannot set USE_CACHE to '$2'" ;;
 			esac
 			;;
 
@@ -94,21 +94,21 @@ ${scwryptsmodule}.parse.usage() {
 ${scwryptsmodule}.parse.validate() {
 	case $USE_CACHE in
 		true | reset | bypass ) ;;
-		* ) ERROR "invalid value '$USE_CACHE' for USE_CACHE (are you missing 'local USE_CACHE=true'?)" ;;
+		* ) echo.error "invalid value '$USE_CACHE' for USE_CACHE (are you missing 'local USE_CACHE=true'?)" ;;
 	esac
 
 	[[ "$CACHE_FILE" ]] && {
 		mkdir -p -- "$SCWRYPTS_TEMP_PATH/$(dirname -- "$CACHE_FILE")" \
-			|| ERROR "unable to create base directory '$SCWRYPTS_TEMP_PATH/$(dirname -- "$CACHE_FILE")'"
+			|| echo.error "unable to create base directory '$SCWRYPTS_TEMP_PATH/$(dirname -- "$CACHE_FILE")'"
 
 		true
-	} || ERROR "missing cache file"
+	} || echo.error "missing cache file"
 
 	[[ ${#ARGS[@]} -gt 0 ]] \
-		|| ERROR "no command provided"
+		|| echo.error "no command provided"
 
 	[[ $CACHE_ARGS_COUNT -le 1 ]] \
-		|| ERROR "too many '--use-cache' flags used"
+		|| echo.error "too many '--use-cache' flags used"
 }
 
 #####################################################################
@@ -124,7 +124,7 @@ ${scwryptsmodule}.zshparse.args() {
 					CACHE_ARGS+=(--use-cache $2)
 					;;
 
-				* ) ERROR "invalid --use-cache value '$2'" ;;
+				* ) echo.error "invalid --use-cache value '$2'" ;;
 			esac
 	esac
 	return $PARSED

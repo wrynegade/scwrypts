@@ -36,7 +36,7 @@ MAIN() {
 			-h | --help ) USAGE; return 0 ;;
 
 			* )
-				[ $SERVICE ] && ERROR "unexpected argument '$2'"
+				[ $SERVICE ] && echo.error "unexpected argument '$2'"
 				SERVICE=$1
 				;;
 		esac

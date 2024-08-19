@@ -27,7 +27,7 @@ ${scwryptsmodule}.validate() {
 	[ $CLUSTER_NAME ] && return 0
 
 	[[ $EKS_CLUSTER_NAME_INTERACTIVE =~ allowed ]] \
-		|| ERROR 'missing cluster name' \
+		|| echo.error 'missing cluster name' \
 		|| return
 
 	CLUSTER_NAME=$(\
@@ -36,5 +36,5 @@ ${scwryptsmodule}.validate() {
 			| FZF "select an eks cluster ($ACCOUNT/$REGION)" \
 	)
 
-	[ $CLUSTER_NAME ] || ERROR 'must select a valid cluster or use --cluster-name'
+	[ $CLUSTER_NAME ] || echo.error 'must select a valid cluster or use --cluster-name'
 }

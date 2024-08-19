@@ -18,12 +18,12 @@ SETUP_SYMLINK() {
 	local TARGET_CONFIG="$HOME/.config/$2"
 
 	[ ! -f "$SOURCE_CONFIG" ] && [ ! -d "$SOURCE_CONFIG" ] && [ -f "$TARGET_CONFIG" ] && {
-		DEBUG 'SOURCE_CONFIG is not tracked; copying from TARGET_CONFIG'
+		echo.debug 'SOURCE_CONFIG is not tracked; copying from TARGET_CONFIG'
 		mkdir -p "$(dirname "$SOURCE_CONFIG")"
 		cp "$TARGET_CONFIG" "$SOURCE_CONFIG"
 	}
 	[ ! -f "$SOURCE_CONFIG" ] && [ ! -d "$SOURCE_CONFIG" ] && {
-		WARNING "no such file or directory '$SOURCE_CONFIG'"
+		echo.warning "no such file or directory '$SOURCE_CONFIG'"
 		return 0
 	}
 
@@ -35,7 +35,7 @@ SETUP_SYMLINK() {
 	rm "$TARGET_CONFIG" >/dev/null 2>&1
 
 	ln -s "$SOURCE_CONFIG" "$TARGET_CONFIG" \
-		&& SUCCESS "successfully linked '$(basename $(dirname $TARGET_CONFIG))/$(basename $TARGET_CONFIG)'" \
+		&& echo.success "successfully linked '$(basename $(dirname $TARGET_CONFIG))/$(basename $TARGET_CONFIG)'" \
 		|| FAIL 3 "failed to create link '$TARGET_CONFIG'" \
 		;
 }

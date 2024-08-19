@@ -15,11 +15,11 @@ CREATE_VIRTUALENV__scwrypts__zx() {
 	[ -f "${VIRTUALENV_PATH}/bin/activate" ] && return 0
 
 
-	STATUS 'setting up nodeenv'
+	echo.status 'setting up nodeenv'
 	local NODEJS_VERSION=$(scwrypts.config nodejs.version)
 	nodeenv "${VIRTUALENV_PATH}" --node=${NODEJS_VERSION} \
-		&& SUCCESS 'node virtualenv created' \
-		|| ERROR "unable to create '${VIRTUALENV_PATH}' with '${NODEJS_VERSION}'" \
+		&& echo.success 'node virtualenv created' \
+		|| echo.error "unable to create '${VIRTUALENV_PATH}' with '${NODEJS_VERSION}'" \
 		;
 }
 
@@ -32,7 +32,7 @@ ACTIVATE_VIRTUALENV__scwrypts__zx() {
 	[ "${VIRTUALENV_PATH}" ] || return 1
 
 	source "${VIRTUALENV_PATH}/bin/activate" || {
-		ERROR "failed to activate virtualenv ${GROUP}/${TYPE}; did create fail?"
+		echo.error "failed to activate virtualenv ${GROUP}/${TYPE}; did create fail?"
 		return 1
 	}
 }

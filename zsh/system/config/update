@@ -3,8 +3,8 @@ use scwrypts/meta
 #####################################################################
 
 MAIN() {
-	STATUS 'updating all config files and links'
+	echo.status 'updating all config files and links'
 	SCWRYPTS__RUN --name system/config/symlinks --group scwrypts --type zsh || exit 1
 	SCWRYPTS__RUN --name system/config/terminfo --group scwrypts --type zsh || exit 2
-	SUCCESS 'finished updating config files and links'
+	echo.success 'finished updating config files and links'
 }

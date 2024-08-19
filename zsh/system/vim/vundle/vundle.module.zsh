@@ -31,7 +31,7 @@ done
 
 VUNDLE__PLUGIN_INSTALL() {
 	VIM +PluginInstall +qall \
-		&& SUCCESS 'successfully installed Vundle.vim plugins' \
+		&& echo.success 'successfully installed Vundle.vim plugins' \
 		|| FAIL 1 'failed to install Vundle.vim plugins'
 }
 
@@ -42,10 +42,10 @@ VUNDLE__REBUILD_PLUGINS() {
 	for PLUGIN in $(echo $VUNDLE__PLUGIN_LIST)
 	do
 		cd "$VUNDLE__PLUGIN_DIR/$PLUGIN"
-		STATUS "building '$PLUGIN'"
+		echo.status "building '$PLUGIN'"
 		VUNDLE__BUILD__$PLUGIN \
-			&& SUCCESS "finished building '$PLUGIN'" \
-			|| ERROR "failed to build '$PLUGIN' (see above)" \
+			&& echo.success "finished building '$PLUGIN'" \
+			|| echo.error "failed to build '$PLUGIN' (see above)" \
 			;
 	done
 

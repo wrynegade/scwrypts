@@ -21,7 +21,7 @@ __CHECK_DEPENDENCY() {
 
 	[[ $DEPENDENCY =~ ^yq$ ]] && {
 		yq --version | grep -q mikefarah \
-			|| WARNING 'detected kislyuk/yq but mikefarah/yq is preferred (compatibility may vary)'
+			|| echo.warning 'detected kislyuk/yq but mikefarah/yq is preferred (compatibility may vary)'
 	}
 
 	return 0
@@ -38,14 +38,14 @@ __CHECK_COREUTILS() {
 		__CHECK_DEPENDENCY $UTIL || { ((MISSING_DEPENDENCY_COUNT+=1)); continue; }
 
 		$UTIL --version 2>&1 | grep 'GNU' | grep -qv 'BSD' || {
-			WARNING "non-GNU version of $UTIL detected"
+			echo.warning "non-GNU version of $UTIL detected"
 			((NON_GNU_DEPENDENCY_COUNT+=1))
 		}
 	done
 
 	[[ $NON_GNU_DEPENDENCY_COUNT -gt 0 ]] && {
-		WARNING 'scripts rely on GNU coreutils; compatibility may vary'
-		IS_MACOS && REMINDER 'GNU coreutils can be installed and linked through Homebrew'
+		echo.warning 'scripts rely on GNU coreutils; compatibility may vary'
+		IS_MACOS && echo.reminder 'GNU coreutils can be installed and linked through Homebrew'
 	}
 
 	return $MISSING_DEPENDENCY_COUNT

@@ -24,7 +24,7 @@ HELM__DEPENDENCY__UPDATE() {
 		case $1 in 
 			-t | --template-filename ) TEMPLATE_FILENAME="$(SCWRYPTS__GET_REALPATH "$2")"; shift 1 ;;
 
-			* ) ERROR "unexpected argument '$1'" ;;
+			* ) echo.error "unexpected argument '$1'" ;;
 		esac
 		shift 1
 	done
@@ -34,9 +34,9 @@ HELM__DEPENDENCY__UPDATE() {
 
 	##########################################
 
-	STATUS "updating helm dependencies for '$CHART_ROOT'" \
+	echo.status "updating helm dependencies for '$CHART_ROOT'" \
 		&& cd $CHART_ROOT  \
 		&& helm dependency update \
-		&& SUCCESS "helm chart dependencies updated" \
-		|| { ERROR "unable to update helm chart dependencies (see above)"; return 1; }
+		&& echo.success "helm chart dependencies updated" \
+		|| { echo.error "unable to update helm chart dependencies (see above)"; return 1; }
 }

@@ -2,5 +2,5 @@
 #####################################################################
 
 MAIN() {
-	SUCCESS 'Hello, World!'
+	echo.success 'Hello, World!'
 }

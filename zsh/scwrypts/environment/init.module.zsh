@@ -18,7 +18,7 @@ SCWRYPTS_ENVIRONMENT__INIT_ENVIRONMENTS() {
 		return $?
 	}
 
-	STATUS "initializing environments for scwrypts"
+	echo.status "initializing environments for scwrypts"
 
 	local BASIC_ENV
 	for BASIC_ENV in local dev prod
@@ -56,7 +56,7 @@ _SCWRYPTS_ENVIRONMENT__CONVERT() {
 			_SCWRYPTS_ENVIRONMENT__CONVERT__V4_TO_V5__TEMPLATE_FILE
 		}
 
-		#[ -f "$GROUP_TEMPLATE_FILENAME" ] && SUCCESS "environment template '$GROUP' OK"
+		#[ -f "$GROUP_TEMPLATE_FILENAME" ] && echo.success "environment template '$GROUP' OK"
 	done
 
 	local ENVIRONMENT_NAME
@@ -64,7 +64,7 @@ _SCWRYPTS_ENVIRONMENT__CONVERT() {
 	for ENVIRONMENT_NAME in $(_SCWRYPTS_ENVIRONMENT__FIND_LEGACY_ENV_NAMES)
 	do
 		local MIGRATE_GROUP=false
-		STATUS "checking '$ENVIRONMENT_NAME' configuration files"
+		echo.status "checking '$ENVIRONMENT_NAME' configuration files"
 		for GROUP in ${SCWRYPTS_GROUPS[@]}
 		do
 			GROUP_CONFIG_FILENAME="$(SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME "$ENVIRONMENT_NAME" "$GROUP")"
@@ -77,7 +77,7 @@ _SCWRYPTS_ENVIRONMENT__CONVERT() {
 
 		[[ $MIGRATE_GROUP =~ true ]] && {
 			_SCWRYPTS_ENVIRONMENT__CONVERT__V4_TO_V5__CONFIG_FILE \
-				&& SUCCESS "successfully migrated '$ENVIRONMENT_NAME'"
+				&& echo.success "successfully migrated '$ENVIRONMENT_NAME'"
 		}
 	done
 }
@@ -85,19 +85,19 @@ _SCWRYPTS_ENVIRONMENT__CONVERT() {
 _SCWRYPTS_ENVIRONMENT__CONVERT__V4_TO_V5__TEMPLATE_FILE() {
 	_SCWRYPTS_ENVIRONMENT__CONVERT__deprecation_warning
 
-	STATUS "detected legacy template for '$GROUP'; attempting v5 conversion"
+	echo.status "detected legacy template for '$GROUP'; attempting v5 conversion"
 
 	"$SCWRYPTS_ROOT__scwrypts/.config/create-new-env" "$GROUP_ROOT/.config" "$GROUP" &>/dev/null
 
 	EDIT "$GROUP_TEMPLATE_FILENAME"
 
-	REMINDER "the file '$GROUP_TEMPLATE_FILENAME' should be committed to the appropriate repository"
+	echo.reminder "the file '$GROUP_TEMPLATE_FILENAME' should be committed to the appropriate repository"
 }
 
 _SCWRYPTS_ENVIRONMENT__CONVERT__V4_TO_V5__CONFIG_FILE() {
 	_SCWRYPTS_ENVIRONMENT__CONVERT__deprecation_warning
 
-	SCWRYPTS_LOG_LEVEL=4 STATUS "detected legacy environment configuration file for '$ENVIRONMENT_NAME'; attempting v5 conversion"
+	SCWRYPTS_LOG_LEVEL=4 echo.status "detected legacy environment configuration file for '$ENVIRONMENT_NAME'; attempting v5 conversion"
 
 	local LEGACY_CONFIG_FILE
 	local LEGACY_CONFIG_VALUES="$(
@@ -133,8 +133,8 @@ _SCWRYPTS_ENVIRONMENT__CONVERT__V4_TO_V5__CONFIG_FILE() {
 export __SCWRYPTS_ENVIRONMENT__DEPRECATION_WARNING=false
 export __SCWRYPTS_ENVIRONMENT__DEPRECATION_WARNING=true
 _SCWRYPTS_ENVIRONMENT__CONVERT__deprecation_warning() {
-	[[ $__SCWRYPTS_ENVIRONMENT__DEPRECATION_WARNING =~ true ]] && return 0
+	[[ $__SCWRYPTS_ENVIRONMENT__DEPRECATION_echo.warning =~ true ]] && return 0
 
-	WARNING "DEPRECATED : the v4 to v5 environment migration is temporary and will be removed in 5.2"
+	echo.warning "DEPRECATED : the v4 to v5 environment migration is temporary and will be removed in 5.2"
 	export __SCWRYPTS_ENVIRONMENT__DEPRECATION_WARNING=true
 }

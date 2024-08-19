@@ -69,11 +69,11 @@ CHECK_ENVIRONMENT
 
 - echo "do some stuff here"
 - # ... etc ...
-- SUCCESS "completed the stuff"
+- echo.success "completed the stuff"
 + MAIN() {
 +     echo "do some stuff here"
 +     # ... etc ...
-+     SUCCESS "completed the stuff
++     echo.success "completed the stuff
 + }
 ```
 
@@ -85,7 +85,7 @@ All I had to do in this case was delete the function invocation at the end:
 ```diff
 # ... top boilerplate ...
 MAIN() {
-    SUCCESS "look at me I'm so cool I already wrote this in a main function"
+    echo.success "look at me I'm so cool I already wrote this in a main function"
 }
 -
 - #####################################################################
@@ -128,7 +128,7 @@ use do/awesome/stuff --group my-custom-library
 MAIN() {
     echo "do some stuff here"
     # ... etc ...
-    SUCCESS "completed the stuff
+    echo.success "completed the stuff
 }
 ```
 

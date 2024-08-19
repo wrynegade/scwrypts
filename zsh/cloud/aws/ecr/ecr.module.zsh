@@ -22,12 +22,12 @@ ECR_LOGIN() {
 
 	eval "$ZSHPARSEARGS"
 
-	STATUS "performing AWS ECR docker login"
+	echo.status "performing AWS ECR docker login"
 	$AWS ecr get-login-password \
 		| docker login "$ACCOUNT.dkr.ecr.$REGION.amazonaws.com" \
 			--username AWS \
 			--password-stdin \
-		&& SUCCESS "authenticated docker for '$ACCOUNT' in '$REGION'" \
-		|| ERROR "unable to authenticate docker for '$ACCOUNT' in '$REGION'" \
+		&& echo.success "authenticated docker for '$ACCOUNT' in '$REGION'" \
+		|| echo.error "unable to authenticate docker for '$ACCOUNT' in '$REGION'" \
 		;
 }

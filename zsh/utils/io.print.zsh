@@ -1,65 +1,105 @@
-PRINT() {
-	local MESSAGE
-	local LAST_LINE_END='\n'
-	local STDERR=1
-	local STDOUT=0
+DEPENDENCIES+=(jo jq printf)
 
-	local LTRIM=1
-	local FORMAT=$SCWRYPTS_OUTPUT_FORMAT
+utils.io.print() {
+	local \
+		MESSAGE \
+		PREFIX COLOR \
+		MINIMUM_LOG_LEVEL IGNORE_MINIMUM_LOG_LEVEL=false \
+		PRINT_TO_STDERR=true \
+		PRINT_TO_STDOUT=false \
+		LAST_LINE_END='\n' \
+		;
+
+	[ ${SCWRYPTS_LOG_LEVEL}     ] || local SCWRYPTS_LOG_LEVEL=4
+	[ ${SCWRYPTS_OUTPUT_FORMAT} ] || local SCWRYPTS_OUTPUT_FORMAT=pretty
+
 	local _S
 	while [[ $# -gt 0 ]]
 	do
 		_S=1
 		case $1 in
-			-n | --no-trim-tabs ) LTRIM=0 ;;
-			-x | --no-line-end  ) LAST_LINE_END='' ;;
-			-o | --use-stdout   ) STDOUT=1; STDERR=0 ;;
+			( --prefix )
+				_S=2
+				PREFIX="$2"
+				;;
 
-			-f | --format ) ((_S+=1)); FORMAT=$2 ;;
+			( --color )
+				_S=2
+				COLOR="$2"
+				;;
 
-			* ) MESSAGE+="$(echo $1) " ;;
+			( --minimum-log-level )
+				_S=2
+				MINIMUM_LOG_LEVEL=$2
+				;;
+
+			( --force-print )
+				IGNORE_MINIMUM_LOG_LEVEL=true
+				;;
+
+			( --stdout )
+				PRINT_TO_STDOUT=true
+				PRINT_TO_STDERR=false
+				;;
+
+			( --no-line-end  )
+				LAST_LINE_END=''
+				;;
+
+			( --format ) 
+				_S=2
+				local SCWRYPTS_OUTPUT_FORMAT=$2
+				;;
+
+			( * )
+				[ "$MESSAGE" ] && MESSAGE+=" $1" || MESSAGE="$1"
+				;;
 		esac
-		shift $_S
+
+		[[ ${_S} -le $# ]] && shift ${_S} || { echo "echo.error : missing argument for '$1'" >&2; return 1; }
 	done
 
-	[ $FORMAT ] || FORMAT=pretty
-	local STYLED_MESSAGE
-	case $FORMAT in
+	[ "${MESSAGE}" ] || return 1
+
+	: \
+		&& [ "${MINIMUM_LOG_LEVEL}" ] \
+		&& [[ "${IGNORE_MINIMUM_LOG_LEVEL}" =~ false ]] \
+		&& [[ "${SCWRYPTS_LOG_LEVEL}" -lt "${MINIMUM_LOG_LEVEL}" ]] \
+		&& return 0
+
+
+	MESSAGE="$(echo "${MESSAGE}" | sed 's/^	\+//; s/%/%%/g')"
+	case ${SCWRYPTS_OUTPUT_FORMAT} in
+		raw ) MESSAGE+="${LAST_LINE_END}" ;;
 		pretty )
-			STYLED_MESSAGE="$(echo "$MESSAGE" | sed 's/%/%%/g')"
-			STYLED_MESSAGE="$({
-				printf "${COLOR}"
+			MESSAGE="${COLOR}$({
 				while IFS='' read line
 				do
-					[[ $PREFIX =~ ^[[:space:]]\+$ ]] && printf '\n'
+					[[ ${PREFIX} =~ ^[[:space:]]\+$ ]] && printf '\n'
 
-					printf "${PREFIX} : $(echo "$line" | sed 's/^	\+//; s/ \+$//')"
+					printf "${PREFIX} : $(echo "${line}" | sed 's/^	\+//; s/ \+$//')"
 
-					PREFIX=$(echo $PREFIX | sed 's/./ /g')
-				done <<< $MESSAGE
-			})"
-			STYLED_MESSAGE="${COLOR}$(echo "$STYLED_MESSAGE" | sed 's/%/%%/g')${__COLOR_RESET}${LAST_LINE_END}"
+					PREFIX='          '
+				done <<< $(echo "${MESSAGE}" | sed 's/%/%%/g')
+			})${LAST_LINE_END}$(utils.colors.reset)"
 			;;
 		json )
-			STYLED_MESSAGE="$(
-				echo '{}' | jq -c ".
-					| .timestamp = \"$(date +%s)\"
-					| .runtime   = \"$SCWRYPTS_RUNTIME_ID\"
-					| .status    = \"$(echo "$PREFIX" | sed 's/ .*//')\"
-					| .message   = $(echo $MESSAGE | sed 's/^\t\+//' | jq -Rs)
-					" | sed 's/\\/\\\\/g'
+			MESSAGE="$(jo \
+				timestamp=$(date +%s) \
+				runtime=${SCWRYPTS_RUNTIME_ID} \
+				status="$(echo "${PREFIX}" | sed 's/ .*//')" \
+				message="$(echo -n "${MESSAGE}" | sed 's/^\t\+//' | jq -Rs)" \
 			)\n"
 			;;
 		* )
-			echo "ERROR : unsupported format '$FORMAT'" >&2
+			echo "echo.error : unsupported format '${SCWRYPTS_OUTPUT_FORMAT}'" >&2
 			return 1
 			;;
 	esac
 
 
-
-	[[ $STDERR -eq 1 ]] && printf -- "$STYLED_MESSAGE" >&2
-	[[ $STDOUT -eq 1 ]] && printf -- "$STYLED_MESSAGE"
+	[[ ${PRINT_TO_STDERR} =~ true ]] && printf -- "${MESSAGE}" >&2
+	[[ ${PRINT_TO_STDOUT} =~ true ]] && printf -- "${MESSAGE}"
 
 	return 0
 }

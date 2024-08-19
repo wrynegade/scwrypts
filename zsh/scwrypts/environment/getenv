@@ -67,11 +67,11 @@ MAIN.parse.validate() {
 	case $MODE in
 		single-variable )
 			[[ ${#VARIABLE_NAMES[@]} -gt 0 ]] \
-				|| ERROR "missing variable / lookup path to check"
+				|| echo.error "missing variable / lookup path to check"
 			;;
 		all )
 			[[ ${#VARIABLE_NAMES[@]} -eq 0 ]] \
-				|| ERROR "unexpected variable name with '--all' flag"
+				|| echo.error "unexpected variable name with '--all' flag"
 			;;
 	esac
 }

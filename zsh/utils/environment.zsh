@@ -54,15 +54,15 @@ __CHECK_ENV_VAR() {
 
 			--default )
 				[ $2 ] && ((_S+=1)) \
-					|| ERROR "missing env var default value" \
+					|| echo.error "missing env var default value" \
 					|| break
 
 				[ ! "$DEFAULT_VALUE" ] \
-					|| ERROR "only one default value is supported" \
+					|| echo.error "only one default value is supported" \
 					|| break
 
 				[[ $OPTIONAL =~ true ]] \
-					&& WARNING "--optional and --default flags are redundant; remove '--optional' flag"
+					&& echo.warning "--optional and --default flags are redundant; remove '--optional' flag"
 
 				DEFAULT_VALUE="$2"
 				OPTIONAL=true
@@ -75,10 +75,10 @@ __CHECK_ENV_VAR() {
 						;;
 
 					2 ) DEFAULT_VALUE="$1"
-						WARNING "use of positional argument for default value is DEPRECATED\nplease use --default <value> flag"
+						echo.warning "use of positional argument for default value is DEPRECATED\nplease use --default <value> flag"
 						;;
 
-					* ) ERROR "unknown argument '$1'"
+					* ) echo.error "unknown argument '$1'"
 						;;
 				esac
 				;;
@@ -87,7 +87,7 @@ __CHECK_ENV_VAR() {
 	done
 
 	[ "$NAME" ] \
-		|| ERROR "must provide environment variable name"
+		|| echo.error "must provide environment variable name"
 
 	[ "$OPTIONAL" ] || OPTIONAL=false
 
@@ -96,10 +96,10 @@ __CHECK_ENV_VAR() {
 
 	case $NAME_IS in
 		lookup-path )
-			[ $__SCWRYPT ] || ERROR "lookup paths cannot be used outside of scwrypts ($NAME)"
+			[ $__SCWRYPT ] || echo.error "lookup paths cannot be used outside of scwrypts ($NAME)"
 			[ $__SCWRYPT ] && {
 				use scwrypts/environment \
-					|| ERROR "unable to load lookup path"
+					|| echo.error "unable to load lookup path"
 
 				LOOKUP_PATH="$NAME"
 				NAME=$(\
@@ -108,7 +108,7 @@ __CHECK_ENV_VAR() {
 						| grep -v ^null$\
 					)
 
-				[ $NAME ] || ERROR "no .ENVIRONMENT key is configured for '$LOOKUP_PATH'"
+				[ $NAME ] || echo.error "no .ENVIRONMENT key is configured for '$LOOKUP_PATH'"
 			}
 			;;
 		environment-variable )
@@ -137,7 +137,7 @@ __CHECK_ENV_VAR() {
 			true )
 				[ "$DEFAULT_VALUE" ] \
 					&& export $NAME=$DEFAULT_VALUE \
-					|| WARNING "environment variable '$NAME' is not set" \
+					|| echo.warning "environment variable '$NAME' is not set" \
 					;
 
 				export ${NAME}__checked=0
@@ -147,7 +147,7 @@ __CHECK_ENV_VAR() {
 				local ERROR_MESSAGE="missing required environment variable '$NAME'"
 				[ "$LOOKUP_PATH" ] && ERROR_MESSAGE+=" (config path '$LOOKUP_PATH')"
 
-				ERROR "$ERROR_MESSAGE"
+				echo.error "$ERROR_MESSAGE"
 				export ${NAME}__checked=1
 				return 1
 				;;
@@ -182,7 +182,7 @@ __CHECK_ENV_VAR() {
 		true )
 			[ "$DEFAULT_VALUE" ] \
 				&& export $NAME=$DEFAULT_VALUE \
-				|| WARNING "environment variable '$NAME' is not set" \
+				|| echo.warning "environment variable '$NAME' is not set" \
 				;
 
 			export ${NAME}__checked=0
@@ -192,7 +192,7 @@ __CHECK_ENV_VAR() {
 			local ERROR_MESSAGE="missing required environment variable '$NAME'"
 			[ "$LOOKUP_PATH" ] && ERROR_MESSAGE+=" (config path '$LOOKUP_PATH')"
 
-			ERROR "$ERROR_MESSAGE"
+			echo.error "$ERROR_MESSAGE"
 			export ${NAME}__checked=1
 			return 1
 			;;
@@ -241,7 +241,7 @@ __CHECK_ENV_VAR__select() {  # support for ENV_VAR__select=()
 
 	[[ ${#SELECTION_VALUES[@]} -gt 0 ]] || return
 
-	WARNING "support for ENV_VAR__select syntax is deprecated;\nplease use the .selection[] array in the yaml configuration for user-selectable options"
+	echo.warning "support for ENV_VAR__select syntax is deprecated;\nplease use the .selection[] array in the yaml configuration for user-selectable options"
 
 	echo "$SELECTION_VALUES" \
 		| sed 's/\s\+/\n/g' \

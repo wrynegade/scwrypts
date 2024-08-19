@@ -50,26 +50,26 @@ ${scwryptsmodule}() {
 	${FUNCTION}.assert.called() {
 		local ERRORS=0
 		[[ MOCK__CALLCOUNT__${FUNCTION_VARIABLE} -gt 0 ]] \
-			|| ERROR \"${FUNCTION} was not called\"
+			|| echo.error \"${FUNCTION} was not called\"
 	}
 
 	${FUNCTION}.assert.not.called() {
 		local ERRORS=0
 		${FUNCTION}.assert.called &>/dev/null
 		[[ \$? -ne 0 ]] \
-			|| ERROR \"${FUNCTION} was called\"
+			|| echo.error \"${FUNCTION} was called\"
 	}
 
 	${FUNCTION}.assert.callstack() {
 		local ERRORS=0
 		[[ \"\$@\" =~ ^\${MOCK__CALLSTACK__${FUNCTION_VARIABLE}}$ ]] \
-			|| ERROR \"${FUNCTION} callstack does not match\nexpected : \$@\nreceived : \${MOCK__CALLSTACK__${FUNCTION_VARIABLE}}\"
+			|| echo.error \"${FUNCTION} callstack does not match\nexpected : \$@\nreceived : \${MOCK__CALLSTACK__${FUNCTION_VARIABLE}}\"
 	}
 
 	${FUNCTION}.assert.callstackincludes() {
 		local ERRORS=0
 		[[ \${MOCK__CALLSTACK__${FUNCTION_VARIABLE}} =~ \$@ ]] \
-			|| ERROR \"${FUNCTION} callstack does not include\nexpected  : \$@\ncallstack : \${MOCK__CALLSTACK__${FUNCTION_VARIABLE}}\"
+			|| echo.error \"${FUNCTION} callstack does not include\nexpected  : \$@\ncallstack : \${MOCK__CALLSTACK__${FUNCTION_VARIABLE}}\"
 	}
 
 	${FUNCTION}.reset() {
@@ -158,8 +158,8 @@ ${scwryptsmodule}.parse.usage() {
 
 ${scwryptsmodule}.parse.validate() {
 	[ $FUNCTION ] && command -v $FUNCTION &>/dev/null \
-		|| ERROR "cannot mock uncallable '$FUNCTION'"
+		|| echo.error "cannot mock uncallable '$FUNCTION'"
 
 	echo "$MOCKS" | sed 's/\s\+/\n/g' | grep -q "^${FUNCTION}$" \
-		&& ERROR "cannot mock '$FUNCTION' (it is already mocked)"
+		&& echo.error "cannot mock '$FUNCTION' (it is already mocked)"
 }
