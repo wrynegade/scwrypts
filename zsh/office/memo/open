@@ -1,10 +1,10 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 use office/memo
 #####################################################################
 
 MAIN() {
 	local MEMO_NAME=$(MEMO__LIST_ALL | FZF_USER_INPUT 'select/create a memo')
-	[ ! "$MEMO_NAME" ] && ABORT
+	[ ! "$MEMO_NAME" ] && user.abort
 
 	MEMO_FILE="$MEMO__DIR/$MEMO_NAME.$MEMO__FILETYPE"
 
@@ -12,7 +12,7 @@ MAIN() {
 		echo.status "creating memo '$MEMO_NAME'"
 		echo "# $MEMO_NAME" > "$MEMO_FILE" \
 			&& echo.success "created memo '$MEMO_NAME'" \
-			|| FAIL 1 "failed to create '$MEMO_FILE'" \
+			|| utils.fail 1 "failed to create '$MEMO_FILE'" \
 			;
 	}
 

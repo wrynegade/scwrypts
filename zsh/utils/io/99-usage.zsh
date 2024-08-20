@@ -46,7 +46,7 @@ utils.io.usage() { # formatter for USAGE variable
 		case ${DYNAMIC_USAGE_ELEMENT} in
 			description )
 				DYNAMIC_USAGE_ELEMENT_TEXT=$(echo "${DYNAMIC_USAGE_ELEMENT_TEXT}" | perl -p0e 's/^[\n\s]+//')
-				DYNAMIC_USAGE_ELEMENT_TEXT="$(utils.colors.yellow)\\033[03m${DYNAMIC_USAGE_ELEMENT_TEXT}\\033[0m"
+				DYNAMIC_USAGE_ELEMENT_TEXT="$(utils.colors.print yellow "${DYNAMIC_USAGE_ELEMENT_TEXT}")"
 				;;
 			* )
 			DYNAMIC_USAGE_ELEMENT_TEXT=$(echo ${DYNAMIC_USAGE_ELEMENT_TEXT} | sed 's/[^	]/  &/')

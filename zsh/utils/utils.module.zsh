@@ -5,9 +5,17 @@ REQUIRED_ENV+=()    # (extensible) list of required environment variables
 
 #####################################################################
 
-source ${0:a:h}/io.zsh
 source ${0:a:h}/os.zsh
 source ${0:a:h}/parse.zsh
+
+for __UTILS_FILE in \
+	$(find "${0:a:h}/io"   -type f | sort) \
+	$(find "${0:a:h}/apps" -type f | sort) \
+	;
+do
+	source "${__UTILS_FILE}"
+done
+unset __UTILS_FILE
 
 #####################################################################
 
@@ -26,8 +34,6 @@ utils.check-environment() {
 		esac
 		shift 1
 	done
-
-	[[ ${OPTIONAL} -eq 1 ]] && E=echo.warning || E=echo.error
 
 	local ENVIRONMENT_STATUS=0
 

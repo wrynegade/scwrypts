@@ -44,7 +44,7 @@ KUBECTL__SET_CONTEXT() {
 }
 
 KUBECTL__SELECT_CONTEXT() {
-	KUBECTL__LIST_CONTEXTS | FZF 'select a context'
+	KUBECTL__LIST_CONTEXTS | utils.fzf 'select a context'
 }
 
 KUBECTL__LIST_CONTEXTS() {
@@ -78,7 +78,7 @@ KUBECTL__SET_NAMESPACE() {
 }
 
 KUBECTL__SELECT_NAMESPACE() {
-	KUBECTL__LIST_NAMESPACES | FZF 'select a namespace'
+	KUBECTL__LIST_NAMESPACES | utils.fzf 'select a namespace'
 }
 
 KUBECTL__LIST_NAMESPACES() {
@@ -131,7 +131,7 @@ KUBECTL__SELECT_SERVICE() {
 			;
 	} \
 		| column -t \
-		| FZF 'select a service' --header-lines=1 \
+		| utils.fzf 'select a service' --header-lines=1 \
 		| awk '{print $2;}' \
 	)
 

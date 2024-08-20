@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 #####################################################################
 
 use scwrypts/meta
@@ -43,7 +43,7 @@ MAIN() {
 		TEST_FILES+=($(find "$(scwrypts.config.group ${GROUP} root)" ${FIND_ARGS[@]}))
 	done
 
-	local SCWRYPTS_CONFIG="$(SCWRYPTS__RUN --config)"
+	local SCWRYPTS_CONFIG="$(scwrypts.meta --config)"
 	local TEST_FILE
 	for TEST_FILE in ${TEST_FILES[@]}
 	do

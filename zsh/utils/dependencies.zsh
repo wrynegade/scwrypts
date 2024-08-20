@@ -15,7 +15,10 @@ utils.dependencies.check() {
 	local DEPENDENCY="$1"
 	[ ! ${DEPENDENCY} ] && return 1
 	command -v ${DEPENDENCY} >/dev/null 2>&1 || {
-		${E} "application '$1' "$([[ ${OPTIONAL} -eq 1 ]] && echo preferred || echo required)" but not available on PATH $(__CREDITS $1)"
+		[[ ${OPTIONAL} -eq 1 ]] \
+			&& echo.warning "application '$1' preferred but not available on PATH $(utils.dependencies.credits $1)" \
+			|| echo.error   "application '$1' required but not available on PATH $(utils.dependencies.credits $1)" \
+			;
 		return 1
 	}
 
@@ -49,4 +52,20 @@ utils.dependencies.check-coreutils() {
 	}
 
 	return ${MISSING_DEPENDENCY_COUNT}
+}
+
+utils.dependencies.credits() {
+	return 0
+	# scwrypts exclusive ("credits" pulled from README files)
+	[ ! ${__SCWRYPT} ] && return 0
+
+	local COMMAND="$1"
+	[[ $COMMAND =~ - ]] && COMMAND=$(echo $COMMAND | sed 's/-/--/g')
+	(
+	cd "$(scwrypts.config.group scwrypts root)"
+	cat ./**/README.md \
+		| grep 'Generic Badge' \
+		| sed -n "s/.*Generic Badge.*-$COMMAND-.*(/(/p" \
+		;
+	)
 }

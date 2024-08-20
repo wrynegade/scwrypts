@@ -1,10 +1,10 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 use scwrypts/meta
 #####################################################################
 
 MAIN() {
 	echo.status 'updating all config files and links'
-	SCWRYPTS__RUN --name system/config/symlinks --group scwrypts --type zsh || exit 1
-	SCWRYPTS__RUN --name system/config/terminfo --group scwrypts --type zsh || exit 2
+	scwrypts.meta --name system/config/symlinks --group scwrypts --type zsh || exit 1
+	scwrypts.meta --name system/config/terminfo --group scwrypts --type zsh || exit 2
 	echo.success 'finished updating config files and links'
 }

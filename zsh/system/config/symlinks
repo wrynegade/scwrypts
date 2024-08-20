@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 use system/config
 #####################################################################
 
@@ -12,7 +12,7 @@ MAIN() {
 #####################################################################
 
 SETUP_SYMLINK() {
-	[ ! $2 ] && FAIL 1 'must provide SOURCE_CONFIG and TARGET_CONFIG'
+	[ ! $2 ] && utils.fail 1 'must provide SOURCE_CONFIG and TARGET_CONFIG'
 
 	local SOURCE_CONFIG="$1"
 	local TARGET_CONFIG="$HOME/.config/$2"
@@ -36,6 +36,6 @@ SETUP_SYMLINK() {
 
 	ln -s "$SOURCE_CONFIG" "$TARGET_CONFIG" \
 		&& echo.success "successfully linked '$(basename $(dirname $TARGET_CONFIG))/$(basename $TARGET_CONFIG)'" \
-		|| FAIL 3 "failed to create link '$TARGET_CONFIG'" \
+		|| utils.fail 3 "failed to create link '$TARGET_CONFIG'" \
 		;
 }

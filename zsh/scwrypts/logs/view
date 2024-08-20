@@ -1,11 +1,10 @@
-#!/bin/zsh               
+#!/usr/bin/env zsh               
 #####################################################################
 
 MAIN() {
-	cd ${SCWRYPTS_ROOT}
 	PROMPT 'select a script log'
-	LOG_FILE=$(ls -t ${SCWRYPTS_LOG_PATH} | FZF 'logfile')
-	[ ! ${LOG_FILE} ] && { echo.error 'user abort'; exit 1; }
+	LOG_FILE=$(cd "${SCWRYPTS_LOG_PATH}"; ls -t | utils.fzf 'logfile')
+	[ "${LOG_FILE}" ] || utils.abort
 	
 	echo.status 'opening logfile'
 	LESS "${SCWRYPTS_LOG_PATH}/${LOG_FILE}"

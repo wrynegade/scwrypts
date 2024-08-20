@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 use scwrypts/virtualenv/update
 use scwrypts/virtualenv/delete
 #####################################################################
@@ -47,7 +47,7 @@ MAIN() {
 	[ $ENV_TYPE ] || ENV_TYPE=$(\
 		echo ${SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS[@]} \
 			| sed 's/ \+/\n/' \
-			| FZF 'select an environment to refresh' \
+			| utils.fzf 'select an environment to refresh' \
 		)
 	[ $ENV_TYPE ] || echo.error "no environment type selected"
 

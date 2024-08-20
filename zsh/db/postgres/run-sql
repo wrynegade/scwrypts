@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 use db/postgres
 #####################################################################
 
@@ -20,10 +20,10 @@ MAIN() {
 		return 1
 	}
 
-	[ ! $INPUT_FILE ] && INPUT_FILE=$(FZF 'select a sql file to run')
-	[ ! $INPUT_FILE ] && ABORT
+	[ ! $INPUT_FILE ] && INPUT_FILE=$(utils.fzf 'select a sql file to run')
+	[ ! $INPUT_FILE ] && user.abort
 
-	[ ! -f "$INPUT_FILE" ] && FAIL 2 "no such sql file '$SQL_DIR/$INPUT_FILE'"
+	[ ! -f "$INPUT_FILE" ] && utils.fail 2 "no such sql file '$SQL_DIR/$INPUT_FILE'"
 
 	echo.status "loading '$INPUT_FILE' preview..."
 	LESS "$INPUT_FILE"
@@ -31,11 +31,11 @@ MAIN() {
 	echo.status "login   : $_USER@$_HOST:$_PORT/$_NAME"
 	echo.status "command : '$INPUT_FILE'"
 
-	yN 'run this command?' || ABORT
+	yN 'run this command?' || user.abort
 
 	echo.status "running '$INPUT_FILE'"
 
 	PSQL < $INPUT_FILE \
 		&& echo.success "finished running '$INPUT_FILE'" \
-		|| FAIL 3 "something went wrong running '$INPUT_FILE' (see above)"
+		|| utils.fail 3 "something went wrong running '$INPUT_FILE' (see above)"
 }

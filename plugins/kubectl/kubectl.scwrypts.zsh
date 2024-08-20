@@ -1,5 +1,5 @@
 export ${scwryptsgroup}__type=zsh
-export ${scwryptsgroup}__color='\033[0;31m'
+export ${scwryptsgroup}__color=$(utils.colors.red)
 
 #####################################################################
 

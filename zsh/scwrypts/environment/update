@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
 use scwrypts/environment
 
@@ -12,7 +12,7 @@ USAGE__options+="
 	   recursive   (somewhat advanced) from deepest parent to target environment, edit all related environments in order
 	   advanced    (dangerous) API mode; requires a '--' and additional arguments
 	
-	-n, --name   name of the environment to update (default is current '$SCWRYPTS_ENV')\n$(SCWRYPTS_ENVIRONMENT__GET_ENV_NAMES | sed 's/^/   /')
+	-n, --name   name of the environment to update (default is current '$SCWRYPTS_ENV')\n$(scwrypts.environment.common.get-env-names | sed 's/^/   /')
 
 	--advanced-help   help doc for advanced mode
 "
@@ -40,7 +40,7 @@ MAIN() {
 		_S=1
 		case $1 in
 			--advanced-help )
-				SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG --help
+				scwrypts.environment.update --help
 				return 0
 				;;
 
@@ -72,21 +72,21 @@ MAIN() {
 			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$SCWRYPTS_ENV"
 			;;
 		copy )
-			local SOURCE_ENVIRONMENT="$(SCWRYPTS_ENVIRONMENT__GET_ENV_NAMES | FZF 'select an environment to copy')"
-			[ "$SOURCE_ENVIRONMENT" ] || ABORT
+			local SOURCE_ENVIRONMENT="$(scwrypts.environment.common.get-env-names | utils.fzf 'select an environment to copy')"
+			[ "$SOURCE_ENVIRONMENT" ] || user.abort
 
 			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME=$(echo | FZF_USER_INPUT 'new environment name')
-			[ "$ENVIRONMENT_NAME" ] || ABORT
+			[ "$ENVIRONMENT_NAME" ] || user.abort
 			;;
 		delete )
-			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$(SCWRYPTS_ENVIRONMENT__GET_ENV_NAMES | FZF 'select an environment to delete')"
-			[ "$ENVIRONMENT_NAME" ] || ABORT
+			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$(scwrypts.environment.common.get-env-names | utils.fzf 'select an environment to delete')"
+			[ "$ENVIRONMENT_NAME" ] || user.abort
 			;;
 		advanced )
 			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$SCWRYPTS_ENV"
 	esac
 
-	[ -f "$(SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME "$ENVIRONMENT_NAME" scwrypts)" ] \
+	[ -f "$(scwrypts.environment.common.get-env-filename "$ENVIRONMENT_NAME" scwrypts)" ] \
 		&& local ENVIRONMENT_EXISTS=true \
 		|| local ENVIRONMENT_EXISTS=false \
 		;
@@ -97,7 +97,7 @@ MAIN() {
 				true ) ;;
 				false )
 					echo.warning "environment $ENVIRONMENT_NAME does not exist"
-					Yn "create new environment '$ENVIRONMENT_NAME'?" || ABORT
+					Yn "create new environment '$ENVIRONMENT_NAME'?" || user.abort
 					;;
 			esac
 			;;
@@ -117,7 +117,7 @@ MAIN() {
 			case $ENVIRONMENT_EXISTS in
 				true )
 					echo.reminder 'deleting an environment is PERMANENT\nmake sure your credentials are backed up!'
-					yN "are you sure you want to delete '$ENVIRONMENT_NAME'?" || ABORT
+					yN "are you sure you want to delete '$ENVIRONMENT_NAME'?" || user.abort
 					;;
 				false )
 					echo.error "environment '$ENVIRONMENT_NAME' does not exist (can't delete it if it's not there)"
@@ -146,5 +146,5 @@ MAIN() {
 
 	ARGS+=(--environment-name $ENVIRONMENT_NAME)
 
-	SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG ${ARGS[@]}
+	scwrypts.environment.update ${ARGS[@]}
 }

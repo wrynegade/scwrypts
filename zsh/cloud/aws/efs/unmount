@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 DEPENDENCIES+=(jq)
 REQUIRED_ENV+=(AWS__EFS__LOCAL_MOUNT_POINT)
 
@@ -20,13 +20,13 @@ MAIN() {
 	GETSUDO || exit 1
 
 
-	local SELECTED=$(echo $MOUNTED | FZF 'select a file system to unmount')
-	[ ! $SELECTED ] && ABORT
+	local SELECTED=$(echo $MOUNTED | utils.fzf 'select a file system to unmount')
+	[ ! $SELECTED ] && user.abort
 
 	local EFS="$AWS__EFS__LOCAL_MOUNT_POINT/$SELECTED"
 	echo.status "unmounting '$SELECTED'"
 	sudo umount $EFS >/dev/null 2>&1
 	sudo rmdir $EFS \
 		&& echo.success "done" \
-		|| FAIL 2 "failed to unmount '$EFS'"
+		|| utils.fail 2 "failed to unmount '$EFS'"
 }

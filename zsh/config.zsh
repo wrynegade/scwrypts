@@ -24,6 +24,21 @@ __SCWRYPTS_ROOT="$(cd -- "${0:a:h}"; git rev-parse --show-toplevel 2>/dev/null |
 	;
 
 #####################################################################
+
+#
+# this is like a manual "use" invocation, but the import driver relies
+# on this file, so here we go ahead and do it by hand once
+#
+# equivalent to "use utils"
+# (which is unnecessary since utils are ALWAYS loaded with import.driver.zsh)
+#
+# normally more logic is necessary for "use", but utils.module.zsh is a
+# special module which supports direct-sourcing from any zsh environment
+#
+source "${__SCWRYPTS_ROOT}/zsh/utils/utils.module.zsh"
+SCWRYPTS_LIBRARY_LOADED__scwrypts__utils=true
+
+#####################################################################
 ### scwrypts global configuration ###################################
 #####################################################################
 
@@ -67,7 +82,7 @@ SCWRYPTS_GROUPS=()
 
 command -v echo.warning &>/dev/null || WARNING() { echo "echo.warning : $@" >&2; }
 command -v echo.error   &>/dev/null || ERROR()   { echo "echo.error   : $@" >&2; return 1; }
-command -v FAIL    &>/dev/null || FAIL()    { echo.error "${@:2}"; exit $1; }
+command -v utils.fail    &>/dev/null || FAIL()    { echo.error "${@:2}"; exit $1; }
 
 __SCWRYPTS_GROUP_LOADERS=(
 	"${__SCWRYPTS_ROOT}/scwrypts.scwrypts.zsh"
@@ -133,7 +148,7 @@ do
 done
 
 [[ ${SCWRYPTS_GROUPS[1]} =~ ^scwrypts$ ]] \
-	|| FAIL 69 "encountered error when loading essential group 'scwrypts'; aborting"
+	|| utils.fail 69 "encountered error when loading essential group 'scwrypts'; aborting"
 
 #####################################################################
 ### cleanup #########################################################

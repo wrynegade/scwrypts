@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 use system/packages/git
 #####################################################################
 
@@ -55,7 +55,7 @@ MAIN() {
 			echo.error 'cannot skip build without specifying package local-name'
 		} || {
 			UPDATE=1
-			NAME=$(ls "$PACKAGE_INSTALL_DIR" | FZF 'select a package to update')
+			NAME=$(ls "$PACKAGE_INSTALL_DIR" | utils.fzf 'select a package to update')
 			[ ! $NAME ] && echo.error 'target-url required'
 		}
 	}

@@ -54,7 +54,7 @@ test.interactive-login-ignored-on-ci() {
 }
 
 test.interactive-login-to-correct-cluster() {
-	unittest.mock FZF --stdout ${_CLUSTER_NAME}
+	unittest.mock utils.fzf --stdout ${_CLUSTER_NAME}
 
 	${testmodule}
 

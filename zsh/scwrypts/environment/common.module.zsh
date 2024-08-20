@@ -2,20 +2,19 @@
 
 DEPENDENCIES+=(grep jq sed sort yq)
 
-use utils
-
 #####################################################################
 
-SCWRYPTS_ENVIRONMENT__GET_ENV_NAMES() {
+${scwryptsmodule}.get-env-names() {
 	[ $REQUIRED_ENVIRONMENT_REGEX ] && {
-		_SCWRYPTS_ENVIRONMENT__FIND_ENV_NAMES | grep "$REQUIRED_ENVIRONMENT_REGEX"
+		scwrypts.environment.common.find-env-names \
+			| grep "$REQUIRED_ENVIRONMENT_REGEX"
 		return $?
 	}
 
-	_SCWRYPTS_ENVIRONMENT__FIND_ENV_NAMES
+	scwrypts.environment.common.find-env-names
 }
 
-SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME() {  # provides the fully qualified path to the group config file
+${scwryptsmodule}.get-env-filename() {  # provides the fully qualified path to the group config file
 	local NAME="$1"
 	local GROUP="$2"
 	[ $NAME ] && [ $GROUP ] \
@@ -27,7 +26,7 @@ SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME() {  # provides the fully qualified path
 
 #####################################################################
 
-_SCWRYPTS_ENVIRONMENT__GET_PARENT_ENV_NAMES() {  # deepest parent first; e.g. for 'a.b.c.d', returns (a a.b a.b.c)
+${scwryptsmodule}.get-parent-env-names() {  # deepest parent first; e.g. for 'a.b.c.d', returns (a a.b a.b.c)
 	local NAME="$1"
 	[[ $NAME =~ . ]] || return 0
 
@@ -41,25 +40,25 @@ _SCWRYPTS_ENVIRONMENT__GET_PARENT_ENV_NAMES() {  # deepest parent first; e.g. fo
 	echo ${PARENT_ENV_NAMES[@]} | sed 's/\s\+/\n/g' | sort
 }
 
-_SCWRYPTS_ENVIRONMENT__FIND_ENV_FILES() {
+${scwryptsmodule}.find-env-files() {
 	find "$SCWRYPTS_ENV_PATH/" -mindepth 1 -maxdepth 1 -type f -name \*.env.yaml 2>/dev/null
 }
 
-_SCWRYPTS_ENVIRONMENT__FIND_ENV_NAMES() {
-	_SCWRYPTS_ENVIRONMENT__FIND_ENV_FILES \
+${scwryptsmodule}.find-env-names() {
+	scwrypts.environment.common.find-env-files \
 		| sed "s|^$SCWRYPTS_ENV_PATH/||; s|\\.[^.]\\+\\.env\\.yaml$||" \
 		| sort --reverse --unique \
 		;
 }
 
-_SCWRYPTS_ENVIRONMENT__FIND_ENV_FILES_BY_NAME() {
+${scwryptsmodule}.find-env-files-by-name() {
 	local NAME="$1"
 	[ $NAME ] || return 1
 
 	find "$SCWRYPTS_ENV_PATH/" -mindepth 1 -maxdepth 1 -type f -name $NAME.\*.env.yaml 2>/dev/null
 }
 
-_SCWRYPTS_ENVIRONMENT__COMBINE_TEMPLATE_FILES() {
+${scwryptsmodule}.combine-template-files() {
 	utils.yq eval-all '. as $item ireduce ({}; . * $item)' \
 		| sed 's/: {}$/:/' \
 		| utils.yq 'sort_keys(...)' \

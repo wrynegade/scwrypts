@@ -2,12 +2,14 @@
 
 use scwrypts/environment/common
 
-use scwrypts/environment/template
+use scwrypts/environment/get-full-template
+use scwrypts/environment/get-envvar-lookup-map
+
 use scwrypts/cache-output
 
 #####################################################################
 
-SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
+${scwryptsmodule}.get() {
 	eval "$(usage.reset)"
 	local USAGE__description="
 		Generates a metadata-enriched environment YAML for the target environment.
@@ -16,7 +18,7 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 		ENVIRONMENT_NAME \
 		PARSERS=(
 			scwrypts.cache-output.zshparse.args
-			SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME
+			scwrypts.environment.user.zshparse.env-name
 			)
 
 	eval "$ZSHPARSEARGS"
@@ -26,12 +28,12 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 	scwrypts.cache-output ${CACHE_ARGS[@]} \
 		--cache-file environment.user.yaml \
 		-- \
-		_SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT "$ENVIRONMENT_NAME" \
+		scwrypts.environment.user.get.helper "$ENVIRONMENT_NAME" \
 		;
 }
 
 
-SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_SHELL_VALUES() {
+${scwryptsmodule}.get-shell-values() {
 	eval "$(usage.reset)"
 	local USAGE__description="
 		used primarily by utils.environment.check in scwrypts environments
@@ -45,7 +47,7 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_SHELL_VALUES() {
 		ENVIRONMENT_NAME \
 		PARSERS=(
 			scwrypts.cache-output.zshparse.args
-			SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME
+			scwrypts.environment.user.zshparse.env-name
 			)
 
 	eval "$ZSHPARSEARGS"
@@ -60,7 +62,7 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_SHELL_VALUES() {
 		;
 }
 
-SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_JSON() {
+${scwryptsmodule}.get-json() {
 	eval "$(usage.reset)"
 	local USAGE__description="
 		returns a JSON object containing live environment configurations
@@ -72,7 +74,7 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_JSON() {
 		ENVIRONMENT_NAME \
 		PARSERS=(
 			scwrypts.cache-output.zshparse.args
-			SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME
+			scwrypts.environment.user.zshparse.env-name
 			)
 
 	eval "$ZSHPARSEARGS"
@@ -82,14 +84,14 @@ SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_JSON() {
 	scwrypts.cache-output ${CACHE_ARGS[@]} \
 		--cache-file environment.user.json \
 		-- \
-		_SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_JSON \
+		scwrypts.environment.user.get-json.helper \
 			--environment-name "$ENVIRONMENT_NAME" \
 		;
 }
 
 #####################################################################
 
-SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME() {
+${scwryptsmodule}.zshparse.env-name() {
 	# local ENVIRONMENT_NAME
 	local PARSED=0
 	case $1 in
@@ -104,20 +106,20 @@ SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME() {
 	return $PARSED
 }
 
-SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME.usage() {
+${scwryptsmodule}.zshparse.env-name.usage() {
 	USAGE__options+="\n
 		--environment-name <string>   name of a scwrypts environment (default: $SCWRYPTS_ENV)
 		                              using this flag will bypass cache
 	"
 }
 
-SCWRYPTS_ENVIRONMENT__PARSE_ENV_NAME.validate() {
+${scwryptsmodule}.zshparse.env-name.validate() {
 	[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$SCWRYPTS_ENV"
 }
 
 #####################################################################
 
-_SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
+${scwryptsmodule}.get.helper() {
 	local ENVIRONMENT_NAME LOADING_ORIGINAL_ENV=true
 	local _S ERRORS=0
 	while [[ $# -gt 0 ]]
@@ -178,12 +180,12 @@ _SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 
 	local GROUP GROUP_CONFIG_FILENAME
 	{
-		_SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE_WITH_VALUE_KEYS
+		scwrypts.environment.user.get-full-template-with-value-keys
 		[[ $LOADING_ORIGINAL_ENV =~ true ]] && {
-			for PARENT in $(_SCWRYPTS_ENVIRONMENT__GET_PARENT_ENV_NAMES "$ENVIRONMENT_NAME")
+			for PARENT in $(scwrypts.environment.common.get-parent-env-names "$ENVIRONMENT_NAME")
 			do
 				echo ---
-				_SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT --parent "$PARENT" \
+				scwrypts.environment.user.get.helper --parent "$PARENT" \
 					| sed '
 						s/^\(\s\+\)\(value\|selection\):/\1.PARENT\U\2:/
 						' \
@@ -197,7 +199,7 @@ _SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 		}
 		for GROUP in ${SCWRYPTS_GROUPS[@]}
 		do
-			GROUP_CONFIG_FILENAME="$(SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME "$ENVIRONMENT_NAME" "$GROUP")"
+			GROUP_CONFIG_FILENAME="$(scwrypts.environment.common.get-env-filename "$ENVIRONMENT_NAME" "$GROUP")"
 
 			[ -f "${GROUP_CONFIG_FILENAME}" ] || touch "${GROUP_CONFIG_FILENAME}"
 
@@ -205,15 +207,15 @@ _SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT() {
 			cat "$GROUP_CONFIG_FILENAME"
 		done
 	} \
-		| _SCWRYPTS_ENVIRONMENT__COMBINE_TEMPLATE_FILES \
+		| scwrypts.environment.common.combine-template-files \
 		| utils.yq -P \
 		| sed -z 's/\n[a-z]/\n&/g' \
 		| sed 's/value: null$/value:/; /\svalue:/G' \
 		;
 }
 
-_SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE_WITH_VALUE_KEYS() {
-	SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE \
+${scwryptsmodule}.get-full-template-with-value-keys() {
+	scwrypts.environment.get-full-template \
 		| utils.yq '(.. | select(has(".ENVIRONMENT"))) += {
 				"selection": [],
 				"value": null
@@ -225,7 +227,7 @@ _SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE_WITH_VALUE_KEYS() {
 #####################################################################
 
 _SCWRYPTS_ENVIRONMENT__CONVERT_SHELL_VALUES() {
-	SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT $@ \
+	scwrypts.environment.user.get $@ \
 		| utils.yq '..
 			|= select(
 				((has ("value") | not) or .value == null) and has (".PARENTVALUE")
@@ -255,14 +257,14 @@ _SCWRYPTS_ENVIRONMENT__CONVERT_SHELL_VALUES() {
 
 #####################################################################
 
-_SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_JSON() {
+${scwryptsmodule}.get-json.helper() {
 	local SHELL_VALUES="$(_SCWRYPTS_ENVIRONMENT__CONVERT_SHELL_VALUES $@)"
-	local LOOKUP_MAP="$(SCWRYPTS_ENVIRONMENT__GET_ENVVAR_LOOKUP_MAP)"
+	local LOOKUP_MAP="$(scwrypts.environment.template.get-envvar-lookup-map)"
 	{
 		echo "$SHELL_VALUES"
 		local ENVIRONMENT_VARIABLE
 		for ENVIRONMENT_VARIABLE in $(\
-			SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE \
+			scwrypts.environment.get-full-template \
 				| utils.yq '.. | select(has(".ENVIRONMENT")) | .".ENVIRONMENT"' \
 			)
 		do

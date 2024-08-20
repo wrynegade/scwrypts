@@ -57,7 +57,7 @@ Don't worry, it's easy.
 Take your original scwrypt, and slap the executable stuff into a function called `MAIN` (yes, it must be _exactly_, all-caps `MAIN`):
 
 ```diff
-#!/bin/zsh
+#!/usr/bin/env zsh
 #####################################################################
 DEPENDENCIES+=(dep-function-a dep-function-b)
 REQUIRED_ENV+=()
@@ -115,7 +115,7 @@ Also you can ditch the `CHECK_ENVIRONMENT`.
 While it won't hurt, v4 already does this, so just get rid of it.
 Here's my recommended formatting:
 ```diff
-#!/bin/zsh
+#!/usr/bin/env zsh
 - #####################################################################
 DEPENDENCIES+=(dep-function-a dep-function-b)
 - REQUIRED_ENV+=()
@@ -164,7 +164,7 @@ If you _have_ done it already, typically by writing a variable called "USAGE" in
 
 Returning to our original `MAIN()` example, I'll add some options parsing so we should now look something like this:
 ```sh
-#!/bin/zsh
+#!/usr/bin/env zsh
 DEPENDENCIES+=(dep-function-a dep-function-b)
 
 use do/awesome/stuff --group my-custom-library
@@ -200,7 +200,7 @@ I want to call out a few specific ones:
 
 Just add another section to define these values before declaring `MAIN`:
 ```sh
-#!/bin/zsh
+#!/usr/bin/env zsh
 DEPENDENCIES+=(dep-function-a dep-function-b)
 
 use do/awesome/stuff --group my-custom-library

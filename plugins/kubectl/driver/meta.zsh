@@ -83,8 +83,8 @@ SCWRYPTS_KUBECTL_CUSTOM_COMMAND__meta() {
 	case $1 in
 		get )
 			[[ $2 =~ ^all$ ]] && {
-				local CONTEXT=$(REDIS get --prefix current:context | grep . || echo "\\033[1;31mnone set\\033[0m")
-				local NAMESPACE=$(REDIS get --prefix current:namespace | grep . || echo "\\033[1;31mnone set\\033[0m")
+				local CONTEXT=$(REDIS get --prefix current:context | grep . || utils.colors.print bright-red "none set")
+				local NAMESPACE=$(REDIS get --prefix current:namespace | grep . || utils.colors.print bright-red "none set")
 				echo "
 					environment : $SCWRYPTS_ENV
 					context     : $CONTEXT
@@ -92,7 +92,7 @@ SCWRYPTS_KUBECTL_CUSTOM_COMMAND__meta() {
 
 					CLI settings
 					  command context : $(_SCWRYPTS_KUBECTL_SETTINGS get context)
-					      strict mode : $([[ $STRICT -eq 1 ]] && echo "on" || echo "\\033[1;31moff\\033[0m")
+					      strict mode : $([[ $STRICT -eq 1 ]] && utils.colors.print green on || utils.colors.print bright-red off)
 					" | sed 's/^	\+//' >&2
 				return 0
 			}

@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 use office/latex
 #####################################################################
 
@@ -6,7 +6,7 @@ MAIN() {
 	local DIRECTORY=$(SCWRYPTS__GET_REALPATH ".")
 	[ $1 ] && DIRECTORY="$(dirname "$(LATEX__GET_MAIN_FILENAME "$1")")"
 	[ $DIRECTORY ] && [ -d $DIRECTORY ] \
-		|| FAIL 1 'unable to parse valid directory'
+		|| utils.fail 1 'unable to parse valid directory'
 
 	cd $DIRECTORY
 	rm $(ls | grep '\.\(aux\)\|\(log\)\|\(pdf\)\|\(out\)\|\(dvi\)$')

@@ -3,20 +3,21 @@
 use scwrypts/environment/common
 
 use scwrypts/environment/user
-use scwrypts/environment/template
+use scwrypts/environment/get-full-template
+use scwrypts/environment/select-env
 
 #####################################################################
 
 [ $SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE ] \
 	|| export SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE=basic
 
-SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG() {
+scwrypts.environment.update() {
 	local EDIT_MODE=$SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE
 	local ENVIRONMENT_NAME="$SCWRYPTS_ENV"
 	local FROM_EXISTING
 
 	local USAGE="
-		usage: SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG [...options...]
+		usage: scwrypts.environment.update [...options...]
 
 		options:
 			--mode <string>   update execution mode (default: $SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE)
@@ -55,7 +56,7 @@ SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG() {
 			--mode )
 				[ $2 ] && ((_S+=1)) || echo.error "missing mode" || break
 				EDIT_MODE="$2"
-				command -v _SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__$EDIT_MODE &>/dev/null \
+				command -v scwrypts.environment.update.edit.$EDIT_MODE &>/dev/null \
 					|| echo.error "invalid mode '$EDIT_MODE'"
 
 				;;
@@ -67,10 +68,10 @@ SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG() {
 
 	case $EDIT_MODE in
 		copy )
-			[ $FROM_EXISTING ] || FROM_EXISTING=$(SCWRYPTS_ENVIRONMENT__SELECT_ENV)
+			[ $FROM_EXISTING ] || FROM_EXISTING=$(scwrypts.environment.select-env)
 			[ $FROM_EXISTING ] || echo.error "cannot work in '$EDIT_MODE' without existing target"
 
-			[[ $(_SCWRYPTS_ENVIRONMENT__FIND_ENV_FILES_BY_NAME "$FROM_EXISTING" | wc -l) -gt 0 ]] \
+			[[ $(scwrypts.environment.common.find-env-files-by-name "$FROM_EXISTING" | wc -l) -gt 0 ]] \
 				|| echo.error "no such environment '$FROM_EXISTING' exists"
 			;;
 
@@ -89,7 +90,7 @@ SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG() {
 		return 1
 	}
 
-	_SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__$EDIT_MODE
+	scwrypts.environment.update.edit.${EDIT_MODE}
 	local EXIT_CODE=$?
 
 	rm "$TEMP_CONFIG_FILE" 2>/dev/null
@@ -99,19 +100,19 @@ SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG() {
 
 #####################################################################
 
-_SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__basic() {
-	SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT \
+${scwryptsmodule}.edit.basic() {
+	scwrypts.environment.user.get \
 		--environment-name $ENVIRONMENT_NAME \
 		> "$TEMP_CONFIG_FILE"
 
 	utils.io.edit "$TEMP_CONFIG_FILE"
 
-	_SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIGS "$(cat "$TEMP_CONFIG_FILE")" "$ENVIRONMENT_NAME"
+	scwrypts.environment.update.update-user-configs "$(cat "$TEMP_CONFIG_FILE")" "$ENVIRONMENT_NAME"
 }
 
-_SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__quiet() {
+${scwryptsmodule}.edit.quiet() {
 	echo "---  # $ENVIRONMENT_NAME" > "$TEMP_CONFIG_FILE"
-	SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT \
+	scwrypts.environment.user.get \
 			--environment-name $ENVIRONMENT_NAME \
 		| utils.yq '.
 			| del(.. | select(has(".ENVIRONMENT")).".ENVIRONMENT")
@@ -125,63 +126,63 @@ _SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__quiet() {
 
 	utils.io.edit "$TEMP_CONFIG_FILE"
 
-	_SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIGS "$(cat "$TEMP_CONFIG_FILE")" "$ENVIRONMENT_NAME"
+	scwrypts.environment.update.update-user-configs "$(cat "$TEMP_CONFIG_FILE")" "$ENVIRONMENT_NAME"
 }
 
-_SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__recursive() {
+${scwryptsmodule}.edit.recursive() {
 	local RECURSIVE_EDIT_MODE="$SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE"
 	[[ $RECURSIVE_EDIT_MODE =~ ^recursive$ ]] \
 		&& RECURSIVE_EDIT_MODE=quiet
 
 	local PARENT_ENVIRONMENT_NAME
 	for PARENT_ENVIRONMENT_NAME in \
-		$(_SCWRYPTS_ENVIRONMENT__GET_PARENT_ENV_NAMES "$ENVIRONMENT_NAME") \
+		$(scwrypts.environment.common.get-parent-env-names "$ENVIRONMENT_NAME") \
 		$ENVIRONMENT_NAME
 		;
 	do
 		echo.status "editing environment '$PARENT_ENVIRONMENT_NAME'"
-		SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIG \
+		scwrypts.environment.update \
 			--environment-name $PARENT_ENVIRONMENT_NAME \
 			--mode $RECURSIVE_EDIT_MODE \
 			;
 	done
 }
 
-_SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__init() {
-	[ -f "$(SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME)" ]
+${scwryptsmodule}.edit.init() {
+	[ -f "$(scwrypts.environment.common.get-env-filename)" ]
 
-	SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT \
+	scwrypts.environment.user.get \
 		--environment-name $ENVIRONMENT_NAME \
 		> "$TEMP_CONFIG_FILE"
 
-	_SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIGS "$(cat "$TEMP_CONFIG_FILE")"
+	scwrypts.environment.update.update-user-configs "$(cat "$TEMP_CONFIG_FILE")"
 }
 
-_SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__copy() {
+${scwryptsmodule}.edit.copy() {
 	local GROUP_CONFIG_FILENAME SOURCE_CONFIG_FILENAME
 	for GROUP in ${SCWRYPTS_GROUPS[@]}
 	do
 		cp \
-			"$(SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME "$FROM_EXISTING" "$GROUP")" \
-			"$(SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME "$ENVIRONMENT_NAME" "$GROUP")" \
+			"$(scwrypts.environment.common.get-env-filename "$FROM_EXISTING" "$GROUP")" \
+			"$(scwrypts.environment.common.get-env-filename "$ENVIRONMENT_NAME" "$GROUP")" \
 			2>/dev/null \
 			;
 	done
 
-	SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT \
+	scwrypts.environment.user.get \
 		--environment-name $ENVIRONMENT_NAME \
 		> "$TEMP_CONFIG_FILE"
 
-	_SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIGS "$(cat "$TEMP_CONFIG_FILE")"
+	scwrypts.environment.update.update-user-configs "$(cat "$TEMP_CONFIG_FILE")"
 }
 
-_SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__delete() {
+${scwryptsmodule}.edit.delete() {
 	touch "$TEMP_CONFIG_FILE"
 
 	local ERRORS=0 GROUP GROUP_CONFIG_FILENAME
 	for GROUP in ${SCWRYPTS_GROUPS[@]}
 	do
-		local GROUP_CONFIG_FILENAME="$(SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME "$ENVIRONMENT_NAME" "$GROUP")"
+		local GROUP_CONFIG_FILENAME="$(scwrypts.environment.common.get-env-filename "$ENVIRONMENT_NAME" "$GROUP")"
 		[ -f "$GROUP_CONFIG_FILENAME" ] || {
 			echo.status "nothing to cleanup for $ENVIRONMENT_NAME/$GROUP"
 			continue
@@ -201,7 +202,7 @@ _SCWRYPTS_ENVIRONMENT__EDIT_USER_CONFIG__delete() {
 #####################################################################
 
 export __SCWRYPTS_ENVIRONMENT__WORKFLOW_IS_CHANGE_SAFE=false
-_SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIGS() {
+${scwryptsmodule}.update-user-configs() {
 	local NEW_CONFIGURATION="$1"
 	[ $NEW_CONFIGURATION ] || return 1
 
@@ -211,10 +212,10 @@ _SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIGS() {
 	# reinject all metadata, since the update function is allowed to strip it
 	NEW_CONFIGURATION="$(
 		{
-			_SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE_WITH_VALUE_KEYS --environment "$ENVIRONMENT_NAME"
+			scwrypts.environment.user.get-full-template-with-value-keys --environment "$ENVIRONMENT_NAME"
 			echo ---
 			echo "$NEW_CONFIGURATION"
-		} | _SCWRYPTS_ENVIRONMENT__COMBINE_TEMPLATE_FILES
+		} | scwrypts.environment.common.combine-template-files
 	)"
 
 	local METADATA_DELETE_QUERY="$(
@@ -244,7 +245,7 @@ _SCWRYPTS_ENVIRONMENT__UPDATE_USER_CONFIGS() {
 
 		[ "$GROUP_CONFIG" ] || GROUP_CONFIG='# no configuration set'
 
-		echo "---  # $ENVIRONMENT_NAME > $GROUP\n$GROUP_CONFIG" > "$(SCWRYPTS_ENVIRONMENT__GET_ENV_FILE_NAME "$ENVIRONMENT_NAME" "$GROUP")"
+		echo "---  # $ENVIRONMENT_NAME > $GROUP\n$GROUP_CONFIG" > "$(scwrypts.environment.common.get-env-filename "$ENVIRONMENT_NAME" "$GROUP")"
 	done
 
 	[[ $ENVIRONMENT_NAME =~ ^$SCWRYPTS_ENV$ ]] && [[ $__SCWRYPTS_ENVIRONMENT__WORKFLOW_IS_CHANGE_SAFE =~ false ]] && {

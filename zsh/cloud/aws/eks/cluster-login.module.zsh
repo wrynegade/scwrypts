@@ -30,7 +30,7 @@ ${scwryptsmodule}() {
 	[ ${CLUSTER_NAME} ] || CLUSTER_NAME=$(\
 		${AWS} eks list-clusters \
 			| jq -r '.[] | .[]' \
-			| FZF "select an eks cluster (${ACCOUNT}/${REGION})"
+			| utils.fzf "select an eks cluster (${ACCOUNT}/${REGION})"
 	)
 
 	[ ${CLUSTER_NAME} ] || echo.error 'must select a valid cluster or use --cluster-name'

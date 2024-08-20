@@ -72,7 +72,7 @@ readonly ${scwryptsgroup}__type=
 #
 
 
-readonly ${scwryptsgroup}__color='\033[0;32m'
+readonly ${scwryptsgroup}__color=$(utils.colors.green)
 #
 # ${scwryptsgroup}__color (optional) (default = no color / regular text color)
 #
@@ -118,4 +118,57 @@ readonly ${scwryptsgroup}__required_environment_regex=
 #
 # when set, interactive menus will be adjusted and non-interactive
 # execution will fail if the name of the environment does not match
+#
+
+
+#####################################################################
+### ADVANCED CONFIGURATION ##########################################
+#####################################################################
+
+#${scwryptsgroup}.list-available() {}
+#
+# ${scwryptsgroup}.list-available()
+#
+# a function which outputs lines of "${SCWRYPT_TYPE}/${SCWRYPT_NAME}"
+# to stdout
+#
+# by default, looks for executable files in ${scwryptsgrouproot}
+#
+# during execution of this function, the following variables are
+# available:
+#
+# - $GROUP_ROOT : USE THIS instead of ${scwryptsgrouproot}
+# - $GROUP_TYPE : USE THIS instead of ${scwryptsgroup}__type
+#
+# (see ./zsh/scwrypts/list-available.module.zsh for more details)
+#
+
+
+#${scwryptsgroup}.TYPE.get-runstring() {}
+#
+# a function which outputs what should be literally run when executing
+# the indicated type; scwrypts already implements runstring generators
+# for supported types (that's the main thing which makes them "supported")
+#
+# configuration variables are still automatically included as a
+# prefix to the runstring
+#
+# (see ./zsh/scwrypts/get-runstring.module.zsh for more details)
+#
+
+
+#####################################################################
+### HYPER-ADVANCED CONFIGURATION ####################################
+#####################################################################
+
+#
+# additional zsh can be defined or run arbitrarily; this is NOT recommended
+# unless you understand the implications of the various places where
+# this code is loaded
+#
+# if you want to know where to get started (it will take some learning!),
+# review the execution process in:
+#   - ./scwrypts
+#   - ./zsh/scwrypts/get-runstring.module.zsh
+#   - ./zsh/scwrypts/environment/user.module.zsh
 #

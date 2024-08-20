@@ -64,7 +64,7 @@ PG_RESTORE() {
 	local FILE
 	POSTGRES__SET_LOGIN_ARGS $@
 
-	local INPUT_FILE=$(find "$DATA_DIR"/backup.* -type f | FZF 'select database file to restore')
+	local INPUT_FILE=$(find "$DATA_DIR"/backup.* -type f | utils.fzf 'select database file to restore')
 
 	[ $INPUT_FILE ] && [ -f "$INPUT_FILE" ] || {
 		echo.error 'no file selected or missing backup file; aborting'
@@ -94,7 +94,7 @@ PG_RESTORE() {
 			make sure your database is ready to accept the database file!
 		"
 
-		yN 'continue?' || ABORT
+		yN 'continue?' || user.abort
 
 		PSQL < "$INPUT_FILE"
 		EXIT_CODE=$?

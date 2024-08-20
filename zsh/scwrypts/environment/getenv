@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
 use scwrypts/environment
 
@@ -43,7 +43,7 @@ MAIN() {
 			done
 			;;
 		all )
-			SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_JSON
+			scwrypts.environment.user.get-json
 			;;
 	esac
 }

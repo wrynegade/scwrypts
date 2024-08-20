@@ -11,7 +11,7 @@ beforeall() {
 
 beforeeach() {
 	unittest.mock aws
-	unittest.mock DEBUG
+	unittest.mock echo.debug
 
 	_ARGS=($(uuidgen) $(uuidgen) $(uuidgen))
 
@@ -59,7 +59,7 @@ test.overrides-account() {
 
 	${testmodule} --account ${OVERRIDE_ACCOUNT} ${_ARGS[@]}
 
-	DEBUG.assert.callstackincludes \
+	unittest.debug.assert.callstackincludes \
 		AWS_ACCOUNT=${OVERRIDE_ACCOUNT} \
 		;
 }

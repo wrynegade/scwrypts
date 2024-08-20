@@ -19,7 +19,7 @@ CLONE() {
 	echo.status "downloading $NAME"
 	git clone "$TARGET" "$NAME" \
 		&& echo.success "successfully downloaded '$NAME'" \
-		|| FAIL 1 "failed to download '$NAME'" \
+		|| utils.fail 1 "failed to download '$NAME'" \
 		;
 }
 
@@ -28,7 +28,7 @@ PULL() {
 	cd "$PACKAGE_INSTALL_DIR/$NAME"
 	git pull origin $(git rev-parse --abbrev-ref HEAD) \
 		&& echo.success "successfully updated '$NAME'" \
-		|| FAIL 1 "failed to update '$NAME'" \
+		|| utils.fail 1 "failed to update '$NAME'" \
 		;
 }
 
@@ -58,14 +58,14 @@ MAKE() {
 	echo.status "building '$NAME'"
 	make \
 		&& echo.success "finished building '$NAME'" \
-		|| FAIL 1 "build failed for '$NAME' (see above)"\
+		|| utils.fail 1 "build failed for '$NAME' (see above)"\
 		;
 
 	echo.status "installing '$NAME'"
 	GETSUDO
 	sudo make install \
 		&& echo.success "succesfully installed '$NAME'" \
-		|| FAIL 2 "failed to install '$NAME' (see above)"\
+		|| utils.fail 2 "failed to install '$NAME' (see above)"\
 		;
 }
 
@@ -73,6 +73,6 @@ MAKEPKG() {
 	echo.status "installing '$NAME'"
 	yes | makepkg -si \
 		&& echo.success "succesfully installed '$NAME'" \
-		|| FAIL 1 "failed to install '$NAME' (see above)"\
+		|| utils.fail 1 "failed to install '$NAME' (see above)"\
 		;
 }

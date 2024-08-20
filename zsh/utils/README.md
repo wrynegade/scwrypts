@@ -9,7 +9,7 @@ Doing so will *also* check for path dependencies and required environment variab
 
 
 ```shell
-#!/bin/zsh
+#!/usr/bin/env zsh
 source ./path/to/utils.plugin.zsh
 echo.success 'ZSH utilities online!'
 ```
@@ -26,7 +26,7 @@ Include a dependency by adding to the `DEPENDENCIES` array.
 If any dependencies are missing, `source utils.module.zsh` will return an error code and count the number of missing dependencies in the variable `DEP_ERROR_COUNT`.
 
 ```shell
-#!/bin/zsh
+#!/usr/bin/env zsh
 DEPENDENCIES+=(
 	path-executable-1
 	path-executable-2
@@ -47,7 +47,7 @@ If any environment variables are missing, `source utils.module.zsh` will return 
 Missing environment variables will be added to the environment template (*exclusive to Scwrypts*).
 
 ```shell
-#!/bin/zsh
+#!/usr/bin/env zsh
 REQUIRED_ENV+=(
 	AWS_PROFILE
 	AWS_REGION

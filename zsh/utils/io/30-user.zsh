@@ -10,8 +10,8 @@ utils.io.input() {  # read a single line of user input
 
 # yes/no prompts   && = yes (exit code 0)
 #                  || = no  (exit code 1)
-utils.io.Yn() { [[ ! $(utils.io.read-yn $@ '[Yn]') =~ [nN] ]]; }  # default 'yes'
-utils.io.yN() { [[   $(utils.io.read-yn $@ '[yN]') =~ [yY] ]]; }  # default 'no'
+utils.Yn() { [[ ! $(utils.io.read-yn $@ '[Yn]') =~ [nN] ]]; }  # default 'yes'
+utils.yN() { [[   $(utils.io.read-yn $@ '[yN]') =~ [yY] ]]; }  # default 'no'
 
 utils.io.edit() {  # edit a file in user's preferred editor
 	[ ${CI} ] && {
@@ -37,7 +37,7 @@ utils.io.getsudo() {  # ensure a user has sudo permissions
 
 utils.io.read()  {
 	[ ${CI} ] && [ -t 0 ] \
-		&& FAIL 42 'currently in CI, but attempting interactive read; aborting'
+		&& utils.fail 42 'currently in CI, but attempting interactive read; aborting'
 
 	local FORCE_USER_INPUT=false
 	local ARGS=()
@@ -72,6 +72,8 @@ utils.io.read-yn() {  # yes/no read is suprisingly tricky
 	local USERPROMPT=()
 	local READ_ARGS=()
 
+	[ "${SCWRYPTS_LOG_LEVEL}" ] || local SCWRYPTS_LOG_LEVEL=4
+
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
@@ -100,22 +102,10 @@ utils.io.read-yn() {  # yes/no read is suprisingly tricky
 	local yn
 	echo.prompt "${USERPROMPT[@]}"
 
-	local PERFORM_FAKE_PROMPT=false
 	case ${SKIP_USER_INPUT} in
 		true ) yn=y ;;
 		false )
-			[[ ${SCWRYPTS_LOG_LEVEL} -lt 1 ]] && {
-				[[ ${FORCE_USER_INPUT} =~ false ]] && [ ! -t 0 ] \
-					|| PERFORM_FAKE_PROMPT=true
-			}
-
-			[[ ${PERFORM_FAKE_PROMPT} =~ true ]] \
-				&& echo -n "${USERPROMPT[@]} : " >&2
-
 			utils.io.read ${READ_ARGS[@]} -s -k yn
-
-			[[ ${PERFORM_FAKE_PROMPT} =~ true ]] \
-				&& echo ${yn} >&2
 			;;
 	esac
 

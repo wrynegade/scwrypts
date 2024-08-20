@@ -12,10 +12,28 @@ utils.colors.magenta()        { printf '\033[0;35m'; }
 utils.colors.bright-magenta() { printf '\033[1;35m'; }
 utils.colors.cyan()           { printf '\033[0;36m'; }
 utils.colors.bright-cyan()    { printf '\033[1;36m'; }
-utils.colors.white()          { printf '\033[0;37m'; }
-utils.colors.light-gray()     { printf '\033[1;37m'; }
+utils.colors.light-gray()     { printf '\033[0;37m'; }
+utils.colors.white()          { printf '\033[1;37m'; }
 
 utils.colors.reset()          { printf '\033[0m'; }
+
+utils.colors.remove() { sed 's/\x1b\[[0-9;]*m//g'; }
+
+#####################################################################
+
+utils.colors.print() {  # print color + message + color-reset sequence
+	local COLOR="$1"
+	local MESSAGE="${@:2}"
+
+	command -v utils.colors.${COLOR} &>/dev/null || {
+		printf "${MESSAGE}"
+		return
+	}
+
+	printf "$(utils.colors.${COLOR})${MESSAGE}$(utils.colors.reset)"
+}
+
+#####################################################################
 
 export __SCWRYPTS_UTILS_COLORS=(
 		$(utils.colors.red)
@@ -36,3 +54,5 @@ export __SCWRYPTS_UTILS_COLORS=(
 utils.colors.random() {
 	printf "$(utils.colors.reset)${__SCWRYPTS_UTILS_COLORS[$(shuf -i 1-${#__SCWRYPTS_UTILS_COLORS[@]} -n 1)]}"
 }
+
+#####################################################################

@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 use scwrypts/virtualenv/update
 #####################################################################
 
@@ -17,5 +17,5 @@ MAIN() {
 	
 	[[ $FAILED_COUNT -eq 0 ]] \
 		&& echo.success 'all environments up-to-date' \
-		|| FAIL $FAILED_COUNT "failed to update $FAILED_COUNT more environment(s)"
+		|| utils.fail $FAILED_COUNT "failed to update $FAILED_COUNT more environment(s)"
 }

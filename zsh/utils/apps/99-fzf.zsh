@@ -1,5 +1,5 @@
-utils.io.fzf() {
-	[ ${CI} ] && FAIL 1 'currently in CI, but FZF requires user input'
+utils.fzf() {
+	[ ${CI} ] && utils.fail 1 'currently in CI, but utils.fzf requires user input'
 
 	local FZF_ARGS=(
 		-i
@@ -20,7 +20,7 @@ utils.io.fzf() {
 	[ ${SELECTION} ]
 }
 
-utils.io.fzf-user-input() { # allow user to type custom answers; reconfirm if ambiguous with select
+utils.fzf.user-input() { # allow user to type custom answers; reconfirm if ambiguous with select
 	local FZF_OUTPUT=$(BE_QUIET=1 FZF $@ --print-query | sed '/^$/d' | sort -u)
 	[[ ${SCWRYPTS_LOG_LEVEL} -ge 1 ]] && echo ${FZF_OUTPUT} | head -n1 >&2
 	[ ! ${FZF_OUTPUT} ] && return 1
@@ -30,10 +30,10 @@ utils.io.fzf-user-input() { # allow user to type custom answers; reconfirm if am
 
 	local FZF_OUTPUT=$(
 		echo "${FZF_OUTPUT}" \
-			| sed "1s/\$/^$(printf "$(utils.colors.light-gray)\\033[3m")<- what you typed$(utils.colors.reset)/" \
-			| sed "2s/\$/^$(printf "$(utils.colors.light-gray)\\033[3m")<- what you selected$(utils.colors.reset)/" \
+			| sed "1s/\$/^$(utils.colors.print light-gray '<- what you typed')/" \
+			| sed "2s/\$/^$(utils.colors.print light-gray '<- what you selected')/" \
 			| column -ts '^' \
-			| BE_QUIET=1 utils.io.fzf "$@ (clarify)" \
+			| BE_QUIET=1 utils.fzf "$@ (clarify)" \
 		)
 
 	[[ ${SCWRYPTS_LOG_LEVEL} -ge 1 ]] && echo ${FZF_OUTPUT} >&2

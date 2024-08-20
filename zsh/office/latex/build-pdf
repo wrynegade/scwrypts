@@ -1,9 +1,9 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 use office/latex
 #####################################################################
 
 MAIN() {
-	[ ! $1 ] && FAIL 1 'must provide filename'
+	[ ! $1 ] && utils.fail 1 'must provide filename'
 	local FILENAME=$(LATEX__GET_MAIN_FILENAME "$1")
 
 	local ARGS=(-interaction=nonstopmode)
@@ -13,11 +13,11 @@ MAIN() {
 
 	echo.status 'running compile (1/2)'
 	pdflatex ${ARGS[@]} \
-		|| FAIL 2 'first compile failed (see above)'
+		|| utils.fail 2 'first compile failed (see above)'
 
 	echo.status 'running compile (2/2)'
 	pdflatex ${ARGS[@]} >/dev/null 2>&1 \
-		|| FAIL 3 'second compile failed :c'
+		|| utils.fail 3 'second compile failed :c'
 
 	echo.success "created '$(echo $FILENAME | sed 's/\.[^.]*$/.pdf/')'"
 }

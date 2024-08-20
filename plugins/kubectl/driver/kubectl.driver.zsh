@@ -42,11 +42,11 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 
 	local USAGE__args="$(
 		{
-			echo "\\033[0;32m[0-9]\\033[0m^if the first argument is a number 0-9, uses or creates a subsession (default 0)"
+			echo "$(utils.colors.print green '[0-9]')^if the first argument is a number 0-9, uses or creates a subsession (default 0)"
 			echo " ^ "
 			for C in ${CUSTOM_COMMANDS[@]}
 			do
-				echo "\\033[0;32m$C\\033[0m^$(SCWRYPTS_KUBECTL_CUSTOM_COMMAND_DESCRIPTION__$C 2>/dev/null)"
+				echo "$(utils.colors.print green ${C})^$(SCWRYPTS_KUBECTL_CUSTOM_COMMAND_DESCRIPTION__$C 2>/dev/null)"
 			done 
 		} | column -ts '^'
 	)"
@@ -67,7 +67,7 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 		enriched, use-case-sensitive setup of kubernetes context.
 
 		All actions are scoped to the current SCWRYPTS_ENV
-		  currently : \\033[0;33m$SCWRYPTS_ENV\\033[0m
+		  currently : $(utils.colors.print yellow ${SCWRYPTS_ENV})
 		  
 		"
 

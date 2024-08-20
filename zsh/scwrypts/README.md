@@ -48,7 +48,7 @@ export AWS_REGION__select=us-east-1,us-east-2,us-west-1,us-west-2
 
 Setting the `AWS_REGION` variable will cause scwrypts to ignore the `__select` syntax.
 
-CI will fail on select, because CI fails on any FZF prompt.
+CI will fail on select, because CI fails on any utils.fzf prompt.
 
 #### `__override` Environment Variables
 Override any variable with the indicated value.

@@ -9,13 +9,13 @@ use cloud/aws/cli
 
 RDS__SELECT_DATABASE() {
 	local DATABASES=$(_RDS__GET_AVAILABLE_DATABASES)
-	[ ! $DATABASES ] && FAIL 1 'no databases available'
+	[ ! $DATABASES ] && utils.fail 1 'no databases available'
 
 	local ID=$(\
 		echo $DATABASES | jq -r '.instance + " @ " + .cluster' \
-			| FZF 'select a database (instance@cluster)' \
+			| utils.fzf 'select a database (instance@cluster)' \
 	)
-	[ ! $ID ] && ABORT
+	[ ! $ID ] && user.abort
 
 	local INSTANCE=$(echo $ID | sed 's/ @ .*$//')
 	local CLUSTER=$(echo $ID  | sed 's/^.* @ //')
@@ -57,7 +57,7 @@ RDS__GET_DATABASE_CREDENTIALS() {
 	##########################################
 
 	local DATABASE=$(RDS__SELECT_DATABASE)
-	[ ! $DATABASE ] && ABORT
+	[ ! $DATABASE ] && user.abort
 
 	DB_HOST="$(echo $DATABASE | jq -r '.host')"
 	[ ! $DB_HOST ] && { echo.error 'unable to find host'; return 2; }
@@ -70,9 +70,9 @@ RDS__GET_DATABASE_CREDENTIALS() {
 
 	local AUTH_METHOD=$(\
 		echo "iam\nsecretsmanager\nuser-input" \
-			| FZF 'select an authentication method' \
+			| utils.fzf 'select an authentication method' \
 	)
-	[ ! $AUTH_METHOD ] && ABORT
+	[ ! $AUTH_METHOD ] && user.abort
 
 	case $AUTH_METHOD in
 		iam            ) _RDS_AUTH__iam ;;
@@ -119,7 +119,7 @@ _RDS__GET_SECRETSMANAGER_CREDENTIALS() {
 	local ID=$(\
 		AWS secretsmanager list-secrets \
 			| jq -r '.[] | .[] | .Name' \
-			| FZF 'select a secret' \
+			| utils.fzf 'select a secret' \
 	)
 	[ ! $ID ] && return 1
 

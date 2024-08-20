@@ -32,7 +32,7 @@ done
 VUNDLE__PLUGIN_INSTALL() {
 	VIM +PluginInstall +qall \
 		&& echo.success 'successfully installed Vundle.vim plugins' \
-		|| FAIL 1 'failed to install Vundle.vim plugins'
+		|| utils.fail 1 'failed to install Vundle.vim plugins'
 }
 
 VUNDLE__REBUILD_PLUGINS() {

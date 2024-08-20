@@ -22,15 +22,15 @@ ${scwryptsmodule}() {
 	
 	export MOCK__ORIGINAL_IMPLEMENTATION__${FUNCTION_VARIABLE}="$(which ${FUNCTION})"
 
-	[ "$STDOUT" ] && export MOCK__STDOUT__${FUNCTION_VARIABLE}="$STDOUT"
-	[ "$STDERR" ] && export MOCK__STDERR__${FUNCTION_VARIABLE}="$STDERR"
+	[ "${STDOUT}" ] && export MOCK__STDOUT__${FUNCTION_VARIABLE}="${STDOUT}"
+	[ "${STDERR}" ] && export MOCK__STDERR__${FUNCTION_VARIABLE}="${STDERR}"
 
-	[ $EXIT_CODE ] || EXIT_CODE=0
-	export MOCK__EXIT_CODE__${FUNCTION_VARIABLE}=$EXIT_CODE
+	[ ${EXIT_CODE} ] || EXIT_CODE=0
+	export MOCK__EXIT_CODE__${FUNCTION_VARIABLE}=${EXIT_CODE}
 
 	##########################################
 
-	# tricky! in order to set the $FUNCTION as literal within zsh functions, we need
+	# tricky! in order to set the ${FUNCTION} as literal within zsh functions, we need
 	# to run all the test definitions as an eval line :S
 	eval "
 
@@ -105,7 +105,7 @@ ${scwryptsmodule}() {
 	}
 	"
 
-	MOCKS+=($FUNCTION)
+	MOCKS+=(${FUNCTION})
 }
 
 #####################################################################
@@ -130,16 +130,16 @@ ${scwryptsmodule}.parse() {
 			EXIT_CODE="$2"
 			;;
 
-		* ) [[ $POSITIONAL_ARGS -gt 0 ]] && return 0
+		* ) [[ ${POSITIONAL_ARGS} -gt 0 ]] && return 0
 			((POSITIONAL_ARGS+=1))
 			PARSED=1
-			case $POSITIONAL_ARGS in
+			case ${POSITIONAL_ARGS} in
 				1 ) FUNCTION="$1" ;;
 			esac
 			;;
 	esac
 
-	return $PARSED
+	return ${PARSED}
 }
 
 ${scwryptsmodule}.parse.usage() {
@@ -157,9 +157,9 @@ ${scwryptsmodule}.parse.usage() {
 }
 
 ${scwryptsmodule}.parse.validate() {
-	[ $FUNCTION ] && command -v $FUNCTION &>/dev/null \
-		|| echo.error "cannot mock uncallable '$FUNCTION'"
+	[ ${FUNCTION} ] && command -v ${FUNCTION} &>/dev/null \
+		|| echo.warning "mocking uncallable '${FUNCTION}'"
 
-	echo "$MOCKS" | sed 's/\s\+/\n/g' | grep -q "^${FUNCTION}$" \
-		&& echo.error "cannot mock '$FUNCTION' (it is already mocked)"
+	echo "${MOCKS}" | sed 's/\s\+/\n/g' | grep -q "^${FUNCTION}$" \
+		&& echo.error "cannot mock '${FUNCTION}' (it is already mocked)"
 }

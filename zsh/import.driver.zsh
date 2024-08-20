@@ -1,4 +1,5 @@
-[[ ${SCWRYPTS_IMPORT_DRIVER_READY} =~ true ]] && return 0
+command -v use use.is-loaded use.get-library-root &>/dev/null && return 0
+
  ###################################################################
 #                                                                   #
 # usage: use [OPTIONS ...] zsh/module/path                          #
@@ -73,34 +74,32 @@ use() {
 		&& [ ! "${SCWRYPTS_LIBRARY_ROOT}"  ] \
 		&& SCWRYPTS_LIBRARY_GROUP=scwrypts
 
-	[ ! "${SCWRYPTS_LIBRARY_ROOT}" ] && SCWRYPTS_LIBRARY_ROOT="$(GET_SCWRYPTS_LIBRARY_ROOT)"
+	# bail ASAP, check errors later
+	use.is-loaded && return 0
+
+	[ ! "${SCWRYPTS_LIBRARY_ROOT}" ] && SCWRYPTS_LIBRARY_ROOT="$(use.get-scwrypts-library-root)"
 	[ ! "${SCWRYPTS_LIBRARY_ROOT}" ] && echo.error "unable to determine library root from group name '${SCWRYPTS_LIBRARY_GROUP}'"
 
 	#####################################################################
 
 	local LIBRARY_FILE LIBRARY_FILE_TEMP
 
-	local LIBRARY_FILENAME_DIRECT="${SCWRYPTS_LIBRARY_ROOT}/${SCWRYPTS_LIBRARY}.module.zsh"
-	local LIBRARY_FILENAME_GROUP_MODULE="${SCWRYPTS_LIBRARY_ROOT}/${SCWRYPTS_LIBRARY}/$(basename -- "${SCWRYPTS_LIBRARY}").module.zsh" \
+	[ ! "${LIBRARY_FILE}" ] && {
+		LIBRARY_FILE_TEMP="${SCWRYPTS_LIBRARY_ROOT}/${SCWRYPTS_LIBRARY}.module.zsh"
+		[ -f "${LIBRARY_FILE_TEMP}" ] && {
+			LIBRARY_FILE="${LIBRARY_FILE_TEMP}"
+		}
+	}
 
-	for LIBRARY_FILE_TEMP in \
-		"${LIBRARY_FILENAME_DIRECT}" \
-		"${LIBRARY_FILENAME_GROUP_MODULE}" \
-		;
-	do
-		[ -f "${LIBRARY_FILE_TEMP}" ] && LIBRARY_FILE="${LIBRARY_FILE_TEMP}" && break
-	done
+	[ ! "${LIBRARY_FILE}" ] && {  # "group" library reference
+		LIBRARY_FILE_TEMP="${SCWRYPTS_LIBRARY_ROOT}/${SCWRYPTS_LIBRARY}/$(basename -- "${SCWRYPTS_LIBRARY}").module.zsh"
+		[ -f "${LIBRARY_FILE_TEMP}" ] && {
+			LIBRARY_FILE="${LIBRARY_FILE_TEMP}"
+		}
+	}
 
 	[ "${LIBRARY_FILE}" ] \
 		|| echo.error "no such library '${SCWRYPTS_LIBRARY_GROUP}/${SCWRYPTS_LIBRARY}'"
-
-	#####################################################################
-
-	local SCWRYPTS_MODULE_BEFORE=${scwryptsmodule}
-	[[ ${SCWRYPTS_LIBRARY_GROUP} =~ ^scwrypts$ ]] \
-		&& export scwryptsmodule="$(echo "${SCWRYPTS_LIBRARY}" | sed 's|/|.|g')" \
-		|| export scwryptsmodule="${SCWRYPTS_LIBRARY_GROUP}.$(echo "${SCWRYPTS_LIBRARY}" | sed 's|/|.|g')" \
-		;
 
 	#####################################################################
 
@@ -111,10 +110,11 @@ use() {
 
 	#####################################################################
 
-	IS_LOADED && {
-		export scwryptsmodule=${SCWRYPTS_MODULE_BEFORE}
-		return 0
-	}
+	local SCWRYPTS_MODULE_BEFORE=${scwryptsmodule}
+	[[ ${SCWRYPTS_LIBRARY_GROUP} =~ ^scwrypts$ ]] \
+		&& export scwryptsmodule="$(echo "${SCWRYPTS_LIBRARY}" | sed 's|/|.|g')" \
+		|| export scwryptsmodule="${SCWRYPTS_LIBRARY_GROUP}.$(echo "${SCWRYPTS_LIBRARY}" | sed 's|/|.|g')" \
+		;
 
 	source "${LIBRARY_FILE}" || {
 		((IMPORT_ERRORS+=1))
@@ -131,7 +131,7 @@ use() {
 		}
 	}
 
-	IS_LOADED --set
+	use.is-loaded --set
 	[[ ${SCWRYPTS_MODULE_BEFORE} ]] \
 		&& export scwryptsmodule=${SCWRYPTS_MODULE_BEFORE} \
 		|| unset scwryptsmodule \
@@ -140,11 +140,16 @@ use() {
 	return 0
 }
 
-GET_SCWRYPTS_LIBRARY_ROOT() {
+use.get-scwrypts-library-root() {
+	local VARIABLE_NAME="SCWRYPTS_LIBRARY_ROOT__${SCWRYPTS_LIBRARY_GROUP}"
+	echo "${(P)VARIABLE_NAME}" | grep . && return 0
+
+	##########################################
+
 	local ROOT
 
 	ROOT="$(scwrypts.config.group "${SCWRYPTS_LIBRARY_GROUP}" zshlibrary)"
-	[ "${ROOT}" ] && echo "${ROOT}" && return 0
+	[ "${ROOT}" ] && eval ${VARIABLE_NAME}="${ROOT}" && echo "${ROOT}" && return 0
 
 	##########################################
 	
@@ -162,30 +167,14 @@ GET_SCWRYPTS_LIBRARY_ROOT() {
 		|| echo.error "unable to determine library root" \
 		|| return 1
 
+	eval ${VARIABLE_NAME}="${ROOT}" 
 	echo "${ROOT}"
 }
 
-IS_LOADED() {
+use.is-loaded() {
 	local VARIABLE_NAME="SCWRYPTS_LIBRARY_LOADED__${SCWRYPTS_LIBRARY_GROUP}__$(echo ${SCWRYPTS_LIBRARY} | sed 's|[/-]|_|g')"
 
 	[[ $1 =~ ^--set$ ]] && eval ${VARIABLE_NAME}=true
 
 	[[ ${(P)VARIABLE_NAME} =~ true ]]
 }
-
-#####################################################################
-
-# temporary definitions for first load
-utils.check-errors()      { return 0; unset -f utils.check-errors; }
-utils.check-environment() { return 0; unset -f utils.check-environment; }
-ERROR()             { echo $@ >&2; exit 1; }
-
-#####################################################################
-
-# ensures that zsh/utils and zsh/scwrypts/meta are always present!
-
-use utils
-use scwrypts/meta
-
-#####################################################################
-SCWRYPTS_IMPORT_DRIVER_READY=true

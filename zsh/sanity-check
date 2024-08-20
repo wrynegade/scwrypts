@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 #####################################################################
 
 USAGE__options='
@@ -45,7 +45,7 @@ MAIN() {
 
 	##########################################
 
-	[[ $OUTPUT_FUNCTION =~ ^FAIL$ ]] && FAIL $EXIT_CODE "$MESSAGE"
+	[[ $OUTPUT_FUNCTION =~ ^FAIL$ ]] && utils.fail $EXIT_CODE "$MESSAGE"
 
 	$OUTPUT_FUNCTION "$MESSAGE"
 	return $EXIT_CODE

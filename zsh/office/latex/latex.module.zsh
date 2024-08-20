@@ -38,7 +38,7 @@ LATEX__CHECK_IS_MAIN_FILE() {
 
 LATEX__GET_PDF() {
 	local FILENAME=$(LATEX__GET_MAIN_FILENAME "$1" | sed 's/\.[^.]*$/.pdf/')
-	[ $FILENAME ] && [ -f $FILENAME ] || FAIL 1 "no compiled pdf found for '$1'; have you run 'build-pdf'?"
+	[ $FILENAME ] && [ -f $FILENAME ] || utils.fail 1 "no compiled pdf found for '$1'; have you run 'build-pdf'?"
 	echo.success 'found main pdf'
 	echo $FILENAME
 }

@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 DEPENDENCIES+=(jq)
 REQUIRED_ENV+=(AWS__EFS__LOCAL_MOUNT_POINT)
 
@@ -15,9 +15,9 @@ MAIN() {
 	local FS_ID=$(\
 		AWS efs describe-file-systems \
 		| jq -r '.[] | .[] | .FileSystemId' \
-		| FZF 'select a filesystem to mount' \
+		| utils.fzf 'select a filesystem to mount' \
 	)
-	[ ! $FS_ID ] && ABORT
+	[ ! $FS_ID ] && user.abort
 
 	local MOUNT_POINT="$AWS__EFS__LOCAL_MOUNT_POINT/$FS_ID"
 	[ -d "$MOUNT_POINT" ] && sudo rmdir "$MOUNT_POINT" >/dev/null 2>&1
@@ -30,9 +30,9 @@ MAIN() {
 	local ZONE=$(\
 		echo $MOUNT_TARGETS \
 		| jq -r '.[] | .[] | .AvailabilityZoneName' \
-		| sort -u | FZF 'select availability zone'\
+		| sort -u | utils.fzf 'select availability zone'\
 	)
-	[ ! $ZONE ] && ABORT
+	[ ! $ZONE ] && user.abort
 
 	local MOUNT_IP=$(\
 		echo $MOUNT_TARGETS \
@@ -48,7 +48,7 @@ MAIN() {
 	echo.status "file system ip    : $MOUNT_IP"
 	echo.status "local mount point : $MOUNT_POINT"
 
-	Yn 'proceed?' || ABORT
+	Yn 'proceed?' || user.abort
 
 	sudo mkdir $MOUNT_POINT \
 		&& sudo mount \
@@ -59,6 +59,6 @@ MAIN() {
 		&& echo.success "mounted at '$MOUNT_POINT'" \
 		|| {
 		sudo rmdir $MOUNT_POINT >/dev/null 2>&1
-		FAIL 2 "unable to mount '$FS_ID'"
+		utils.fail 2 "unable to mount '$FS_ID'"
 	}
 }

@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 DEPENDENCIES+=(tic)
 
 use system/config
@@ -6,7 +6,7 @@ use system/config
 
 MAIN() {
 	[ ! $TERMINFO_PATH ] && return 0
-	[ ! -d $TERMINFO_PATH ] && FAIL 1 "TERMINFO_PATH='$TERMINFO_PATH' does not exist"
+	[ ! -d $TERMINFO_PATH ] && utils.fail 1 "TERMINFO_PATH='$TERMINFO_PATH' does not exist"
 
 	local ERRORS=0
 	for TERMINFO_FILE in $(find $TERMINFO_PATH -type f)

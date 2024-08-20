@@ -1,20 +1,22 @@
-#!/bin/zsh               
+#!/usr/bin/env zsh               
 #####################################################################
 
+
 MAIN() {
-	cd $SCWRYPTS_ROOT
+	local LOGFILE_COUNT="$(find "${SCWRYPTS_LOG_PATH}" -type f 2>/dev/null | wc -l)"
+
+	[ "${SCWRYPTS_LOG_PATH}" ] && [ -d "${SCWRYPTS_LOG_PATH}" ] && [[ ${LOGFILE_COUNT} -gt 0 ]] || {
+		echo.success "no local logs found; nothing to do!"
+		return 0
+	}
+
+	echo.status "found ${LOGFILE_COUNT} log files"
+	echo.warning "this will permanently delete everything in\n${SCWRYPTS_LOG_PATH}"
 	
-	echo.status "Found $(ls $SCWRYPTS_LOG_PATH | wc -l) log files"
-	echo.warning "
-		this will permanently clear all local cloud script logs found in
-		'$SCWRYPTS_LOG_PATH'
-	"
+	utils.yN 'continue?' || utils.abort
 	
-	yN 'continue?' || ABORT
-	
-	echo.status 'removing logfiles'
-	rm -rf $SCWRYPTS_LOG_PATH/* \
-		&& echo.success 'done' \
-		|| { echo.error 'failed :c'; exit 2; }\
+	rm -rf "${SCWRYPTS_LOG_PATH}" \
+		&& echo.success 'all logfiles removed' \
+		|| echo.error 'something went wrong (see above)' \
 		;
 }

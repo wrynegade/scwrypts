@@ -1,6 +1,6 @@
 #####################################################################
 
-SCWRYPTS__RUN() {  # context wrapper to run scwrypts within scwrypts
+${scwryptsmodule}() {  # context wrapper to run scwrypts within scwrypts
 	local EXIT_CODE=0
 	((SUBSCWRYPT+=1))
 

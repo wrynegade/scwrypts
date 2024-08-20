@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 use office/latex
 #####################################################################
 
@@ -6,14 +6,14 @@ TEMPLATE_DIR="${0:a:h}/templates"
 
 MAIN() {
 	local DOCUMENT_DIR="$EXECUTION_DIR"
-	local TEMPLATE=$(GET_TEMPLATES | FZF 'select a template')
-	[ ! $TEMPLATE ] && ABORT
+	local TEMPLATE=$(GET_TEMPLATES | utils.fzf 'select a template')
+	[ ! $TEMPLATE ] && user.abort
 	echo.success "selected template '$TEMPLATE'"
 
-	INPUT DOC_TITLE 'document title' || ABORT
+	INPUT DOC_TITLE 'document title' || user.abort
 
 	local DOCUMENT_FILE="$DOCUMENT_DIR/$(SLUGIFY_TITLE).tex"
-	[ -f "$DOCUMENT_FILE" ] && FAIL 1 "'$(basename $DOCUMENT_FILE)' already exists"
+	[ -f "$DOCUMENT_FILE" ] && utils.fail 1 "'$(basename $DOCUMENT_FILE)' already exists"
 
 	INPUT DOC_ID    'document id/subtitle'
 	INPUT AUTHOR    'author name'

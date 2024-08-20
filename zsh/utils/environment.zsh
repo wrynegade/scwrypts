@@ -103,7 +103,7 @@ utils.environment.check() {
 
 				LOOKUP_PATH="${NAME}"
 				NAME=$(\
-					SCWRYPTS_ENVIRONMENT__GET_FULL_TEMPLATE \
+					scwrypts.environment.get-full-template \
 						| utils.yq -r "${LOOKUP_PATH}.\".ENVIRONMENT\"" \
 						| grep -v ^null$\
 					)
@@ -155,7 +155,7 @@ utils.environment.check() {
 	}
 
 	[ ! ${LOOKUP_PATH} ] && {
-		LOOKUP_PATH="$(SCWRYPTS_ENVIRONMENT__GET_ENVVAR_LOOKUP_MAP | utils.yq -r ".${NAME}" | sed 's/\.value$//')"
+		LOOKUP_PATH="$(scwrypts.environment.template.get-envvar-lookup-map | utils.yq -r ".${NAME}" | sed 's/\.value$//')"
 	}
 
 	# ensure environment safety; prevent bleed in from user's runtime
@@ -209,7 +209,7 @@ utils.environment.check.value() {
 	local NAME="$1"
 	local LOOKUP_PATH="$2"
 
-	SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_SHELL_VALUES \
+	scwrypts.environment.user.get-shell-values \
 		| utils.yq -r "${LOOKUP_PATH}.value" \
 		| grep -v '^null$' \
 		;
@@ -220,7 +220,7 @@ utils.environment.check.selection() {
 	local LOOKUP_PATH="$2"
 
 	local SELECTION_VALUES=($(
-		SCWRYPTS_ENVIRONMENT__GET_USER_ENVIRONMENT_SHELL_VALUES \
+		scwrypts.environment.user.get-shell-values \
 			| utils.yq -r "${LOOKUP_PATH}.selection[]" \
 			| grep -v '^null$' \
 			))
@@ -229,7 +229,7 @@ utils.environment.check.selection() {
 
 	echo "${SELECTION_VALUES}" \
 		| sed 's/\s\+/\n/g' \
-		| FZF "select a value for '${NAME}'" \
+		| utils.fzf "select a value for '${NAME}'" \
 		;
 }
 
@@ -245,6 +245,6 @@ utils.environment.check.select() {  # support for ENV_VAR__select=()
 
 	echo "${SELECTION_VALUES}" \
 		| sed 's/\s\+/\n/g' \
-		| FZF "select a value for '${NAME}'" \
+		| utils.fzf "select a value for '${NAME}'" \
 		;
 }
