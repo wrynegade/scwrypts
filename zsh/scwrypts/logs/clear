@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh               
+#!/usr/bin/env zsh
 #####################################################################
 
 
@@ -12,9 +12,9 @@ MAIN() {
 
 	echo.status "found ${LOGFILE_COUNT} log files"
 	echo.warning "this will permanently delete everything in\n${SCWRYPTS_LOG_PATH}"
-	
+
 	utils.yN 'continue?' || utils.abort
-	
+
 	rm -rf "${SCWRYPTS_LOG_PATH}" \
 		&& echo.success 'all logfiles removed' \
 		|| echo.error 'something went wrong (see above)' \

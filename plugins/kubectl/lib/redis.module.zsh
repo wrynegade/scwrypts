@@ -35,7 +35,7 @@ REDIS() {
 
 	while [[ $# -gt 0 ]]
 	do
-		case $1 in 
+		case $1 in
 			-p | --prefix ) USER_ARGS+=("${REDIS_PREFIX}${SCWRYPTS_ENV}:${SUBSESSION}:$2"); shift 1 ;;
 
 			--subsession            ) SUBSESSION=$2; shift 1 ;;

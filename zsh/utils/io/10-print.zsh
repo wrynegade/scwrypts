@@ -46,7 +46,7 @@ utils.io.print() {
 				LAST_LINE_END=''
 				;;
 
-			( --format ) 
+			( --format )
 				_S=2
 				local SCWRYPTS_OUTPUT_FORMAT=$2
 				;;

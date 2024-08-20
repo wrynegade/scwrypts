@@ -38,7 +38,7 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 		description: -
 	"
 
-	local USAGE__usage=$(echo $CLI | head -c1) 
+	local USAGE__usage=$(echo $CLI | head -c1)
 
 	local USAGE__args="$(
 		{
@@ -47,7 +47,7 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 			for C in ${CUSTOM_COMMANDS[@]}
 			do
 				echo "$(utils.colors.print green ${C})^$(SCWRYPTS_KUBECTL_CUSTOM_COMMAND_DESCRIPTION__$C 2>/dev/null)"
-			done 
+			done
 		} | column -ts '^'
 	)"
 
@@ -61,18 +61,18 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 		utility. These functions leverage redis and scwrypts environments to
 		allow quick selection of contexts and namespaces usable across all
 		active shell instances.
-		
+
 		The scwrypts group 'kubectl' has simple selection executables for
 		kubecontext and namespace, but also provides the library to enable
 		enriched, use-case-sensitive setup of kubernetes context.
 
 		All actions are scoped to the current SCWRYPTS_ENV
 		  currently : $(utils.colors.print yellow ${SCWRYPTS_ENV})
-		  
+
 		"
 
 	##########################################
-	
+
 	local USER_ARGS=()
 
 	local CUSTOM_COMMAND=0

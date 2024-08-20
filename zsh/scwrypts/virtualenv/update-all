@@ -4,9 +4,9 @@ use scwrypts/virtualenv/update
 
 MAIN() {
 	echo.status 'beginning update for all environments'
-	
+
 	FAILED_COUNT=0
-	
+
 	for ENV_GROUP in ${SCWRYPTS_GROUPS[@]}
 	do
 		for ENV_TYPE in ${SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS[@]}
@@ -14,7 +14,7 @@ MAIN() {
 			UPDATE_VIRTUALENV $ENV_GROUP $ENV_TYPE || ((FAILED_COUNT+=1))
 		done
 	done
-	
+
 	[[ $FAILED_COUNT -eq 0 ]] \
 		&& echo.success 'all environments up-to-date' \
 		|| utils.fail $FAILED_COUNT "failed to update $FAILED_COUNT more environment(s)"

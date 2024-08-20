@@ -15,7 +15,7 @@ ${scwryptsmodule}() {
 	eval "$ZSHPARSEARGS"
 
 	##########################################
-	
+
 	MOCKED_ENV+=(${ENVIRONMENT_VARIABLE_NAME})
 
 	export ${ENVIRONMENT_VARIABLE_NAME}__original_value="${(P)ENVIRONMENT_VARIABLE_NAME}"

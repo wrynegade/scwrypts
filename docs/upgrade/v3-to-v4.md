@@ -121,7 +121,7 @@ DEPENDENCIES+=(dep-function-a dep-function-b)
 - REQUIRED_ENV+=()
 
 use do/awesome/stuff --group my-custom-library
-- 
+-
 - CHECK_ENVIRONMENT
 #####################################################################
 

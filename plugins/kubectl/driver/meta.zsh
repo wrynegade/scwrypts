@@ -25,7 +25,7 @@ SCWRYPTS_KUBECTL_CUSTOM_COMMAND_PARSE__meta() {
 		case $1 in
 			-h | --help ) HELP=1 ;;
 
-			set ) 
+			set )
 				USAGE__usage+=" set"
 				USAGE__args="set (namespace|context)"
 				USAGE__description="interactively set a namespace or context for '$SCWRYPTS_ENV'"

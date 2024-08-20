@@ -29,7 +29,7 @@ MAIN() {
 					|| break
 
 				ENV_GROUP="$2"
-				;; 
+				;;
 
 			-t | --type  )
 				[ $2 ] && ((_S+=1)) \
@@ -41,7 +41,7 @@ MAIN() {
 		esac
 		shift $_S
 	done
-	
+
 	[ $ENV_GROUP ] || ENV_GROUP=scwrypts
 
 	[ $ENV_TYPE ] || ENV_TYPE=$(\

@@ -43,7 +43,7 @@ HELM__VALIDATE() {
 
 	[[ $(dirname $TEMPLATE_FILENAME) =~ ^$CHART_ROOT$ ]] \
 		&& USE_CHART_ROOT=1
-	
+
 	_HELM__GET_DEFAULT_VALUES_ARGS
 
 	return 0

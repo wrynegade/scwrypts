@@ -1,33 +1,33 @@
-#!/usr/bin/env zsh               
+#!/usr/bin/env zsh
 use scwrypts/meta
 #####################################################################
 
 MAIN() {
 	local USER_CONFIG_OVERRIDES="$SCWRYPTS_CONFIG_PATH/config.zsh"
-	
+
 	[ ! -f "$USER_CONFIG_OVERRIDES" ] && {
 		echo.status 'first-time setup detected; creating local configuration override...'
 		cp "$DEFAULT_CONFIG" "$USER_CONFIG_OVERRIDES"
-	
+
 		utils.io.edit $USER_CONFIG_OVERRIDES
-	
+
 		echo.status 'attempting first-time build for virtual environments'
 		scwrypts.meta --name scwrypts/virtualenv/update-all --group scwrypts --type zsh \
 			&& echo.success 'finished updating virtualenvs' \
 			|| echo.warning 'unable to create one or more virtualenv (see above)' \
 			;
-	
+
 		echo.reminder '
 			in the future, you can use the following scwrypt to update required virtual
 			environments (equivalent to "npm install" or "pip install -r requirements"):
-		
+
 			scwrypts --name scwrypts/virtualenv/update-all --group scwrypts --type zsh
 		'
 	} || {
 		utils.io.edit "$USER_CONFIG_OVERRIDES"
 	}
-	
-	
+
+
 	echo.success 'saved new configuration'
 	echo.reminder 'changes which affect the hot-key plugin will require a ZSHRC reload'
 }

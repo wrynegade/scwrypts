@@ -1,6 +1,6 @@
 #
 # parses unmatched args into the 'local ARGS=()' array; as seen below,
-# this will only parse unmatched args if the 
+# this will only parse unmatched args if the
 # parses '-h' or '--help', prints usage, and returns early
 #
 

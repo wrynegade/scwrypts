@@ -20,7 +20,7 @@ MAIN() {
 	INPUT AUTHOR_ID 'author id/title'
 
 	{
-		PRINT_TITLE_INFO 
+		PRINT_TITLE_INFO
 		cat "$TEMPLATE_DIR/$TEMPLATE/template.tex"
 	} > "$DOCUMENT_FILE"
 	cp "$TEMPLATE_DIR/gitignore" "$DOCUMENT_DIR/.gitignore"

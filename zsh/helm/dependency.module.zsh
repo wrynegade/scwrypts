@@ -21,7 +21,7 @@ HELM__DEPENDENCY__UPDATE() {
 
 	while [[ $# -gt 0 ]]
 	do
-		case $1 in 
+		case $1 in
 			-t | --template-filename ) TEMPLATE_FILENAME="$(SCWRYPTS__GET_REALPATH "$2")"; shift 1 ;;
 
 			* ) echo.error "unexpected argument '$1'" ;;

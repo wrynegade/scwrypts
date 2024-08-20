@@ -45,5 +45,5 @@ MAIN() {
 
 	utils.check-errors
 
-	KUBECTL__SERVE 
+	KUBECTL__SERVE
 }

@@ -21,7 +21,7 @@ MAIN() {
 				} | grep -v '\.md$' | grep -v 'check-all-dependencies$')
 			do
 				sed -z 's/.*DEPENDENCIES+=(\([^)]*\)).*/\1\n/; s/#.*\n//g; s/\s\+/\n/g' "$GROUP_HOME/$file"
-			done 
+			done
 		))
 	done
 

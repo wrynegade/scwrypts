@@ -67,7 +67,7 @@ TALLY() {
 		[ -f "$TALLY_FILENAME" ] && {
 			CURRENT_VALUE=$(cat "$TALLY_FILENAME" | tail -n1 | grep '^[0-9]\+')
 		}
-		
+
 		[ $CURRENT_VALUE ] || {
 			echo.error "malformed tally file '$TALLY_FILENAME'; aborting"
 			return 1
@@ -92,7 +92,7 @@ TALLY() {
 	}
 
 	##########################################
-	
+
 	case $RAW in
 		true  ) printf "$NEW_VALUE" ;;
 		false )

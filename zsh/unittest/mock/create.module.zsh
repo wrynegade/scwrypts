@@ -17,9 +17,9 @@ ${scwryptsmodule}() {
 	eval "$ZSHPARSEARGS"
 
 	##########################################
-	
+
 	local FUNCTION_VARIABLE="$(echo "${FUNCTION}" | sed 's/\./___/g; s/-/_____/g')"
-	
+
 	export MOCK__ORIGINAL_IMPLEMENTATION__${FUNCTION_VARIABLE}="$(which ${FUNCTION})"
 
 	[ "${STDOUT}" ] && export MOCK__STDOUT__${FUNCTION_VARIABLE}="${STDOUT}"

@@ -19,13 +19,13 @@ echo.reminder() {  # sysadmin reminder or important notice to users
 
 echo.status.color() { utils.colors.blue; }
 echo.status() {  # general status updates (prefer this to generic 'echo')
-	utils.io.print $@ --minimum-log-level 2 --prefix "STATUS    " --color  $(echo.status.color) 
+	utils.io.print $@ --minimum-log-level 2 --prefix "STATUS    " --color  $(echo.status.color)
 	return 0
 }
 
 echo.warning.color() { utils.colors.yellow; }
 echo.warning() {  # warning-level messages; not errors
-	utils.io.print $@ --minimum-log-level 3 --prefix "WARNING  " --color  $(echo.warning.color) 
+	utils.io.print $@ --minimum-log-level 3 --prefix "WARNING  " --color  $(echo.warning.color)
 	return 0
 }
 

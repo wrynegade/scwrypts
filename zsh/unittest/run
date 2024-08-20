@@ -23,13 +23,13 @@ MAIN() {
 	eval "$ZSHPARSEARGS"
 
 	##########################################
-	
+
 	local MODE
 	[[ ${#ARGS[@]} -eq 0 ]] \
 		&& MODE=all \
 		|| MODE=filter \
 		;
-	
+
 	local TEST_FILES=() GROUP FIND_ARGS=() FILTER
 	for GROUP in ${SCWRYPTS_GROUPS[@]}
 	do

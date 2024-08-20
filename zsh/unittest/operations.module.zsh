@@ -12,7 +12,7 @@ ${scwryptsmodule}() {
 	eval "$ZSHPARSEARGS"
 
 	##########################################
-	
+
 	local MOCK
 	for MOCK in ${MOCKS[@]}
 	do

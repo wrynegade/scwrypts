@@ -152,7 +152,7 @@ use.get-scwrypts-library-root() {
 	[ "${ROOT}" ] && eval ${VARIABLE_NAME}="${ROOT}" && echo "${ROOT}" && return 0
 
 	##########################################
-	
+
 	local GROUP_ROOT="$(scwrypts.config.group "${SCWRYPTS_LIBRARY_GROUP}" root)"
 	local GROUP_TYPE="$(scwrypts.config.group "${SCWRYPTS_LIBRARY_GROUP}" type)"
 
@@ -167,7 +167,7 @@ use.get-scwrypts-library-root() {
 		|| echo.error "unable to determine library root" \
 		|| return 1
 
-	eval ${VARIABLE_NAME}="${ROOT}" 
+	eval ${VARIABLE_NAME}="${ROOT}"
 	echo "${ROOT}"
 }
 

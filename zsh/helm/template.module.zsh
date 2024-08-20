@@ -29,7 +29,7 @@ HELM__TEMPLATE__GET() {
 
 	while [[ $# -gt 0 ]]
 	do
-		case $1 in 
+		case $1 in
 			-t | --template-filename ) TEMPLATE_FILENAME="$(SCWRYPTS__GET_REALPATH "$2")"; shift 1 ;;
 
 			--colorize )
@@ -63,7 +63,7 @@ HELM__TEMPLATE__GET() {
 	} || {
 		CAPTURE TEMPLATE_OUTPUT DEBUG_OUTPUT helm template "$CHART_ROOT" ${HELM_ARGS[@]} --debug --show-only "$(echo $TEMPLATE_FILENAME | sed "s|^$CHART_ROOT/||")"
 	}
-		
+
 	[ ! $TEMPLATE_OUTPUT ] && EXIT_CODE=1
 
 

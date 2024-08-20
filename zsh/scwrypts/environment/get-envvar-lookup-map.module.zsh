@@ -27,7 +27,7 @@ ${scwryptsmodule}() {
 	scwrypts.environment.get-full-template $@ \
 		| utils.yq -P '
 			..
-				| select(. == "*") 
+				| select(. == "*")
 				| {(.): "." + (path | join(".") + ".value")}
 			'\
 		| sed -n 's/\.\.ENVIRONMENT//p' \

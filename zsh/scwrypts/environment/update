@@ -11,7 +11,7 @@ USAGE__options+="
 	   delete      permanently delete an existing environment
 	   recursive   (somewhat advanced) from deepest parent to target environment, edit all related environments in order
 	   advanced    (dangerous) API mode; requires a '--' and additional arguments
-	
+
 	-n, --name   name of the environment to update (default is current '$SCWRYPTS_ENV')\n$(scwrypts.environment.common.get-env-names | sed 's/^/   /')
 
 	--advanced-help   help doc for advanced mode

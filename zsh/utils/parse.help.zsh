@@ -30,7 +30,7 @@ zsh.parse.help() {
 
 
 #
-# for a parser named 'MY_PARSER()', the optional 'MY_PARSER.safety()' function 
+# for a parser named 'MY_PARSER()', the optional 'MY_PARSER.safety()' function
 # will check and see _IF_ the parser should be used. All safety functions are run
 # at the very beginning of ZSHPARSEARGS.
 #

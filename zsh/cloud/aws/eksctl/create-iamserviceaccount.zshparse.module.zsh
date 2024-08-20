@@ -9,7 +9,7 @@ ARGS_PARSER__EKSCTL__CREATE_IAMSERVICEACCOUNT() {
 		--namespace      ) PARSED=2; NAMESPACE=$2 ;;
 		--role-name      ) PARSED=2; ROLE_NAME=$2 ;;
 
-		--force ) PARSED=1; FORCE=true ;; 
+		--force ) PARSED=1; FORCE=true ;;
 	esac
 
 	return $PARSED
