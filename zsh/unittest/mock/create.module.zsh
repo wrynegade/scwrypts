@@ -157,8 +157,13 @@ ${scwryptsmodule}.parse.usage() {
 }
 
 ${scwryptsmodule}.parse.validate() {
-	[ ${FUNCTION} ] && command -v ${FUNCTION} &>/dev/null \
-		|| echo.warning "mocking uncallable '${FUNCTION}'"
+	[ ${FUNCTION} ] && command -v ${FUNCTION} &>/dev/null || {
+		local FUNCTION_VARIABLE="$(echo "${FUNCTION}" | sed 's/\./___/g; s/-/_____/g')"
+		[[ $(eval echo "\$MOCK_UNCALLABLE_WARNING_ISSUED__${FUNCTION_VARIABLE}") =~ true ]] || {
+			echo.warning "mocking uncallable '${FUNCTION}'"
+			export MOCK_UNCALLABLE_WARNING_ISSUED__${FUNCTION_VARIABLE}=true
+		}
+	}
 
 	echo "${MOCKS}" | sed 's/\s\+/\n/g' | grep -q "^${FUNCTION}$" \
 		&& echo.error "cannot mock '${FUNCTION}' (it is already mocked)"
