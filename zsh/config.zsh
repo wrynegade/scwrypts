@@ -72,7 +72,7 @@ USER_CONFIG_OVERRIDES="${SCWRYPTS_CONFIG_PATH}/config.zsh"
 }
 
 source "${USER_CONFIG_OVERRIDES}"
-source "${0:a:h}/config.global.zsh"
+source "${__SCWRYPTS_ROOT}/zsh/config.global.zsh"
 
 #####################################################################
 ### load groups and plugins #########################################

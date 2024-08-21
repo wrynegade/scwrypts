@@ -112,19 +112,34 @@ ${scwryptsmodule}.zsh.generic() {
 
 ${scwryptsmodule}.py() {
 	utils.dependencies.check python || return 1
-	CURRENT_PYTHON_VERSION=$(python --version | sed 's/^[^0-9]*\(3\.[^.]*\).*$/\1/')
-	echo ${SCWRYPTS_PREFERRED_PYTHON_VERSIONS__scwrypts} | grep -q ${CURRENT_PYTHON_VERSION} || {
-		echo.warning "only tested on the following python versions: $(printf ', %s.x' ${SCWRYPTS_PREFERRED_PYTHON_VERSIONS__scwrypts[@]} | sed 's/^, //')"
-		echo.warning 'compatibility may vary'
-	}
+	use scwrypts/virtualenv
 
-	echo "cd ${GROUP_ROOT}; python -m $(echo ${SCWRYPT_TYPE}/${SCWRYPT_NAME} | sed 's/\//./g; s/\.py$//; s/\.\.//')"
+	local VIRTUALENV_PATH="$(scwrypts.virtualenv.common.get-path py)"
+	[ -f "${VIRTUALENV_PATH}/bin/activate" ] \
+		|| scwrypts.virtualenv.update py &>/dev/null
+
+	printf "
+		source \"${VIRTUALENV_PATH}/bin/activate\"
+		cd -- \"${GROUP_ROOT}\"
+		python -m $(echo ${SCWRYPT_TYPE}/${SCWRYPT_NAME} | sed 's/\//./g; s/\.py$//; s/\.\.//') "
 }
 
 #####################################################################
 
 ${scwryptsmodule}.zx() {
 	utils.dependencies.check zx || return 1
+	use scwrypts/virtualenv/update
 
-	echo "export FORCE_COLOR=3; cd ${GROUP_ROOT}; ./${SCWRYPT_TYPE}/${SCWRYPT_NAME}.js"
+	local ZX_ROOT
+	[[ "$(eval echo "\$SCWRYPTS_GROUP_CONFIGURATION__${GROUP}__type")" =~ zx ]] \
+		&& ZX_ROOT="${GROUP_ROOT}" \
+		|| ZX_ROOT="${GROUP_ROOT}/zx" \
+		;
+
+	[ -d "${ZX_ROOT}/node_modules" ] \
+		|| scwrypts.virtualenv.update zx >&2
+
+	printf "
+		export FORCE_COLOR=3
+		${ZX_ROOT}/${SCWRYPT_NAME}.js "
 }

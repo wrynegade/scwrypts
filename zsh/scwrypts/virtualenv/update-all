@@ -3,19 +3,20 @@ use scwrypts/virtualenv/update
 #####################################################################
 
 MAIN() {
+	local ERRORS=0
+	local ENV_TYPE ENV_TYPE_COUNT=${#SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS[@]}
+
 	echo.status 'beginning update for all environments'
-
-	FAILED_COUNT=0
-
-	for ENV_GROUP in ${SCWRYPTS_GROUPS[@]}
+	for ENV_TYPE in ${SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS[@]}
 	do
-		for ENV_TYPE in ${SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS[@]}
-		do
-			UPDATE_VIRTUALENV $ENV_GROUP $ENV_TYPE || ((FAILED_COUNT+=1))
-		done
+		scwrypts.virtualenv.update $ENV_TYPE \
+			&& echo.success "successfully updated '${ENV_TYPE}'" \
+			|| echo.error   "error updating '${ENV_TYPE}'" \
+			;
 	done
 
-	[[ $FAILED_COUNT -eq 0 ]] \
-		&& echo.success 'all environments up-to-date' \
-		|| utils.fail $FAILED_COUNT "failed to update $FAILED_COUNT more environment(s)"
+	[[ ${ERRORS} -eq 0 ]] \
+		&& echo.success "successfully updated ${ENV_TYPE_COUNT} / ${ENV_TYPE_COUNT} environment(s)" \
+		|| echo.error   "failed to update ${FAILED_COUNT} / ${ENV_TYPE_COUNT} environment(s)" \
+		;
 }

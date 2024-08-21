@@ -24,8 +24,6 @@ ${scwryptsmodule}.get-env-filename() {  # provides the fully qualified path to t
 	echo "$SCWRYPTS_ENV_PATH/$NAME.$GROUP.env.yaml"
 }
 
-#####################################################################
-
 ${scwryptsmodule}.get-parent-env-names() {  # deepest parent first; e.g. for 'a.b.c.d', returns (a a.b a.b.c)
 	local NAME="$1"
 	[[ $NAME =~ . ]] || return 0

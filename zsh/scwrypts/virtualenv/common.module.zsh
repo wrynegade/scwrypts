@@ -1,37 +1,36 @@
 #####################################################################
 
-use utils
-
-#####################################################################
-
 SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS=()
 
 use scwrypts/virtualenv/env/py
 use scwrypts/virtualenv/env/zx
 
+use scwrypts/virtualenv/zshparse
+
 #####################################################################
 
-_SCWRYPTS_VIRTUALENV__GET_PATH() {
-	local GROUP="$1"
-	local TYPE="$2"
+${scwryptsmodule}.get-path() {
+	local TYPE ARGS=() PARSERS=(
+		scwrypts.virtualenv.zshparse.type-arg
+	)
 
-	local ENV_PATH="$(eval echo '$SCWRYPTS_VIRTUALENV_PATH__'$GROUP)"
-	[ "$ENV_PATH" ] || ENV_PATH="$SCWRYPTS_VIRTUALENV_PATH__scwrypts"
+	eval "$ZSHPARSEARGS"
 
-	mkdir -p "$ENV_PATH/$TYPE" &>/dev/null
+	##########################################
 
-	echo "$ENV_PATH/$TYPE"
+	local ENV_PATH="${SCWRYPTS_STATE_PATH}/virtualenv/${SCWRYPTS_ENV}/${TYPE}"
+
+	mkdir -p -- "${ENV_PATH}" &>/dev/null
+
+	echo "${ENV_PATH}"
 }
 
-
-_SCWRYPTS_VIRTUALENV__VALIDATE_ENVIRONMENT_CONTROLLER() {
-	local GROUP="$1"
-	local TYPE="$2"
-
-	: \
-		&& which     CREATE_VIRTUALENV__${GROUP}__${TYPE} &>/dev/null \
-		&& which   ACTIVATE_VIRTUALENV__${GROUP}__${TYPE} &>/dev/null \
-		&& which     UPDATE_VIRTUALENV__${GROUP}__${TYPE} &>/dev/null \
-		&& which DEACTIVATE_VIRTUALENV__${GROUP}__${TYPE} &>/dev/null \
-		;
+${scwryptsmodule}.validate-controller() {
+	local TYPE="$1"
+	command -v \
+			virtualenv.${TYPE}.create \
+			virtualenv.${TYPE}.activate \
+			virtualenv.${TYPE}.deactivate \
+			virtualenv.${TYPE}.update \
+		&>/dev/null
 }

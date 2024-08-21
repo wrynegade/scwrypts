@@ -42,7 +42,7 @@ MAIN() {
 		shift $_S
 	done
 
-	[ $ENV_GROUP ] || ENV_GROUP=scwrypts
+	[ $ENV_GROUP ] || ENV_GROUP=default
 
 	[ $ENV_TYPE ] || ENV_TYPE=$(\
 		echo ${SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS[@]} \
@@ -56,6 +56,6 @@ MAIN() {
 	##########################################
 	: \
 		&& DELETE_VIRTUALENV "$ENV_GROUP" "$ENV_TYPE" \
-		&& UPDATE_VIRTUALENV "$ENV_GROUP" "$ENV_TYPE" \
+		&& virtualenv.update "$ENV_GROUP" "$ENV_TYPE" \
 		;
 }

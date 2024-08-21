@@ -30,12 +30,12 @@ DELETE_VIRTUALENV() {
 
 	##########################################
 
-	_SCWRYPTS_VIRTUALENV__VALIDATE_ENVIRONMENT_CONTROLLER "$GROUP" "$TYPE" || {
+	scwrypts.virtualenv.common.validate-controller "$GROUP" "$TYPE" || {
 		echo.status "no environment controller exists for $GROUP/$TYPE"
 		return 0
 	}
 
-	local VIRTUALENV_PATH="$(_SCWRYPTS_VIRTUALENV__GET_PATH "$GROUP" "$TYPE")"
+	local VIRTUALENV_PATH="$(scwrypts.virtualenv.common.get-path "$GROUP" "$TYPE")"
 	[ -d "$VIRTUALENV_PATH" ] || {
 		echo.success "no $GROUP/$TYPE environment detected"
 		return 0

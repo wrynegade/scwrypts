@@ -1,7 +1,6 @@
 #!/usr/bin/env zsh
 #####################################################################
 
-
 MAIN() {
 	local LOGFILE_COUNT="$(find "${SCWRYPTS_LOG_PATH}" -type f 2>/dev/null | wc -l)"
 

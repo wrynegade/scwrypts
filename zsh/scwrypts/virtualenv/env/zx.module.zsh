@@ -3,63 +3,44 @@ SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS+=(zx)
 #####################################################################
 
 
-CREATE_VIRTUALENV__scwrypts__zx() {
-	[ ${CI} ] && return 0
-	utils.dependencies.check nodeenv || return 1
-	##########################################
-
-	local VIRTUALENV_PATH="$1"
-	[ "${VIRTUALENV_PATH}" ] || return 1
-
-	[ ${CI} ] && return 0
-	[ -f "${VIRTUALENV_PATH}/bin/activate" ] && return 0
-
-
-	echo.status 'setting up nodeenv'
-	local NODEJS_VERSION=$(scwrypts.config nodejs.version)
-	nodeenv "${VIRTUALENV_PATH}" --node=${NODEJS_VERSION} \
-		&& echo.success 'node virtualenv created' \
-		|| echo.error "unable to create '${VIRTUALENV_PATH}' with '${NODEJS_VERSION}'" \
-		;
+virtualenv.zx.create() {
+	utils.dependencies.check npm || return 1
 }
 
-
-ACTIVATE_VIRTUALENV__scwrypts__zx() {
-	[ ${CI} ] && return 0
-	##########################################
-
-	local VIRTUALENV_PATH="$1"
-	[ "${VIRTUALENV_PATH}" ] || return 1
-
-	source "${VIRTUALENV_PATH}/bin/activate" || {
-		echo.error "failed to activate virtualenv ${GROUP}/${TYPE}; did create fail?"
-		return 1
-	}
+virtualenv.zx.activate() {
+	return 0  # npm setup is managed by package.json
 }
 
-
-UPDATE_VIRTUALENV__scwrypts__zx() {
-	[ ${CI} ] && return 0
-	##########################################
-
-	local VIRTUALENV_PATH="$1"
-	[ "${VIRTUALENV_PATH}" ] || return 1
-
-	(
-		cd "$(scwrypts.config.group scwrypts root)/zx"
-		npm install \
-			;
-		)
+virtualenv.zx.deactivate() {
+	return 0  # npm setup is managed by package.json
 }
 
+virtualenv.zx.update() {
+	local ERRORS=0
+	local GROUP NPM_ROOT
 
-DEACTIVATE_VIRTUALENV__scwrypts__zx() {
-	[ ${CI} ] && return 0
-	##########################################
+	for GROUP in ${SCWRYPTS_GROUPS[@]}
+	do
+		case "$(eval echo "\$SCWRYPTS_GROUP_CONFIGURATION__${GROUP}__type")" in
+			( '' )
+				NPM_ROOT="$(scwrypts.config.group ${GROUP} root)/zx"
+				;;
+			( zx )
+				NPM_ROOT="$(scwrypts.config.group ${GROUP} root)"
+				;;
+			( * )
+				continue
+				;;
+		esac
 
-	local VIRTUALENV_PATH="$1"
-	[ "${VIRTUALENV_PATH}" ] || return 1
+		[ "${NPM_ROOT}" ] && [ -d "${NPM_ROOT}" ] \
+			|| echo.error "group ${GROUP} appears to be misconfigured" \
+			|| continue
 
-	deactivate_node >/dev/null 2>&1
-	return 0
+		( cd "${NPM_ROOT}" && npm install; ) \
+			|| echo.error "something went wrong during npm install for ${GROUP}" \
+			|| continue
+	done
+
+	return ${ERRORS}
 }

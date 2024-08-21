@@ -2,27 +2,17 @@
 SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS+=(py)
 #####################################################################
 
-
-CREATE_VIRTUALENV__scwrypts__py() {
-	[ ${CI} ] && return 0
+virtualenv.py.create() {
 	utils.dependencies.check virtualenv || return 1
+
 	##########################################
 
-	local VIRTUALENV_PATH="$1"
-	[ "${VIRTUALENV_PATH}" ] || return 1
+	local VIRTUALENV_PATH="$(scwrypts.virtualenv.common.get-path py)"
+	local PYTHON="$(virtualenv.py.get-base-executable)"
 
 	[ -f "${VIRTUALENV_PATH}/bin/activate" ] && return 0
 
-
 	echo.status 'creating python virtualenv'
-	local PY PYTHON
-	for PY in $(scwrypts.config python.versions)
-	do
-		which python${PY} >/dev/null 2>&1 && {
-			PYTHON=$(which python${PY})
-			break
-		}
-	done
 
 	[ "${PYTHON}" ] \
 		|| echo.error 'python>=3.10 not available; skipping python env' \
@@ -35,43 +25,63 @@ CREATE_VIRTUALENV__scwrypts__py() {
 		;
 }
 
-
-ACTIVATE_VIRTUALENV__scwrypts__py() {
-	[ ${CI} ] && return 0
-	##########################################
-
-	local VIRTUALENV_PATH="$1"
-	[ "${VIRTUALENV_PATH}" ] || return 1
-
-	source "${VIRTUALENV_PATH}/bin/activate" \
-		|| echo.error "failed to activate virtualenv ${GROUP}/${TYPE}; did create fail?"
+virtualenv.py.activate() {
+	source "$(scwrypts.virtualenv.common.get-path py)/bin/activate"
 }
 
-
-UPDATE_VIRTUALENV__scwrypts__py() {
-	[ ${CI} ] && return 0
-	##########################################
-
-	local VIRTUALENV_PATH="$1"
-	[ "${VIRTUALENV_PATH}" ] || return 1
-
-	(
-		cd "$(scwrypts.config.group scwrypts root)/py"
-		pip install \
-			--no-cache-dir \
-			--requirement requirements.txt \
-			;
-		)
-}
-
-
-DEACTIVATE_VIRTUALENV__scwrypts__py() {
-	[ ${CI} ] && return 0
-	##########################################
-
-	local VIRTUALENV_PATH="$1"
-	[ "${VIRTUALENV_PATH}" ] || return 1
-
+virtualenv.py.deactivate() {
 	deactivate &>/dev/null
 	return 0
+}
+
+virtualenv.py.update() {
+	local ERRORS=0
+	local GROUP REQUIREMENTS_FILENAME
+
+	for GROUP in ${SCWRYPTS_GROUPS[@]}
+	do
+		case "$(eval echo "\$SCWRYPTS_GROUP_CONFIGURATION__${GROUP}__type")" in
+			( '' )
+				REQUIREMENTS_FILENAME="$(scwrypts.config.group ${GROUP} root)/py/requirements.txt"
+				;;
+			( py )
+				REQUIREMENTS_FILENAME="$(scwrypts.config.group ${GROUP} root)/requirements.txt"
+				;;
+			( * )
+				continue
+				;;
+		esac
+
+		[ "${REQUIREMENTS_FILENAME}" ] && [ -f "${REQUIREMENTS_FILENAME}" ] \
+			|| echo.error "group ${GROUP} appears to be misconfigured" \
+			|| continue
+
+		( cd "$(dirname -- "${REQUIREMENTS_FILENAME}")" \
+			&& pip install \
+				--no-cache-dir \
+				--requirement "${REQUIREMENTS_FILENAME}" \
+			) \
+			|| echo.error "something went wrong during pip install for ${GROUP}" \
+			|| continue
+	done
+
+	return ${ERRORS}
+}
+
+#####################################################################
+
+virtualenv.py.get-base-executable() {
+	local PY PYTHON
+	for PY in $(scwrypts.config python.versions)
+	do
+		python --version | grep -qi " ${PY}" \
+			&& which python \
+			&& break \
+			;
+
+		which python${PY} &>/dev/null \
+			&& which python${PY} \
+			&& break \
+			;
+	done
 }

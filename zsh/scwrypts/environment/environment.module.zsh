@@ -4,6 +4,10 @@
 #
 
 
+# common lookups used by all environment logic
+use scwrypts/environment/common
+
+
 # allows utils.fzf selection of environments
 use scwrypts/environment/select-env
 
