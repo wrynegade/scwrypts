@@ -31,7 +31,7 @@ ${scwryptsmodule}() {
 
 		${UNITTEST} &> "${UNITTEST_RESULTS_DIR}/${UNITTEST}.txt" \
 			&& echo.success "${SCWRYPTS_TEST_MODULE_STRING}${UNITTEST}" \
-			|| { echo.error "${SCWRYPTS_TEST_MODULE_STRING}${UNITTEST}"; ((TEST_ERRORS+=1)); echo "--- begin test output ---">&2; cat "${UNITTEST_RESULTS_DIR}/${UNITTEST}.txt"; echo "--- end test output ---">&2; }
+			|| { echo.error "${SCWRYPTS_TEST_MODULE_STRING}${UNITTEST}"; ((TEST_ERRORS+=1)); echo "--- begin test output ---">&2; cat "${UNITTEST_RESULTS_DIR}/${UNITTEST}.txt"; echo "--- end test output ---\n">&2; }
 
 		command -v aftereach &>/dev/null && aftereach
 

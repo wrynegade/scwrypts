@@ -30,22 +30,20 @@ MAIN() {
 		|| MODE=filter \
 		;
 
-	local TEST_FILES=() GROUP FIND_ARGS=() FILTER
+	local TEST_FILES="" GROUP
 	for GROUP in ${SCWRYPTS_GROUPS[@]}
 	do
-		FIND_ARGS=(-type f -name \*.test.zsh)
+		TEST_FILES+="$(find "$(scwrypts.config.group ${GROUP} root)" -type f -name \*.test.zsh)"
+	done
 
-		for FILTER in ${ARGS[@]}
-		do
-			FIND_ARGS+=(-a -name \*$FILTER\*)
-		done
-
-		TEST_FILES+=($(find "$(scwrypts.config.group ${GROUP} root)" ${FIND_ARGS[@]}))
+	for FILTER in ${ARGS[@]}
+	do
+		TEST_FILES="$(echo "${TEST_FILES}" | grep "${FILTER}")"
 	done
 
 	local SCWRYPTS_CONFIG="$(scwrypts.meta --config)"
 	local TEST_FILE
-	for TEST_FILE in ${TEST_FILES[@]}
+	for TEST_FILE in $(echo "${TEST_FILES}")
 	do
 		local TEST_SUITE_NAME="$(basename -- "$(dirname -- ${TEST_FILE})")/$(basename -- "${TEST_FILE}")"
 		zsh <<< "
@@ -56,7 +54,7 @@ MAIN() {
 			source '$TEST_FILE'
 			use unittest/execute-test-file
 			utils.check-environment
-			SCWRYPTS_TEST_MODULE_STRING=\"${TEST_SUITE_NAME} : \" unittest.execute-test-file
+			SUPPRESS_USAGE_OUTPUT=true SCWRYPTS_TEST_MODULE_STRING=\"${TEST_SUITE_NAME} : \" unittest.execute-test-file
 		}
 		"
 	done

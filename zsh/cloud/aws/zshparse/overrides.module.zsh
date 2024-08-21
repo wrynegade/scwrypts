@@ -25,14 +25,14 @@ ${scwryptsmodule}.usage() {
 ${scwryptsmodule}.validate() {
 	AWS_CONTEXT_ARGS=(--output json)
 
-	[ $ACCOUNT ] || { __CHECK_ENV_VAR AWS_ACCOUNT &>/dev/null && ACCOUNT=$AWS_ACCOUNT; }
+	[ $ACCOUNT ] || { utils.environment.check AWS_ACCOUNT &>/dev/null && ACCOUNT=$AWS_ACCOUNT; }
 	[ $ACCOUNT ] \
 		&& AWS_EVAL_PREFIX+="AWS_ACCOUNT=$ACCOUNT " \
 		&& AWS_PASSTHROUGH+=(--account $ACCOUNT) \
 		|| echo.error "missing either --account or AWS_ACCOUNT" \
 		;
 
-	[ $REGION ] || { __CHECK_ENV_VAR AWS_REGION &>/dev/null && REGION=$AWS_REGION; }
+	[ $REGION ] || { utils.environment.check AWS_REGION &>/dev/null && REGION=$AWS_REGION; }
 	[ $REGION ] \
 		&& AWS_EVAL_PREFIX+="AWS_REGION=$REGION AWS_DEFAULT_REGION=$REGION " \
 		&& AWS_CONTEXT_ARGS+=(--region $REGION) \
@@ -40,7 +40,7 @@ ${scwryptsmodule}.validate() {
 		|| echo.error "missing either --region  or AWS_REGION" \
 		;
 
-	__CHECK_ENV_VAR AWS_PROFILE &>/dev/null
+	utils.environment.check AWS_PROFILE &>/dev/null
 	[ $AWS_PROFILE ] \
 		&& AWS_EVAL_PREFIX+="AWS_PROFILE=$AWS_PROFILE " \
 		&& AWS_CONTEXT_ARGS+=(--profile $AWS_PROFILE) \

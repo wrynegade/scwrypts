@@ -59,7 +59,7 @@ test.overrides-account() {
 
 	${testmodule} --account ${OVERRIDE_ACCOUNT} ${_ARGS[@]}
 
-	unittest.debug.assert.callstackincludes \
+	echo.debug.assert.callstackincludes \
 		AWS_ACCOUNT=${OVERRIDE_ACCOUNT} \
 		;
 }

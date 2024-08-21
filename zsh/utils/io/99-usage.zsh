@@ -1,5 +1,6 @@
 utils.io.usage() { # formatter for USAGE variable
 	[ ! ${USAGE} ] && return 0
+	[[ ${SUPPRESS_USAGE_OUTPUT} =~ true ]] && return 0
 	local USAGE_LINE=$(echo ${USAGE} | grep -i '^[	]*usage *:' | sed 's/^[		]*//')
 
 	[ "${USAGE__options}" ] && [ "${USAGE__usage}" ] && {
