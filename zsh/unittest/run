@@ -41,7 +41,7 @@ MAIN() {
 		TEST_FILES="$(echo "${TEST_FILES}" | grep "${FILTER}")"
 	done
 
-	local SCWRYPTS_CONFIG="$(scwrypts.meta --config)"
+	local SCWRYPTS_CONFIG="$(scwrypts.meta.run --config)"
 	local TEST_FILE
 	for TEST_FILE in $(echo "${TEST_FILES}")
 	do

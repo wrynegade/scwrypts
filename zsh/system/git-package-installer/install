@@ -1,0 +1,27 @@
+#!/usr/bin/env zsh
+use system/git-package-installer
+#####################################################################
+
+system.git-package-installer.zshparse.usage
+
+#####################################################################
+
+MAIN() {
+	local \
+		GIT_REPOSITORY_URL LOCAL_NAME INSTALLATION_BASE_PATH \
+		UPDATE=false SKIP_BUILD=false SKIP_PULL=false MAKE_CLEAN=false \
+		PASSTHROUGH_ARGS=() \
+		PARSERS=(
+			system.git-package-installer.zshparse
+			)
+	
+	eval "$ZSHPARSEARGS"
+
+	##########################################
+	
+	: \
+		&& system.git-package-installer.clone ${PASSTHROUGH_ARGS[@]} \
+		&& system.git-package-installer.pull  ${PASSTHROUGH_ARGS[@]} \
+		&& system.git-package-installer.build ${PASSTHROUGH_ARGS[@]} \
+		;
+}

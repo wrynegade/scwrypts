@@ -1,7 +1,0 @@
-#!/usr/bin/env zsh
-use scwrypts/meta
-#####################################################################
-
-MAIN() {
-	scwrypts.meta --name system/packages/install --group scwrypts --type zsh -- --update $@
-}

@@ -4,7 +4,7 @@ use scwrypts/meta
 
 MAIN() {
 	echo.status 'updating all config files and links'
-	scwrypts.meta --name system/config/symlinks --group scwrypts --type zsh || exit 1
-	scwrypts.meta --name system/config/terminfo --group scwrypts --type zsh || exit 2
+	scwrypts.meta.run --name system/config/symlinks --group scwrypts --type zsh || exit 1
+	scwrypts.meta.run --name system/config/terminfo --group scwrypts --type zsh || exit 2
 	echo.success 'finished updating config files and links'
 }

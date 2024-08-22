@@ -1,7 +1,0 @@
-#!/usr/bin/env zsh
-use system/vim/vundle
-#####################################################################
-
-MAIN() {
-	VUNDLE__REBUILD_PLUGINS $@
-}

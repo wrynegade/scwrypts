@@ -1,7 +1,0 @@
-#!/usr/bin/env zsh
-use system/vim/vundle
-#####################################################################
-
-MAIN() {
-	utils.io.edit "$VUNDLE__BUILD_DEFINITIONS"
-}

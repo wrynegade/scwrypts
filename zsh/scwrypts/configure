@@ -12,7 +12,7 @@ MAIN() {
 		utils.io.edit $USER_CONFIG_OVERRIDES
 
 		echo.status 'attempting first-time build for virtual environments'
-		scwrypts.meta --name scwrypts/virtualenv/update-all --group scwrypts --type zsh \
+		scwrypts.meta.run --name scwrypts/virtualenv/update-all --group scwrypts --type zsh \
 			&& echo.success 'finished updating virtualenvs' \
 			|| echo.warning 'unable to create one or more virtualenv (see above)' \
 			;
