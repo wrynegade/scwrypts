@@ -1,43 +1,15 @@
-#####################################################################
-
-DEPENDENCIES+=(
-	redis-cli
-)
-
-REQUIRED_ENV+=()
-
-#####################################################################
-
-REDIS() {
-	[[ ${#ARGS[@]} -eq 0 ]] && REDIS__SET_LOGIN_ARGS $@
-
-	redis-cli ${#ARGS[@]}
-}
+#
+# basic redis interface
+#
 
 
-REDIS__SET_LOGIN_ARGS() {
-	while [[ $# -gt 0 ]]
-	do
-		case $1 in
-			--host ) _ARGS+=(-h $2); _HOST="$2"; shift 1 ;;
-			--port ) _ARGS+=(-p $2); _PORT="$2"; shift 1 ;;
-			--pass ) _ARGS+=(-a $2); _PASS="$2"; shift 1 ;;
+# direct interface to redis-cli with long-flags for authentication arguments
+use redis/cli
 
-			--file ) _FILE="$2"; shift 1 ;;
 
-			* ) _ARGS+=($1) ;;
-		esac
-		shift 1
-	done
+# silently checks whether redis is configured and connection is valid
+use redis/enabled
 
-	[ $_FILE ] && [ ! -f "$_FILE" ] && {
-		echo.error "no such file '$_FILE'"
-		exit 1
-	}
 
-	return 0
-}
-
-REDIS__ENABLED() {
-	REDIS ping 2>&1 | grep -qi pong
-}
+# works just like curl, but caches if redis is available
+use redis/curl

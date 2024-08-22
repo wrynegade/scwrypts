@@ -1,46 +1,14 @@
 #!/usr/bin/env zsh
-use redis
+#####################################################################
+
+use redis/curl
+
+#####################################################################
+
+redis.curl.parse.usage
+
 #####################################################################
 
 MAIN() {
-	[ ! $TTL ] && TTL=10
-
-	[[ $(REDIS__ENABLED) -eq 0 ]] && {
-		curl $@
-		return $?
-	}
-
-	local ARGS=()
-	local URL
-
-	while [[ $# -gt 0 ]]
-	do
-		case $1 in
-			--   ) shift 1 ;;
-			--*= ) ARGS+=($1); shift 1 ;;
-			--*  ) ARGS+=($1 $2); shift 2 ;;
-			-*   ) ARGS+=($1); shift 1 ;;
-			* ) URL=$1; break ;;
-		esac
-	done
-
-	local KEY=$(GET_URL_KEY $URL)
-	local OUTPUT=$(REDIS get $KEY 2>&1)
-	[ $OUTPUT ] && {
-		[[ ${#ARGS[@]} -gt 0 ]] && __WARN "cache hit found; ignoring arguments ($ARGS)"
-		echo $OUTPUT
-		return
-	}
-
-	local OUTPUT=$(curl -s $@)
-	[ ! $OUTPUT ] && return 1
-
-	REDIS set $KEY "$OUTPUT" >/dev/null
-	REDIS expire $KEY $TTL >/dev/null
-
-	echo $OUTPUT
+	redis.curl $@
 }
-
-#####################################################################
-
-GET_URL_KEY() { echo "scwrypts:curl:$1" | sed 's/\s\+/+/g'; }
