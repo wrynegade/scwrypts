@@ -155,7 +155,7 @@ utils.environment.check() {
 	}
 
 	[ ! ${LOOKUP_PATH} ] && {
-		LOOKUP_PATH="$(scwrypts.environment.template.get-envvar-lookup-map | utils.yq -r ".${NAME}" | sed 's/\.value$//')"
+		LOOKUP_PATH="$(scwrypts.environment.get-envvar-lookup-map | utils.yq -r ".${NAME}" | sed 's/\.value$//')"
 	}
 
 	# ensure environment safety; prevent bleed in from user's runtime
