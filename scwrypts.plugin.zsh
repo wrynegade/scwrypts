@@ -18,7 +18,7 @@
 	}
 
 __SCWRYPTS_PARSE() {
-	SCWRYPT_SELECTION=$(scwrypts --list | fzf --prompt 'select a script : ' --header-lines 1)
+	SCWRYPT_SELECTION=$(scwrypts --list | fzf --ansi --prompt 'select a script : ' --header-lines 1)
 	LBUFFER= RBUFFER=
 	[ $SCWRYPT_SELECTION ] || return 1
 
