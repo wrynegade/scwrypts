@@ -285,6 +285,7 @@ jobs:
       - run:
           name: scwrypts returns proper error codes
           command: |
+            set +o pipefail
             ~/scwrypts/scwrypts -n sanity check -- --exit-code 100
             [[ $? -eq 100 ]] || exit 1
 
