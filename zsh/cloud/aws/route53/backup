@@ -1,33 +1,30 @@
 #!/usr/bin/env zsh
 DEPENDENCIES+=(cli53)
-REQUIRED_ENV+=(AWS_PROFILE)
+REQUIRED_ENV+=(AWS_PROFILE AWS_ACCOUNT)
 #####################################################################
 
+utils.cli53() {
+	AWS_ACCOUNT=${AWS_ACCOUNT} \
+		cli53 --profile ${AWS_PROFILE} $@;
+}
+
 MAIN() {
-	local BACKUP_PATH="$SCWRYPTS_DATA_PATH/route53/${SCWRYPTS_ENV}/aws-dns-backup/$(date '+%Y-%m-%d')"
-	mkdir -p $BACKUP_PATH >/dev/null 2>&1
+	local BACKUP_BASE_PATH="${SCWRYPTS_DATA_PATH}/route53-backup/${SCWRYPTS_ENV}"
 
 	local DOMAIN
 	local JOBS=()
-	for DOMAIN in $(ROUTE53_GET_DOMAINS)
+	for DOMAIN in $(utils.cli53 list | awk '{print $2;}' | sed '1d; s/\.$//')
 	do
-		( echo.status "creating '$BACKUP_PATH/$DOMAIN.txt'" \
-			&& cli53 export --profile $AWS_PROFILE $DOMAIN > "$BACKUP_PATH/$DOMAIN.txt" \
-			&& echo.success "backed up '$DOMAIN'" \
-			|| echo.error "failed to back up '$DOMAIN'" \
+		(
+			utils.cli53 export ${DOMAIN} > "${BACKUP_BASE_PATH}/${DOMAIN}/$(date '+%Y-%m-%d_%H%M').cli53.txt" \
+				&& echo.success "backed up '${DOMAIN}'" \
+				|| echo.error "failed to back up '${DOMAIN}'" \
 		) &
 		JOBS+=$!
 	done
 
 	local P
-	for P in ${JOBS[@]}; do wait $P >/dev/null 2>&1; done
-}
+	for P in ${JOBS[@]}; do wait ${P} &>/dev/null; done
 
-#####################################################################
-
-ROUTE53_GET_DOMAINS() {
-	cli53 list --profile $AWS_PROFILE \
-		| awk '{print $2;}' \
-		| sed '1d; s/\.$//'\
-		;
+	echo.reminder "successful backups can be found in '${BACKUP_BASE_PATH}'"
 }
