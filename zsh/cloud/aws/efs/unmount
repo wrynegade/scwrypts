@@ -1,32 +1,39 @@
 #!/usr/bin/env zsh
-DEPENDENCIES+=(jq)
-REQUIRED_ENV+=(AWS__EFS__LOCAL_MOUNT_POINT)
-
-use cloud/aws/cli
 #####################################################################
 
+DEPENDENCIES+=(jq umount sudo)
+REQUIRED_ENV+=(AWS__EFS__LOCAL_MOUNT_POINT)
+
+#####################################################################
+
+USAGE__description='
+	interactively unmount an AWS EFS volume to the local filesystem
+'
+
 MAIN() {
-	[ ! -d "$AWS__EFS__LOCAL_MOUNT_POINT" ] && {
+	eval "$(utils.parse.autosetup)"
+	##########################################
+
+	[ ! -d "${AWS__EFS__LOCAL_MOUNT_POINT}" ] && {
 		echo.status 'no efs currently mounted'
-		exit 0
+		return 0
 	}
 
-	local MOUNTED=$(ls "$AWS__EFS__LOCAL_MOUNT_POINT")
-	[ ! $MOUNTED ] && {
+	local MOUNTED=$(cd -- "${AWS__EFS__LOCAL_MOUNT_POINT}" | find . -type -f | sed 's|^\./.||')
+	[ "${MOUNTED}" ] && {
 		echo.status 'no efs currently mounted'
-		exit 0
+		return 0
 	}
 
-	GETSUDO || exit 1
+	utils.io.getsudo || return 1
 
+	local SELECTED=$(echo ${MOUNTED} | utils.fzf 'select a file system to unmount')
+	[ "${SELECTED}" ] || user.abort
 
-	local SELECTED=$(echo $MOUNTED | utils.fzf 'select a file system to unmount')
-	[ ! $SELECTED ] && user.abort
-
-	local EFS="$AWS__EFS__LOCAL_MOUNT_POINT/$SELECTED"
-	echo.status "unmounting '$SELECTED'"
-	sudo umount $EFS >/dev/null 2>&1
-	sudo rmdir $EFS \
+	local EFS="${AWS__EFS__LOCAL_MOUNT_POINT}/${SELECTED}"
+	echo.status "unmounting '${SELECTED}'"
+	sudo umount "${EFS}" >/dev/null 2>&1
+	sudo rmdir -- "${EFS}" \
 		&& echo.success "done" \
-		|| utils.fail 2 "failed to unmount '$EFS'"
+		|| utils.fail 2 "failed to unmount '${EFS}'"
 }

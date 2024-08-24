@@ -1,64 +1,82 @@
 #!/usr/bin/env zsh
-DEPENDENCIES+=(jq)
-REQUIRED_ENV+=(AWS__EFS__LOCAL_MOUNT_POINT)
+#####################################################################
 
 use cloud/aws/cli
+use cloud/aws/zshparse/overrides
+
+DEPENDENCIES+=(jq mount sort sudo)
+REQUIRED_ENV+=(AWS__EFS__LOCAL_MOUNT_POINT)
+
+#####################################################################
+
+USAGE__description='
+	interactively mount an AWS EFS volume to the local filesystem
+'
+
 #####################################################################
 
 MAIN() {
-	GETSUDO || exit 1
-	[ ! -d $AWS__EFS__LOCAL_MOUNT_POINT ] && {
-		sudo mkdir $AWS__EFS__LOCAL_MOUNT_POINT \
-			&& echo.status "created local mount point '$AWS__EFS__LOCAL_MOUNT_POINT'"
-	}
+	local PARSERS=(cloud.aws.zshparse.overrides)
+	eval "$(utils.parse.autosetup)"
+	utils.io.getsudo || return 1
+	##########################################
+	
+	{
+		mkdir -p -- "${AWS__EFS__LOCAL_MOUNT_POINT}" \
+			|| sudo mkdir -p -- "${AWS__EFS__LOCAL_MOUNT_POINT}"
+	} &>/dev/null
+
+	[ -d "${AWS__EFS__LOCAL_MOUNT_POINT}" ] \
+		|| echo.error "unable to create local mount point '${AWS__EFS__LOCAL_MOUNT_POINT}'" \
+		|| return 
 
 	local FS_ID=$(\
-		AWS efs describe-file-systems \
-		| jq -r '.[] | .[] | .FileSystemId' \
-		| utils.fzf 'select a filesystem to mount' \
+		$AWS efs describe-file-systems \
+			| jq -r '.[] | .[] | .FileSystemId' \
+			| utils.fzf 'select a filesystem to mount' \
 	)
-	[ ! $FS_ID ] && user.abort
+	[ ! ${FS_ID} ] && utils.abort
 
-	local MOUNT_POINT="$AWS__EFS__LOCAL_MOUNT_POINT/$FS_ID"
-	[ -d "$MOUNT_POINT" ] && sudo rmdir "$MOUNT_POINT" >/dev/null 2>&1
-	[ -d "$MOUNT_POINT" ] && {
-		echo.status "$FS_ID is already mounted"
-		exit 0
+	local MOUNT_POINT="${AWS__EFS__LOCAL_MOUNT_POINT}/${FS_ID}"
+	[ -d "${MOUNT_POINT}" ] && sudo rmdir "${MOUNT_POINT}" &>/dev/null
+	[ -d "${MOUNT_POINT}" ] && {
+		echo.status "${FS_ID} is already mounted"
+		return 0
 	}
 
-	local MOUNT_TARGETS=$(AWS efs describe-mount-targets --file-system-id $FS_ID)
+	local MOUNT_TARGETS=$($AWS efs describe-mount-targets --file-system-id ${FS_ID})
 	local ZONE=$(\
-		echo $MOUNT_TARGETS \
-		| jq -r '.[] | .[] | .AvailabilityZoneName' \
-		| sort -u | utils.fzf 'select availability zone'\
+		echo ${MOUNT_TARGETS} \
+			| jq -r '.[] | .[] | .AvailabilityZoneName' \
+			| sort -u | utils.fzf 'select availability zone'\
 	)
-	[ ! $ZONE ] && user.abort
+	[ ! "${ZONE}" ] && utils.abort
 
 	local MOUNT_IP=$(\
-		echo $MOUNT_TARGETS \
-		| jq -r ".[] | .[] | select (.AvailabilityZoneName == \"$ZONE\") | .IpAddress" \
-		| head -n1 \
+		echo ${MOUNT_TARGETS} \
+			| jq -r ".[] | .[] | select (.AvailabilityZoneName == \"${ZONE}\") | .IpAddress" \
+			| head -n1 \
 	)
 
-	echo.success 'ready to mount!'
+	echo.success  'ready to mount!'
+	echo.status "
+		file system id    : ${FS_ID}
+		availability zone : ${ZONE}
+		file system ip    : ${MOUNT_IP}
+		local mount point : ${MOUNT_POINT}
+	 "
 	echo.reminder 'for private file-systems, you must be connected to the appropriate VPN'
+	Yn 'proceed?' || utils.abort
 
-	echo.status "file system id    : $FS_ID"
-	echo.status "availability zone : $ZONE"
-	echo.status "file system ip    : $MOUNT_IP"
-	echo.status "local mount point : $MOUNT_POINT"
-
-	Yn 'proceed?' || user.abort
-
-	sudo mkdir $MOUNT_POINT \
+	sudo mkdir -- "${MOUNT_POINT}" \
 		&& sudo mount \
 			-t nfs4 \
 			-o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport \
-			$MOUNT_IP:/ \
-			"$MOUNT_POINT" \
-		&& echo.success "mounted at '$MOUNT_POINT'" \
+			"${MOUNT_IP}:/" \
+			"${MOUNT_POINT}" \
+		&& echo.success "mounted at '${MOUNT_POINT}'" \
 		|| {
-		sudo rmdir $MOUNT_POINT >/dev/null 2>&1
-		utils.fail 2 "unable to mount '$FS_ID'"
-	}
+			sudo rmdir -- "${MOUNT_POINT}" &>/dev/null
+			echo.error "unable to mount '${FS_ID}'"
+		}
 }
