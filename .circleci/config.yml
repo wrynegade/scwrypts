@@ -283,7 +283,7 @@ jobs:
             ~/scwrypts/scwrypts -n sanity check -- --exit-code 0
             [[ $? -eq 0 ]] || exit 1
       - run:
-          shell: /bin/bash
+          shell: /bin/sh
           name: scwrypts returns proper error codes
           command: |
             ~/scwrypts/scwrypts -n sanity check -- --exit-code 100
