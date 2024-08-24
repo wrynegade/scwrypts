@@ -12,11 +12,11 @@ ${scwryptsmodule}() {
 		PARSERS=(
 			system.git-package-installer.zshparse
 			)
-	
+
 	eval "$ZSHPARSEARGS"
 
 	##########################################
-	
+
 	[ -d "${INSTALLATION_BASE_PATH}/${LOCAL_NAME}" ] || {
 		system.git-package-installer.clone ${PASSTHROUGH_ARGS[@]} \
 			|| return 1

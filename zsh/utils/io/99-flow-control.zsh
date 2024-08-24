@@ -11,17 +11,21 @@ utils.abort() {  # for consistency; use after user aborts REQUIRED input
 
 #####################################################################
 
-utils.check-errors() {  # aborts if 'echo.error' was ever called
+utils.check-errors() {  # returns an error and reports usage if 'echo.error' was ever called
 	[ ${ERRORS} ] && [[ ${ERRORS} -ne 0 ]] || return 0
 
 	local DISPLAY_USAGE=true
-	local FAIL_OUT=true
+	local FAIL_OUT=false
 
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
 			--no-usage ) DISPLAY_USAGE=false ;;
-			--no-fail  ) FAIL_OUT=false ;;
+			--fail     ) FAIL_OUT=true ;;
+
+			--no-fail )
+				echo.warning "utils.check-errors : '--no-fail' is now the default behavior"
+				;;
 		esac
 		shift 1
 	done

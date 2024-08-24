@@ -3,13 +3,13 @@
 # by emitting EARLY_ESCAPE_CODE=-1
 #
 
-zsh.parse.help() {
+utils.parse.help() {
 	local PARSED=0
 
 	case $1 in
 		-h | --help )
 			PARSED=1
-			USAGE
+			utils.io.usage
 			EARLY_ESCAPE_CODE=-1
 
 			# setting 'EARLY_ESCAPE_CODE=' will stop ALL argument parsing, forcing
@@ -39,7 +39,7 @@ zsh.parse.help() {
 #
 # when the '.safety()' function does not exist, the parser is used
 #
-zsh.parse.help.safety() {
+utils.parse.help.safety() {
 	# skip this parser with NO_DEFAULT_HELP=true
 	[[ ${NO_DEFAULT_HELP} =~ true ]] && return 1
 
@@ -53,7 +53,7 @@ zsh.parse.help.safety() {
 # updates 'USAGE__*' values. Usage functions are run _after_ safety functions,
 # and are ignored if the safety function causes the parser to be skipped.
 #
-zsh.parse.help.usage() {
+utils.parse.help.usage() {
 	#
 	# PARSER.usage functions can be declared to automatically inject the
 	# proper usage values when the parser is used.
@@ -76,7 +76,7 @@ zsh.parse.help.usage() {
 # Note that the return value of this function _is ignored_. You must use the 'ERROR()'
 # function to emit errors up to ZSHPARSEARGS
 #
-# The zsh.parse.help parser does not require any validate function, so consider
+# The utils.parse.help parser does not require any validate function, so consider
 # the following example:
 #
 # ------------------------------------------

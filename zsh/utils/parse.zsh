@@ -10,8 +10,6 @@
 # parsing the args.
 #
 ZSHPARSEARGS='
-[[ ${(t)PARSERS} =~ array ]] || local PARSERS=()
-
 utils.parse $@ || {
 	local ERROR_CODE=$?
 	case $ERROR_CODE in
@@ -51,8 +49,11 @@ utils.parse() {
 	#
 	local PARSER VALID_PARSERS=()
 	local DEFAULT_PARSERS=()
-	[ ${NO_DEFAULT_PARSERS} ] || {
 
+	[[ ${DEFAULT_PARSERS[@]-1} =~ ^utils.parse.help$ ]] \
+		&& local NO_DEFAULT_PARSERS=true  # autosetup preloads default parsers
+
+	[ ${NO_DEFAULT_PARSERS} ] || {
 		# automatically includes 'MY_FUNCTION.parse()' as 1st parser when parsing for 'MY_FUNCTION()'
 		[[ ${funcstack[2]} =~ ^[(]eval[)]$ ]] \
 			&& PARSERS=(${funcstack[3]}.parse ${PARSERS}) \
@@ -127,3 +128,10 @@ utils.parse() {
 
 source "${0:a:h}/parse.help.zsh"
 source "${0:a:h}/parse.args.zsh"
+
+
+#####################################################################
+### the easy-but-removed way to go ##################################
+#####################################################################
+
+source "${0:a:h}/parse.autosetup.zsh"

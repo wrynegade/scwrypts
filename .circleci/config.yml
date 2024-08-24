@@ -27,10 +27,9 @@ executors:
       - image: alpine:3
     resource_class: small
 
-
 commands:
   archlinux-run:
-    description: execute command steps in the archlinux container from the CI user
+    description: execute steps in the archlinux container as the CI user
     parameters:
       _name:
         type: string
@@ -278,7 +277,16 @@ jobs:
           command: |
             ~/scwrypts/scwrypts run unittest \
             ;
-
+      - run:
+          name: scwrypts returns proper success codes
+          command: |
+            ~/scwrypts/scwrypts -n sanity check -- --exit-code 0
+            [[ $? -eq 0 ]] || exit 1
+      - run:
+          name: scwrypts returns proper error codes
+          command: |
+            ~/scwrypts/scwrypts -n sanity check -- --exit-code 100
+            [[ $? -eq 100 ]] || exit 1
 
 workflows:
   test:

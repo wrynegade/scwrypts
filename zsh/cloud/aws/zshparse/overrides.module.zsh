@@ -1,7 +1,16 @@
+${scwryptsmodule}.locals() {
+	local ACCOUNT   # parsed/configured AWS_ACCOUNT (use this instead of the env var!)
+	local REGION    # parsed/configured AWS_REGION (use this instead of the env var!)
+
+	local AWS_PASSTHROUGH=()   # used to forward parsed overrides to cloud.aws.cli calls (e.g. 'cloud.aws.cli ${AWS_PASSTHROUGH[@]} your command')
+	local AWS=()               # used to forward parsed overrides to cloud.aws.cli calls (e.g. '$AWS your command')
+
+	# should only be used by cloud/aws/cli
+	local AWS_EVAL_PREFIX
+	local AWS_CONTEXT_ARGS=()
+}
+
 ${scwryptsmodule}() {
-	# local ACCOUNT REGION                        parsed/configured $AWS_ACCOUNT and $AWS_REGION (use this instead of direct env-var)
-	# local AWS=() AWS_PASSTHROUGH=()             used to forward parsed overrides to AWS calls (e.g. 'cloud.aws.cli ${AWS_PASSTHROUGH[@]} your command' or '$AWS your command')
-	# local AWS_EVAL_PREFIX AWS_CONTEXT_ARGS=()   should only be used by lib/cloud/aws/cli:AWS
 	local PARSED=0
 
 	case $1 in
@@ -17,7 +26,7 @@ ${scwryptsmodule}.usage() {
 
 	USAGE__options+="\n
 		--account   overrides required AWS_ACCOUNT scwrypts env value
-		--region    overrides required AWS_REGION scwrypts env value
+		--region    overrides required AWS_REGION  scwrypts env value
 	"
 }
 

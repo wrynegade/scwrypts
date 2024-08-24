@@ -1,15 +1,10 @@
 #####################################################################
 
 ${scwryptsmodule}() {
-	eval "$(usage.reset)"
-	local USAGE__description="
+	local DESCRIPTION="
 		allows batch operations against existing mocks for lib/test/unittest
 	"
-	local \
-		OPERATION \
-		PARSERS=()
-
-	eval "$ZSHPARSEARGS"
+	eval "$(utils.parse.autosetup)"
 
 	##########################################
 
@@ -22,8 +17,11 @@ ${scwryptsmodule}() {
 
 #####################################################################
 
+${scwryptsmodule}.locals() {
+	local OPERATION
+}
+
 ${scwryptsmodule}.parse() {
-	# local OPERATION
 	local PARSED=0
 
 	case $1 in

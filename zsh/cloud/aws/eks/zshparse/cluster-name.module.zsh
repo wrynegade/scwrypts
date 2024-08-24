@@ -1,7 +1,9 @@
-${scwryptsmodule}() {
-	# local CLUSTER_NAME
-	# local EKS_CLUSTER_NAME_INTERACTIVE=allowed   disabled by default (-c MUST be passed)
+${scwryptsmodule}.locals() {
+	local CLUSTER_NAME
+	local EKS_CLUSTER_NAME_INTERACTIVE=allowed   # disabled by default (-c MUST be passed)
+}
 
+${scwryptsmodule}() {
 	local PARSED=0
 
 	case $1 in
@@ -13,7 +15,6 @@ ${scwryptsmodule}() {
 
 	return $PARSED
 }
-
 
 ${scwryptsmodule}.usage() {
 	[[ "$USAGE__usage" =~ '\[...options...\]' ]] || USAGE__usage+=' [...options...]'

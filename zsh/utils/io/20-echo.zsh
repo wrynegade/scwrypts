@@ -35,7 +35,8 @@ echo.debug() {  # helpful during development or (sparingly) to help others' deve
 	[ ${SCWRYPTS_LOG_LEVEL} ] && [[ ${SCWRYPTS_LOG_LEVEL} -lt 4 ]] && [[ ! $@ =~ --force-print ]] && return 0
 
 	utils.io.print $@ --minimum-log-level 4 --prefix "DEBUG    ℹ" --color $(echo.debug.color) \
-		"\n  DEBUG::funcstack : $(echo "${funcstack[@]:1}" | sed 's/ (anon) (eval) (anon)$/ scwrypts/')" \
+		"\n> DEBUG::funcstack : $(echo "${funcstack[@]:1}" | sed 's/ (anon) (eval) (anon)$/ scwrypts/')" \
+		"\n> DEBUG::timestamp : $(date +%s)" \
 		;
 	return 0
 }

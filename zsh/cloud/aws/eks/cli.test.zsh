@@ -1,13 +1,14 @@
 #####################################################################
 
 use unittest
+
 testmodule=cloud.aws.eks.cli
 
 #####################################################################
 
 beforeall() {
 	use cloud/aws/eks/cli
-	command -v kubectl &>/dev/null || kubectl() { true; }
+	use cloud/aws/eks/cluster-login
 }
 
 beforeeach() {

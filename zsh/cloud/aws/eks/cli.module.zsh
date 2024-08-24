@@ -8,8 +8,7 @@ use cloud/aws/eks/zshparse
 #####################################################################
 
 ${scwryptsmodule}() {
-	eval "$(usage.reset)"
-	local USAGE__description='
+	local DESCRIPTION="
 		Context wrapper for kubernetes CLI commands on AWS EKS. This
 		will automatically attempt login for first-time connections,
 		and ensures the correct kubecontext is used for the expected
@@ -18,18 +17,13 @@ ${scwryptsmodule}() {
 			EKS --cluster-name my-cluster kubectl get pods
 			EKS --cluster-name my-cluster helm history my-deployment
 			... etc ...
-	'
+		"
+	local ARGS=() PARSERS=(
+		cloud.aws.zshparse.overrides
+		cloud.aws.eks.zshparse.cluster-name
+	)
 
-	local \
-		ACCOUNT REGION AWS_PASSTHROUGH=() \
-		CLUSTER_NAME \
-		KUBECLI ARGS=() \
-		PARSERS=(
-			cloud.aws.zshparse.overrides
-			cloud.aws.eks.zshparse.cluster-name
-		)
-
-	eval "$ZSHPARSEARGS"
+	eval "$(utils.parse.autosetup)"
 
 	##########################################
 
@@ -68,11 +62,11 @@ ${scwryptsmodule}() {
 
 #####################################################################
 
-${scwryptsmodule}.parse() {
-	# local KUBECLI   extracted from default ARGS parser
-	return 0
-}
+${scwryptsmodule}.parse() { return 0; }
 
+${scwryptsmodule}.parse.locals() {
+	local KUBECLI   # extracted from default ARGS parser
+}
 
 ${scwryptsmodule}.parse.usage() {
 	USAGE__usage+=' kubecli [...kubecli-args...]'

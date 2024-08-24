@@ -23,7 +23,7 @@ ${scwryptsmodule}() {
 		;
 
 	##########################################
-	
+
 	local TARGET_BRANCH=$(git -C "${INSTALLATION_BASE_PATH}/${LOCAL_NAME}" rev-parse --abbrev-ref HEAD)
 
 	git -C "${INSTALLATION_BASE_PATH}/${LOCAL_NAME}" pull origin ${TARGET_BRANCH} \

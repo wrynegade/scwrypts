@@ -4,21 +4,36 @@ DEPENDENCIES+=(sed)
 
 #####################################################################
 
+#
+# "mocking" is critical to unittesting workflows, and although this
+# provides a preliminary implementation idea for "mocking" in ZSH,
+# this is very new and subject to change
+#
+# for critical workflows, though, some limited tests are way better
+# than no tests at all!
+#
+# known issues:
+#   - callstack assertions are never set when the function call is
+#     a non-terminal member of a pipestream; for example:
+#
+#		unittest.mock func-a --stdout asdf
+#
+#		func-a | grep -q "asdf"
+#		         ^ grep will succeed, indicating the mock worked
+#
+#		func-a.assert.called
+#		       ^ will fail; I guess pipe streams are executed in a subshell
+#		                    where export doesn't work as expected?
+#
+
 MOCKS=()
 ${scwryptsmodule}() {
-	eval "$(usage.reset)"
-	local USAGE__description="
+	local DESCRIPTION="
 		(beta) generates a function mock for basic ZSH unit testing
 	"
-	local \
-		FUNCTION STDOUT STDERR EXIT_CODE \
-		PARSERS=()
-
-	eval "$ZSHPARSEARGS"
+	eval "$(utils.parse.autosetup)"
 
 	##########################################
-
-	local FUNCTION_VARIABLE="$(echo "${FUNCTION}" | sed 's/\./___/g; s/-/_____/g')"
 
 	export MOCK__ORIGINAL_IMPLEMENTATION__${FUNCTION_VARIABLE}="$(which ${FUNCTION})"
 
@@ -32,6 +47,7 @@ ${scwryptsmodule}() {
 
 	# tricky! in order to set the ${FUNCTION} as literal within zsh functions, we need
 	# to run all the test definitions as an eval line :S
+
 	eval "
 
 	export MOCK__CALLSTACK__${FUNCTION_VARIABLE}=()
@@ -110,6 +126,14 @@ ${scwryptsmodule}() {
 
 #####################################################################
 
+${scwryptsmodule}.parse.locals() {
+	local FUNCTION
+	local FUNCTION_VARIABLE
+	local STDOUT
+	local STDERR
+	local EXIT_CODE
+}
+
 ${scwryptsmodule}.parse() {
 	# local FUNCTION STDOUT STDERR EXIT_CODE
 	local PARSED=0
@@ -157,8 +181,10 @@ ${scwryptsmodule}.parse.usage() {
 }
 
 ${scwryptsmodule}.parse.validate() {
+	FUNCTION_VARIABLE="$(echo "${FUNCTION}" | sed 's/\./___/g; s/-/_____/g')"
+	[ "${FUNCTION_VARIABLE}" ] || echo.error "failed to determine safe variable name for '${FUNCTION}'"
+
 	[ ${FUNCTION} ] && command -v ${FUNCTION} &>/dev/null || {
-		local FUNCTION_VARIABLE="$(echo "${FUNCTION}" | sed 's/\./___/g; s/-/_____/g')"
 		[[ $(eval echo "\$MOCK_UNCALLABLE_WARNING_ISSUED__${FUNCTION_VARIABLE}") =~ true ]] || {
 			echo.warning "mocking uncallable '${FUNCTION}'"
 			export MOCK_UNCALLABLE_WARNING_ISSUED__${FUNCTION_VARIABLE}=true

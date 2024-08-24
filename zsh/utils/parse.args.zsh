@@ -8,9 +8,22 @@
 # first line of the function, so it is clear what variables must be set
 # in the parent function
 
+utils.parse.args.locals() {
+	#local ARGS=()
+	#
+	# to enable this parser, you must include 'local ARGS=()' yourself
+	#
+	# if you are in a nested context where ARGS=() may exist from a parent,
+	# you can _disable_ this parser by declaring "local ARGS=none"
+	#
+	# this can be done either in a .locals() function or simply in the body
+	# of your function before utils.parse is called
+	#
+
+	local ARGS_FORCE=allowed   # typically you want this to be 'allowed', but see below for details
+}
+
 utils.parse.args() {
-	# local ARGS=()
-	# local ARGS_FORCE=allowed   typically you want this to be 'allowed', but see below for details
 	local PARSED=0
 	[ $ARGS_FORCE ] || local ARGS_FORCE=false
 

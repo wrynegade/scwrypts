@@ -3,7 +3,7 @@
 
 USAGE__options='
 	-e, --exit-code         desired exit code of the function (default "0")
-	-f, --output-function   one of the zsh/utils output functions (default "SUCCESS")
+	-f, --output-function   one of the zsh/utils output functions (default "success")
 	-m, --message           a message to display (default "Hello, World!")
 '
 
@@ -15,38 +15,39 @@ USAGE__description='
 #####################################################################
 
 MAIN() {
-	local OUTPUT_FUNCTION=SUCCESS
+	local OUTPUT_FUNCTION=success
 	local EXIT_CODE=0
 	local MESSAGE='Hello, world!'
 
-	ARGUMENT_REQUIRED() { echo.error "'$1' requires an argument"; }
-
-	while [[ $# -gt 0 ]]
-	do
-		case $1 in
-			-e | --exit-code )
-				EXIT_CODE="$2"
-				[ $2 ] && shift 1 || ARGUMENT_REQUIRED
-				;;
-			-f | --output-function )
-				OUTPUT_FUNCTION="$2"
-				[ $2 ] && shift 1 || ARGUMENT_REQUIRED
-				;;
-			-m | --message )
-				MESSAGE="$2"
-				[ $2 ] && shift 1 || ARGUMENT_REQUIRED
-				;;
-			* ) echo.error "unknown argument '$1'" ;;
-		esac
-		shift 1
-	done
-
-	utils.check-errors
+	eval "${ZSHPARSEARGS}"
 
 	##########################################
 
-	[[ $OUTPUT_FUNCTION =~ ^FAIL$ ]] && utils.fail $EXIT_CODE "$MESSAGE"
+	[[ ${OUTPUT_FUNCTION} =~ ^fail$ ]] && utils.fail ${EXIT_CODE} "${MESSAGE}"
 
-	$OUTPUT_FUNCTION "$MESSAGE"
-	return $EXIT_CODE
+	echo.${OUTPUT_FUNCTION} "${MESSAGE}"
+	return ${EXIT_CODE}
+}
+
+#####################################################################
+
+MAIN.parse() {
+	local PARSED=0
+
+	case $1 in
+		-e | --exit-code )
+			PARSED=2
+			EXIT_CODE="$2"
+			;;
+		-f | --output-function )
+			PARSED=2
+			OUTPUT_FUNCTION="$2"
+			;;
+		-m | --message )
+			PARSED=2
+			MESSAGE="$2"
+			;;
+	esac
+
+	return ${PARSED}
 }

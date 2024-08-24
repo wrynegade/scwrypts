@@ -1,18 +1,15 @@
 #####################################################################
 
-MOCKED_ENV=()
+DEPENDENCIES+=(sed)
 
+#####################################################################
+
+MOCKED_ENV=()
 ${scwryptsmodule}() {
-	eval "$(usage.reset)"
-	local USAGE__description="
+	local DESCRIPTION="
 		(beta) mocks an environment variable for testing
 	"
-
-	local \
-		ENVIRONMENT_VARIABLE_NAME ENVIRONMENT_VARIABLE_VALUE \
-		PARSERS=()
-
-	eval "$ZSHPARSEARGS"
+	eval "$(utils.parse.autosetup)"
 
 	##########################################
 
@@ -39,8 +36,12 @@ ${scwryptsmodule}.restore() {
 
 #####################################################################
 
+${scwryptsmodule}.parse.locals() {
+	local ENVIRONMENT_VARIABLE_NAME
+	local ENVIRONMENT_VARIABLE_VALUE
+}
+
 ${scwryptsmodule}.parse() {
-	# local ENVIRONMENT_VARIABLE_NAME ENVIRONMENT_VARIABLE_VALUE
 	local PARSED=0
 
 	case $1 in
@@ -49,11 +50,13 @@ ${scwryptsmodule}.parse() {
 			ENVIRONMENT_VARIABLE_VALUE="$2"
 			;;
 
-		* ) [[ $POSITIONAL_ARGS -gt 0 ]] && return 0
+		* )
+			[[ $POSITIONAL_ARGS -gt 0 ]] && return 0
 			((POSITIONAL_ARGS+=1))
 			PARSED=1
 			case $POSITIONAL_ARGS in
-				1 ) ENVIRONMENT_VARIABLE_NAME="$1" ;;
+				1 ) ENVIRONMENT_VARIABLE_NAME="$1"
+					;;
 			esac
 			;;
 	esac

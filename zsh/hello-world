@@ -3,5 +3,4 @@
 
 MAIN() {
 	echo.success 'Hello, World!'
-	utils.abort
 }

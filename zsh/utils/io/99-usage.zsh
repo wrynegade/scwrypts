@@ -10,12 +10,14 @@ utils.io.usage() { # formatter for USAGE variable
 	[ ${USAGE__usage} ] && echo ${USAGE_LINE} | grep -q 'usage: -' \
 		&& USAGE_LINE=$(echo ${USAGE_LINE} | sed "s/usage: -/usage: ${USAGE__usage}/")
 
-	[ ${__SCWRYPT} ] && [[ ! ${USAGE_LINE} =~ 'usage: [A-Z]' ]] \
-		&& USAGE_LINE=$(
-			echo ${USAGE_LINE} \
-				| sed "s;^[^:]*:;& scwrypts ${SCWRYPT_NAME} --;" \
-				| sed 's/ \{2,\}/ /g; s/scwrypts -- scwrypts/scwrypts/' \
-			)
+
+	[ ${__SCWRYPT} ] && [[ ! ${USAGE_LINE} =~ 'usage: [A-Z]' ]] && {
+		[[ ${#funcstack[@]} -eq 4 ]] && {
+			# when in a scwrypt at funcstack length 4, you are viewing the top-level
+			# help document of a MAIN function
+			USAGE_LINE=$(echo ${USAGE_LINE} | sed "s;^[^:]*:;& scwrypts ${SCWRYPT_NAME} --;")
+		}
+	}
 
 	local THE_REST=$(echo ${USAGE} | grep -vi '^[		]*usage *:' )
 
@@ -41,8 +43,18 @@ utils.io.usage() { # formatter for USAGE variable
 	for DYNAMIC_USAGE_ELEMENT in $(echo ${THE_REST} | sed -n 's/^\([^:]*\): -$/\1/p')
 	do
 		DYNAMIC_USAGE_ELEMENT_TEXT=$(eval echo '$USAGE__'${DYNAMIC_USAGE_ELEMENT})
-		[ ${DYNAMIC_USAGE_ELEMENT_TEXT} ] || continue
-
+		[ ${DYNAMIC_USAGE_ELEMENT_TEXT} ] || {
+			case ${DYNAMIC_USAGE_ELEMENT} in
+				( options )
+					# there's _always_ at least one of these
+					THE_REST=$(echo ${THE_REST} | sed "s/${DYNAMIC_USAGE_ELEMENT}: -/${DYNAMIC_USAGE_ELEMENT}:/")
+					;;
+				( * )
+					THE_REST=$(echo ${THE_REST} | sed "/^[	]*${DYNAMIC_USAGE_ELEMENT}: -/d")
+					;;
+			esac
+			continue
+		}
 
 		case ${DYNAMIC_USAGE_ELEMENT} in
 			description )

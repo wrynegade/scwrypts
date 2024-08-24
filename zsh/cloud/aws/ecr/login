@@ -1,7 +1,17 @@
 #!/usr/bin/env zsh
-use cloud/aws/ecr
 #####################################################################
 
-MAIN() {
-	ECR_LOGIN $@
-}
+use cloud/aws/ecr/login
+use cloud/aws/zshparse
+
+#####################################################################
+
+USAGE__description='
+	interactively setup temporary credentials for ECR in the given region
+'
+
+cloud.aws.zshparse.overrides.usage
+
+#####################################################################
+
+MAIN() { cloud.aws.ecr.login $@; }
