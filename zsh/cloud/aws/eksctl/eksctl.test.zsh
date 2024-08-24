@@ -1,28 +1,20 @@
 #####################################################################
 
 use unittest
-testmodule=cloud.aws
+testmodule=cloud.aws.eksctl
 
 #####################################################################
 
 beforeall() {
-	use cloud/aws
+	use cloud/aws/eksctl
 }
 
 #####################################################################
 
-test.provides-aws-cli() {
+test.provides-eksctl-cli() {
 	unittest.test.provides ${testmodule}.cli
 }
 
-test.provides-aws-cli-alias() {
+test.provides-eksctl-alias() {
 	unittest.test.provides ${testmodule}
-}
-
-test.provides-eks() {
-	unittest.test.provides ${testmodule}.eks
-}
-
-test.provides-eksctl() {
-	unittest.test.provides ${testmodule}.eksctl
 }

@@ -2,7 +2,12 @@
 # provides utilities for interacting with Amazon Web Services (AWS)
 #
 
-use cloud/aws/cli  # ./cli.module.zsh
+# context wrapper for AWS CLI v2
+use cloud/aws/cli
 eval "${scwryptsmodule}() { ${scwryptsmodule}.cli \$@; }"
 
-use cloud/aws/eks  # ./eks/eks.module.zsh
+# simplify context commands for kubectl on EKS
+use cloud/aws/eks
+
+# context wrapper for eksctl
+use cloud/aws/eksctl
