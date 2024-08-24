@@ -286,7 +286,7 @@ jobs:
           shell: /bin/sh
           name: scwrypts returns proper error codes
           command: |
-            ~/scwrypts/scwrypts -n sanity check -- --exit-code 100
+            ~/scwrypts/scwrypts -n sanity check -- --exit-code 101
             [[ $? -eq 100 ]] || exit 1
 
 workflows:
