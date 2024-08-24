@@ -43,8 +43,10 @@ MAIN() {
 
 	local SCWRYPTS_CONFIG="$(scwrypts.meta.run --config)"
 	local TEST_FILE
+	local TEST_SUITE_COUNT=0 TEST_SUITE_FAILED_COUNT=0
 	for TEST_FILE in $(echo "${TEST_FILES}")
 	do
+		((TEST_SUITE_COUNT+=1))
 		local TEST_SUITE_NAME="$(basename -- "$(dirname -- ${TEST_FILE})")/$(basename -- "${TEST_FILE}")"
 		zsh <<< "
 		() {
@@ -56,6 +58,11 @@ MAIN() {
 			utils.check-environment
 			SUPPRESS_USAGE_OUTPUT=true SCWRYPTS_TEST_MODULE_STRING=\"${TEST_SUITE_NAME} : \" unittest.execute-test-file
 		}
-		"
+		" || ((TEST_SUITE_FAILED_COUNT+=1))
 	done
+
+	[[ ${TEST_SUITE_FAILED_COUNT} -eq 0 ]] \
+		&& echo.success "\nsuccessfully passed ${TEST_SUITE_COUNT} / ${TEST_SUITE_COUNT} test suite(s)\n " \
+		|| echo.error   "\nfailed ${TEST_SUITE_FAILED_COUNT} / ${TEST_SUITE_COUNT} test suite(s)\n " \
+		;
 }
