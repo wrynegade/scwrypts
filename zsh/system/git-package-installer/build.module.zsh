@@ -48,7 +48,7 @@ ${scwryptsmodule}.make() {
 
 		: \
 			&& make \
-			&& GETSUDO \
+			&& utils.io.getsudo \
 			&& sudo make install \
 			&& echo.success "succesfully installed '${LOCAL_NAME}'" \
 			|| echo.error   "failed to install '${LOCAL_NAME}' (see above)" \
