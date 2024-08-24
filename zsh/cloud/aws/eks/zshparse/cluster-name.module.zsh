@@ -1,6 +1,9 @@
 ${scwryptsmodule}.locals() {
 	local CLUSTER_NAME
-	local EKS_CLUSTER_NAME_INTERACTIVE=allowed   # disabled by default (-c MUST be passed)
+
+	# set to 'allowed' to enable interactive cluster select
+	# by default, the '--cluster-name' flag is required
+	local EKS_CLUSTER_NAME_INTERACTIVE
 }
 
 ${scwryptsmodule}() {

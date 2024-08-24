@@ -18,6 +18,8 @@ ${scwryptsmodule}() {
 		cloud.aws.eks.zshparse.cluster-name
 	)
 
+	local EKS_CLUSTER_NAME_INTERACTIVE=allowed
+
 	eval "$(utils.parse.autosetup)"
 
 	#####################################################################
