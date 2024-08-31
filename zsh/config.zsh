@@ -145,6 +145,23 @@ do
 		&& readonly ${scwryptsgroup}__loaded=true \
 		|| echo.warning "error encountered when loading group '${__SCWRYPTS_GROUP_NAME}'" \
 		;
+
+	[[ ! ${__SCWRYPTS_GROUP_NAME} =~ ^scwrypts$ ]] && [ ! "$(scwrypts.config.group ${__SCWRYPTS_GROUP_NAME} zshlibrary)" ] && {
+		case $(scwrypts.config.group ${__SCWRYPTS_GROUP_NAME} type) in
+			( zsh )
+				[ -d "${scwryptsgrouproot}/lib" ] \
+					&& readonly ${scwryptsgroup}__zshlibrary="${scwryptsgrouproot}/lib" \
+					|| readonly ${scwryptsgroup}__zshlibrary="${scwryptsgrouproot}" \
+					;
+				;;
+			( '' )
+				[ -d "${scwryptsgrouproot}/zsh/lib" ] \
+					&& readonly ${scwryptsgroup}__zshlibrary="${scwryptsgrouproot}/zsh/lib" \
+					|| readonly ${scwryptsgroup}__zshlibrary="${scwryptsgrouproot}/zsh" \
+					;
+				;;
+		esac
+	}
 done
 
 [[ ${SCWRYPTS_GROUPS[1]} =~ ^scwrypts$ ]] \

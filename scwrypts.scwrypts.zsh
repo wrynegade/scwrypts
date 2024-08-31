@@ -35,6 +35,9 @@
 ### OPTIONAL CONFIGURATION ##########################################
 #####################################################################
 
+# ${scwryptsgroup}__option_key configuration values can be accessed anywhere in zsh scwrypts
+# with $(scwrypts.config.group group-name option_key)
+
 readonly ${scwryptsgroup}__type=
 #
 # ${scwryptsgroup}__type (optional) (default = not set)

@@ -236,7 +236,7 @@ command -v use &>/dev/null || {
 		[ ${SEARCH_GROUP} ] || echo.error '--name requires --group argument'
 	}
 
-	utils.check-errors
+	utils.check-errors --fail
 
 	#####################################################################
 	### scwrypts selection / filtering ##################################

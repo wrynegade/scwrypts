@@ -80,7 +80,7 @@ scwrypts.environment.update() {
 			;;
 	esac
 
-	utils.check-errors --no-fail || return $?
+	utils.check-errors || return $?
 
 	local TEMP_CONFIG_FILE="$SCWRYPTS_TEMP_PATH/environment.temp.yaml"
 

@@ -164,7 +164,7 @@ POSTGRES__SET_LOGIN_ARGS() {
 	[ $PSQL_FILE ] && [ ! -f "$PSQL_FILE" ] \
 		&& echo.error "no such file available:\n'$PSQL_FILE'"
 
-	utils.check-errors
+	utils.check-errors --fail
 
 	##########################################
 

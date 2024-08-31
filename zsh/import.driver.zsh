@@ -103,7 +103,7 @@ use() {
 
 	#####################################################################
 
-	utils.check-errors --no-fail || {
+	utils.check-errors || {
 		((IMPORT_ERRORS+=1))
 		return 1
 	}

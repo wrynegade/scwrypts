@@ -49,7 +49,7 @@ utils.parse.autosetup() {
 			;
 	done
 
-	utils.check-errors --no-usage --no-fail || {
+	utils.check-errors --no-usage || {
 		echo "echo.error 'utils.autosetup error'; return 127;"
 		return 127
 	}

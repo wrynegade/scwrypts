@@ -112,7 +112,7 @@ utils.parse() {
 		${PARSER}.validate
 	done
 
-	utils.check-errors --no-fail
+	utils.check-errors
 }
 
 #####################################################################

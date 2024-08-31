@@ -139,7 +139,7 @@ ${scwryptsmodule}.get.helper() {
 		shift $_S
 	done
 
-	utils.check-errors --no-fail || return $?
+	utils.check-errors || return $?
 
 	local ENVIRONMENT_NAME="$1"
 	[ $ENVIRONMENT_NAME ] || ENVIRONMENT_NAME=$SCWRYPTS_ENV

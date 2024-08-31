@@ -1,6 +1,5 @@
 #####################################################################
 
-
 utils.io.input() {  # read a single line of user input
 	echo.prompt "${@:2}"
 	utils.io.read $1

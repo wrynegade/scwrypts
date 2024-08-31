@@ -1,9 +1,15 @@
-#####################################################################
+#
+# helm template testing and generation helpers
+#
 
-DEPENDENCIES+=()
-REQUIRED_ENV+=()
 
-use helm/dependency
-use helm/template
+# ensures default values are injected from local Chart dependencies
+use helm/update-dependencies
 
-#####################################################################
+
+# template generation
+use helm/get-template
+
+
+# shared argument parser
+use helm/zshparse

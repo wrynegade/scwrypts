@@ -85,7 +85,7 @@ test.does-not-create-if-exists() {
 	unittest.mock cloud.aws.eksctl.iamserviceaccount.check-exists \
 		--exit-code 0 \
 		;
-	
+
 	${testmodule} ${_ARGS[@]}
 
 	cloud.aws.eksctl.cli.assert.not.called
@@ -95,7 +95,7 @@ test.creates-role() {
 	unittest.mock cloud.aws.eksctl.iamserviceaccount.check-exists \
 		--exit-code 100 \
 		;
-	
+
 	${testmodule} ${_ARGS[@]}
 
 	cloud.aws.eksctl.cli.assert.callstack \
@@ -114,7 +114,7 @@ test.creates-role-on-force() {
 	unittest.mock cloud.aws.eksctl.iamserviceaccount.check-exists \
 		--exit-code 0 \
 		;
-	
+
 	${testmodule} ${_ARGS[@]} --force
 
 	cloud.aws.eksctl.cli.assert.callstack \
@@ -133,7 +133,7 @@ test.does-not-create-if-mismatched-role() {
 	unittest.mock cloud.aws.eksctl.iamserviceaccount.check-exists \
 		--exit-code 200 \
 		;
-	
+
 	${testmodule} ${_ARGS[@]}
 
 	cloud.aws.eksctl.cli.assert.not.called
@@ -143,7 +143,7 @@ test.returns-correct-error-if-mismatched-role() {
 	unittest.mock cloud.aws.eksctl.iamserviceaccount.check-exists \
 		--exit-code 200 \
 		;
-	
+
 	${testmodule} ${_ARGS[@]}
 
 	[[ $? -eq 2 ]]

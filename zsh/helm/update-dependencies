@@ -1,8 +1,13 @@
 #!/usr/bin/env zsh
-use helm
-use scwrypts
 #####################################################################
 
-MAIN() {
-	HELM__DEPENDENCY__UPDATE $@
-}
+use helm
+
+#####################################################################
+
+helm.zshparse.usage
+helm.update-dependencies.parse.usage
+
+#####################################################################
+
+MAIN() { helm.update-dependencies $@; }

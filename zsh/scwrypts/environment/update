@@ -65,7 +65,7 @@ MAIN() {
 		shift $_S
 	done
 
-	utils.check-errors
+	utils.check-errors --fail
 
 	case $MODE in
 		edit )

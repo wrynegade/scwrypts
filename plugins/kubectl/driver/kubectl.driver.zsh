@@ -134,7 +134,7 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 	while [[ $# -gt 0 ]]; do USER_ARGS+=($1); shift 1; done
 
 
-	utils.check-errors --no-fail || return 1
+	utils.check-errors || return 1
 
 	[[ $HELP -eq 1 ]] && { utils.io.usage; return 0; }
 

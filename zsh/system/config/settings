@@ -1,7 +1,0 @@
-#!/usr/bin/env zsh
-use system/config
-#####################################################################
-
-MAIN() {
-	utils.io.edit "$CONFIG__USER_SETTINGS"
-}

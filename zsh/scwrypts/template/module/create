@@ -1,13 +1,10 @@
 #!/usr/bin/env zsh
 #####################################################################
 
-use helm
+use scwrypts/template/module/create
 
 #####################################################################
 
-helm.zshparse.usage
-helm.get-template.parse.usage
+scwrypts.template.module.create.parse.usage
 
-#####################################################################
-
-MAIN() { helm.get-template $@; }
+MAIN() { scwrypts.template.module.create $@; }

@@ -21,7 +21,7 @@ utils.fzf() {
 }
 
 utils.fzf.user-input() { # allow user to type custom answers; reconfirm if ambiguous with select
-	local FZF_OUTPUT=$(BE_QUIET=1 FZF $@ --print-query | sed '/^$/d' | sort -u)
+	local FZF_OUTPUT=$(BE_QUIET=1 utils.fzf $@ --print-query | sed '/^$/d' | sort -u)
 	[[ ${SCWRYPTS_LOG_LEVEL} -ge 1 ]] && echo ${FZF_OUTPUT} | head -n1 >&2
 	[ ! ${FZF_OUTPUT} ] && return 1
 

@@ -20,7 +20,7 @@ MAIN() {
 	eval "$(utils.parse.autosetup)"
 	utils.io.getsudo || return 1
 	##########################################
-	
+
 	{
 		mkdir -p -- "${AWS__EFS__LOCAL_MOUNT_POINT}" \
 			|| sudo mkdir -p -- "${AWS__EFS__LOCAL_MOUNT_POINT}"
@@ -28,7 +28,7 @@ MAIN() {
 
 	[ -d "${AWS__EFS__LOCAL_MOUNT_POINT}" ] \
 		|| echo.error "unable to create local mount point '${AWS__EFS__LOCAL_MOUNT_POINT}'" \
-		|| return 
+		|| return
 
 	local FS_ID=$(\
 		$AWS efs describe-file-systems \

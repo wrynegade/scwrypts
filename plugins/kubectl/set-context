@@ -33,7 +33,7 @@ MAIN() {
 	[ $CONTEXT ] || CONTEXT=$(KUBECTL__SELECT_CONTEXT)
 	[ $CONTEXT ] || echo.error 'must provide or select a valid kube context'
 
-	utils.check-errors
+	utils.check-errors --fail
 
 	KUBECTL__SET_CONTEXT $CONTEXT
 }

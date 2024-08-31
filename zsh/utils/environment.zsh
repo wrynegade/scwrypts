@@ -115,7 +115,7 @@ utils.environment.check() {
 			;;
 	esac
 
-	utils.check-errors --no-fail --no-usage || return $?
+	utils.check-errors --no-usage || return $?
 
 	##########################################
 

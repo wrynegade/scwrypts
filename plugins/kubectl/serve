@@ -43,7 +43,7 @@ MAIN() {
 		shift 1
 	done
 
-	utils.check-errors
+	utils.check-errors --fail
 
 	KUBECTL__SERVE
 }

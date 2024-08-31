@@ -35,7 +35,7 @@ MAIN() {
 	[ $NAMESPACE ] || NAMESPACE=$(KUBECTL__SELECT_NAMESPACE)
 	[ $NAMESPACE ] || echo.error 'must provide or select a valid namespace'
 
-	utils.check-errors
+	utils.check-errors --fail
 
 	KUBECTL__SET_NAMESPACE $NAMESPACE
 }
