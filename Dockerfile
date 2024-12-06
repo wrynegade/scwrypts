@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV CI=true
 ENV SCWRYPTS_PLUGIN_ENABLED__ci=1
 
-RUN apt-get update && apt-get install -yes \
+RUN apt-get update && apt-get install --yes \
     curl \
     unzip \
     zsh \
@@ -36,10 +36,10 @@ COPY . /opt/scwrypts
 
 ENV PATH="/opt/scwrypts:$PATH"
 
-RUN /opt/scwrypts/scwrypts -v 4 \
-    --name scwrypts/virtualenv/update-all \
-    --group scwrypts \
-    --type zsh
+#RUN /opt/scwrypts/scwrypts -v 4 \
+#    --name scwrypts/virtualenv/update-all \
+#    --group scwrypts \
+#    --type zsh
 
 ENTRYPOINT ["/opt/scwrypts/scwrypts"]
 
