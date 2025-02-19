@@ -15,6 +15,8 @@ executors:
   python:
     docker:
       - image: cimg/python:3.11
+        environment:
+          SCWRYPTS_EXECUTABLE: ~/scwrypts/scwrypts
     resource_class: small
 
   nodejs:
