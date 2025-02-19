@@ -58,7 +58,7 @@ use scwrypts/get-runstring
 	#####################################################################
 	### cli argument parsing and global configuration ###################
 	#####################################################################
-	
+
 	local ENV_NAME="${SCWRYPTS_ENV}"
 	local SEARCH_PATTERNS=()
 
@@ -242,7 +242,7 @@ use scwrypts/get-runstring
 	#####################################################################
 	### scwrypts selection / filtering ##################################
 	#####################################################################
-	
+
 	local SCWRYPTS_AVAILABLE=$(scwrypts.list-available)
 
 	##########################################
@@ -402,7 +402,7 @@ use scwrypts/get-runstring
 	}
 
 	##########################################
-	
+
 	local RUN_STRING=$(scwrypts.get-runstring ${SCWRYPT_NAME} ${SCWRYPT_TYPE} ${SCWRYPT_GROUP})
 	[ "${RUN_STRING}" ] || return 42
 
