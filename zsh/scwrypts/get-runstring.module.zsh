@@ -95,12 +95,12 @@ ${scwryptsmodule}.zsh.generic() {
 			while [[ \$# -gt 0 ]]
 			do
 				case \$1 in
-					-[a-z][a-z]* )
+					( -[a-z][a-z]* )
 						VARSPLIT=\$(echo \"\$1 \" | sed 's/^\\\\(-.\\\\)\\\\(.*\\\\) /\\\\1 -\\\\2/')
 						set -- throw-away \$(echo \" \$VARSPLIT \") \${@:2}
 						;;
-					-h | --help    ) utils.io.usage; exit 0 ;;
-					* ) MAIN_ARGS+=(\$1) ;;
+					( -h | --help    ) utils.io.usage; exit 0 ;;
+					( * ) MAIN_ARGS+=(\$1) ;;
 				esac
 				shift 1
 			done

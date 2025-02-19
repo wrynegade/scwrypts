@@ -7,7 +7,7 @@ utils.parse.help() {
 	local PARSED=0
 
 	case $1 in
-		-h | --help )
+		( -h | --help )
 			PARSED=1
 			utils.io.usage
 			EARLY_ESCAPE_CODE=-1
@@ -68,6 +68,53 @@ utils.parse.help.usage() {
 
 
 #
+# for a parser named 'MY_PARSER()', the optional 'MY_PARSER.locals()' function
+# defines variables which will be local-scoped to the function which is USING
+# the parser
+#
+# this is primarily meant for use in reusable parsers to avoid boilerplate of
+# local variable definition in all use cases
+#
+# out of convenience, any local-scoped variables will also be available
+# throughout all MY_PARSER.*() functions
+#
+# The utils.parse.help parser does not require any local variables, so consider
+# the following example:
+#
+# ------------------------------------------
+#
+# my-function() {
+#	local PARSERS=(MY_PARSER)
+#
+#	eval "${ZSHPARSEARGS}"
+#
+#	echo "my value is ${LOCAL_VARIABLE}"
+# }
+# # outside of my-function(), the LOCAL_VARIABLE is no longer local-scoped
+# # (zsh local-scope "rules" still apply)
+#
+# MY_PARSER.locals() {
+#	local LOCAL_VARIABLE
+# }
+#
+# MY_PARSER() {
+#	local PARSED=0
+#
+#	case $1 in
+#		( --value )
+#			PARSED=2
+#			LOCAL_VARIABLE=$2
+#			;;
+#	esac
+#
+#	return ${PARSED}
+# }
+#
+#
+# ------------------------------------------
+
+
+#
 # for a parser named 'MY_PARSER()', the optional 'MY_PARSER.validate()' function
 # validates parsing errors. Since validate functions are run at the very end of
 # ZSHPARSEARGS (after all argument parsing is complete), this is your last chance
@@ -86,7 +133,7 @@ utils.parse.help.usage() {
 #	local PARSED=0
 #
 #	case $1 in
-#		--my-required-option )
+#		( --my-required-option )
 #			PARSED=2
 #			REQUIRED_OPTION=$2
 #			;;

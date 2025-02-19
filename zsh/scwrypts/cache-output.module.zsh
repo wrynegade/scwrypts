@@ -27,8 +27,8 @@ ${scwryptsmodule}() {
 	local CACHE_FILE_FULLPATH="$SCWRYPTS_TEMP_PATH/$CACHE_FILE"
 
 	case $USE_CACHE in
-		bypass ) ${ARGS[@]} ;;
-		true | reset )
+		( bypass ) ${ARGS[@]} ;;
+		( true | reset )
 			local EXIT_CODE=0
 
 			[[ $USE_CACHE =~ reset ]] && rm -- "$CACHE_FILE_FULLPATH" &>/dev/null
@@ -39,9 +39,9 @@ ${scwryptsmodule}() {
 			}
 
 			case $EXIT_CODE in
-				0 ) cat "$CACHE_FILE_FULLPATH"
+				( 0 ) cat "$CACHE_FILE_FULLPATH"
 					;;
-				* ) cat "$CACHE_FILE_FULLPATH" 2>/dev/null
+				( * ) cat "$CACHE_FILE_FULLPATH" 2>/dev/null
 					echo.error "error running '${ARGS[@]}'"
 					rm -- "$CACHE_FILE_FULLPATH" &>/dev/null
 					;;
@@ -58,18 +58,18 @@ ${scwryptsmodule}.parse() {
 	# local USE_CACHE CACHE_ARGS_COUNT=0 CACHE_FILE
 	local PARSED=0
 	case $1 in
-		--use-cache )
+		( --use-cache )
 			PARSED=2
 			case $2 in
-				true | reset | bypass )
+				( true | reset | bypass )
 					((CACHE_ARGS_COUNT+=1))
 					USE_CACHE=$2
 					;;
-				* ) echo.error "cannot set USE_CACHE to '$2'" ;;
+				( * ) echo.error "cannot set USE_CACHE to '$2'" ;;
 			esac
 			;;
 
-		--cache-file )
+		( --cache-file )
 			PARSED=2
 			CACHE_FILE=$2
 			;;
@@ -93,8 +93,8 @@ ${scwryptsmodule}.parse.usage() {
 
 ${scwryptsmodule}.parse.validate() {
 	case $USE_CACHE in
-		true | reset | bypass ) ;;
-		* ) echo.error "invalid value '$USE_CACHE' for USE_CACHE (are you missing 'local USE_CACHE=true'?)" ;;
+		( true | reset | bypass ) ;;
+		( * ) echo.error "invalid value '$USE_CACHE' for USE_CACHE (are you missing 'local USE_CACHE=true'?)" ;;
 	esac
 
 	[[ "$CACHE_FILE" ]] && {
@@ -117,14 +117,14 @@ ${scwryptsmodule}.zshparse.args() {
 	# local CACHE_ARGS=()
 	local PARSED=0
 	case $1 in
-		--use-cache )
+		( --use-cache )
 			PARSED=2
 			case $2 in
-				true | reset | bypass )
+				( true | reset | bypass )
 					CACHE_ARGS+=(--use-cache $2)
 					;;
 
-				* ) echo.error "invalid --use-cache value '$2'" ;;
+				( * ) echo.error "invalid --use-cache value '$2'" ;;
 			esac
 	esac
 	return $PARSED

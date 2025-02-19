@@ -102,8 +102,14 @@ ${scwryptsmodule}.parse.locals() {
 ${scwryptsmodule}.parse.usage() {
 	# add to the existing USAGE__* variables to improve the --help message
 	# (e.g. USAGE__options, USAGE__args, USAGE__description)
-	local USAGE__options+='
+	USAGE__options+='
 	'
+	# rather than defining 'local DESCRIPTION' above, you can opt to definie
+	# the USAGE__description here which is helpful when providing an executable
+	# wrapper for this module
+	#
+	#USAGE__description=''
+	#
 }
 
 ${scwryptsmodule}.parse.validate() {

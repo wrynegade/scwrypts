@@ -45,17 +45,17 @@ ${scwryptsmodule}.parse() {
 	local PARSED=0
 
 	case $1 in
-		--value )
+		( --value )
 			PARSED=2
 			ENVIRONMENT_VARIABLE_VALUE="$2"
 			;;
 
-		* )
+		( * )
 			[[ $POSITIONAL_ARGS -gt 0 ]] && return 0
 			((POSITIONAL_ARGS+=1))
 			PARSED=1
 			case $POSITIONAL_ARGS in
-				1 ) ENVIRONMENT_VARIABLE_NAME="$1"
+				( 1 ) ENVIRONMENT_VARIABLE_NAME="$1"
 					;;
 			esac
 			;;

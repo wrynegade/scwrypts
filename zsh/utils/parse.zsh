@@ -13,8 +13,8 @@ ZSHPARSEARGS='
 utils.parse $@ || {
 	local ERROR_CODE=$?
 	case $ERROR_CODE in
-		-1 ) return 0 ;;  # -h | --help
-		*  ) return $ERROR_CODE ;;
+		( -1 ) return 0 ;;  # -h | --help
+		( *  ) return $ERROR_CODE ;;
 	esac
 }
 '

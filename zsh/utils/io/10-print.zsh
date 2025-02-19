@@ -68,8 +68,8 @@ utils.io.print() {
 
 	MESSAGE="$(echo "${MESSAGE}" | sed 's/^	\+//; s/%/%%/g')"
 	case ${SCWRYPTS_OUTPUT_FORMAT} in
-		raw ) MESSAGE+="${LAST_LINE_END}" ;;
-		pretty )
+		( raw ) MESSAGE+="${LAST_LINE_END}" ;;
+		( pretty )
 			MESSAGE="${COLOR}$({
 				while IFS='' read line
 				do
@@ -81,15 +81,16 @@ utils.io.print() {
 				done <<< $(echo "${MESSAGE}" | sed 's/%/%%/g')
 			})${LAST_LINE_END}$(utils.colors.reset)"
 			;;
-		json )
+		( json )
 			MESSAGE="$(jo \
 				timestamp=$(date +%s) \
 				runtime=${SCWRYPTS_RUNTIME_ID} \
 				status="$(echo "${PREFIX}" | sed 's/ .*//')" \
 				message="$(echo -n "${MESSAGE}" | sed 's/^\t\+//' | jq -Rs)" \
+				2>/dev/null || echo "{\"error\":\"your message was too long so I encoded it manually\",\"messageB64\":\"$(echo "${MESSAGE}" | base64 | tr -d '\n')\"}"
 			)\n"
 			;;
-		* )
+		( * )
 			echo "echo.error : unsupported format '${SCWRYPTS_OUTPUT_FORMAT}'" >&2
 			return 1
 			;;

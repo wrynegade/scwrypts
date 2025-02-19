@@ -43,8 +43,8 @@ RDS__GET_DATABASE_CREDENTIALS() {
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
-			--print-password ) PRINT_PASSWORD=1 ;;
-			* )
+			( --print-password ) PRINT_PASSWORD=1 ;;
+			( * )
 				echo.warning "unrecognized argument $1"
 				ERRORS+=1
 				;;
@@ -75,9 +75,9 @@ RDS__GET_DATABASE_CREDENTIALS() {
 	[ ! $AUTH_METHOD ] && user.abort
 
 	case $AUTH_METHOD in
-		iam            ) _RDS_AUTH__iam ;;
-		secretsmanager ) _RDS_AUTH__secretsmanager ;;
-		user-input     ) _RDS_AUTH__userinput ;;
+		( iam            ) _RDS_AUTH__iam ;;
+		( secretsmanager ) _RDS_AUTH__secretsmanager ;;
+		( user-input     ) _RDS_AUTH__userinput ;;
 	esac
 
 	[[ $PRINT_PASSWORD -eq 1 ]] && echo.debug "password : $DB_PASS"

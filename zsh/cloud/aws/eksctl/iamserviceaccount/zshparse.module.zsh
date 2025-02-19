@@ -10,9 +10,9 @@ ${scwryptsmodule}() {
 	local PARSED=0
 
 	case $1 in
-		--serviceaccount ) PARSED=2; SERVICEACCOUNT=$2 ;;
-		--namespace      ) PARSED=2; NAMESPACE=$2 ;;
-		--role-name      ) PARSED=2; ROLE_NAME=$2 ;;
+		( --serviceaccount ) PARSED=2; SERVICEACCOUNT=$2 ;;
+		( --namespace      ) PARSED=2; NAMESPACE=$2 ;;
+		( --role-name      ) PARSED=2; ROLE_NAME=$2 ;;
 	esac
 
 	return ${PARSED}

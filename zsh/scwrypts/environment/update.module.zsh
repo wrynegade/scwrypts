@@ -40,20 +40,20 @@ scwrypts.environment.update() {
 	do
 		_S=1
 		case $1 in
-			-h | --help ) utils.io.usage; return 0 ;;
+			( -h | --help ) utils.io.usage; return 0 ;;
 
-			--environment-name )
+			( --environment-name )
 				[ $2 ] && ((_S+=1)) || echo.error "missing environment name" || break
 				ENVIRONMENT_NAME="$2"
 				;;
 
-			--create-from-existing )
+			( --create-from-existing )
 				[ $2 ] && ((_S+=1)) || echo.error "must provide environment name to copy" || break
 				EDIT_MODE=copy
 				FROM_EXISTING="$2"
 				;;
 
-			--mode )
+			( --mode )
 				[ $2 ] && ((_S+=1)) || echo.error "missing mode" || break
 				EDIT_MODE="$2"
 				command -v scwrypts.environment.update.edit.$EDIT_MODE &>/dev/null \
@@ -67,7 +67,7 @@ scwrypts.environment.update() {
 	done
 
 	case $EDIT_MODE in
-		copy )
+		( copy )
 			[ $FROM_EXISTING ] || FROM_EXISTING=$(scwrypts.environment.select-env)
 			[ $FROM_EXISTING ] || echo.error "cannot work in '$EDIT_MODE' without existing target"
 
@@ -75,7 +75,7 @@ scwrypts.environment.update() {
 				|| echo.error "no such environment '$FROM_EXISTING' exists"
 			;;
 
-		* )
+		( * )
 			[ ! $FROM_EXISTING ] || echo.error "cannot work in '$EDIT_MODE' with --create-from-existing"
 			;;
 	esac

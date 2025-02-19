@@ -139,26 +139,26 @@ ${scwryptsmodule}.parse() {
 	local PARSED=0
 
 	case $1 in
-		--stdout )
+		( --stdout )
 			PARSED=2
 			STDOUT="$2"
 			;;
 
-		--stderr )
+		( --stderr )
 			PARSED=2
 			STDERR="$2"
 			;;
 
-		--exit-code )
+		( --exit-code )
 			PARSED=2
 			EXIT_CODE="$2"
 			;;
 
-		* ) [[ ${POSITIONAL_ARGS} -gt 0 ]] && return 0
+		( * ) [[ ${POSITIONAL_ARGS} -gt 0 ]] && return 0
 			((POSITIONAL_ARGS+=1))
 			PARSED=1
 			case ${POSITIONAL_ARGS} in
-				1 ) FUNCTION="$1" ;;
+				( 1 ) FUNCTION="$1" ;;
 			esac
 			;;
 	esac

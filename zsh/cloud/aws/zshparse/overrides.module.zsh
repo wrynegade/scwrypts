@@ -14,8 +14,8 @@ ${scwryptsmodule}() {
 	local PARSED=0
 
 	case $1 in
-		--account ) PARSED+=2; ACCOUNT=$2 ;;
-		--region  ) PARSED+=2; REGION=$2  ;;
+		( --account ) PARSED+=2; ACCOUNT=$2 ;;
+		( --region  ) PARSED+=2; REGION=$2  ;;
 	esac
 
 	return $PARSED

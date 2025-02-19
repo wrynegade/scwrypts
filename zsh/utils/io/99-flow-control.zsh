@@ -20,10 +20,10 @@ utils.check-errors() {  # returns an error and reports usage if 'echo.error' was
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
-			--no-usage ) DISPLAY_USAGE=false ;;
-			--fail     ) FAIL_OUT=true ;;
+			( --no-usage ) DISPLAY_USAGE=false ;;
+			( --fail     ) FAIL_OUT=true ;;
 
-			--no-fail )
+			( --no-fail )
 				echo.warning "utils.check-errors : '--no-fail' is now the default behavior"
 				;;
 		esac

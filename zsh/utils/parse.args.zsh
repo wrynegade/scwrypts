@@ -33,7 +33,7 @@ utils.parse.args() {
 		# into the ARGS array; typically this is set _after_ hitting the '--'
 		# argument (done automatically below)
 		#
-		true )
+		( true )
 			((POSITIONAL_ARGS+=1))
 			PARSED=1
 			ARGS+=($1)
@@ -49,14 +49,14 @@ utils.parse.args() {
 		# MY_FUNCTION -- arg1 arg2 --help
 		#   would set ARGS=(arg1 arg2 --help); consuming the '--help'
 		#
-		allowed )
+		( allowed )
 			case $1 in
-				-[a-zA-Z0-9]* | --[a-zA-Z[0-9]* )
+				( -[a-zA-Z0-9]* | --[a-zA-Z[0-9]* )
 					;;
 
-				-- ) PARSED=1; ARGS_FORCE=true ;;
+				( -- ) PARSED=1; ARGS_FORCE=true ;;
 
-				* )
+				( * )
 					((POSITIONAL_ARGS+=1))
 					PARSED=1
 					ARGS+=($1)
@@ -69,12 +69,12 @@ utils.parse.args() {
 		# typically want ARGS_FORCE=allowed, this is the 'default' option when ARGS_FORCE
 		# is not specified (required to allow safe fallthrough when no args should be parsed)
 		#
-		false )
+		( false )
 			case $1 in
-				-[a-zA-Z0-9]* | --[a-zA-Z[0-9]* )
+				( -[a-zA-Z0-9]* | --[a-zA-Z[0-9]* )
 					;;
 
-				* )
+				( * )
 					((POSITIONAL_ARGS+=1))
 					PARSED=1
 					ARGS+=($1)
@@ -91,10 +91,10 @@ utils.parse.args.usage() {
 	[[ $USAGE__usage =~ args ]] && return 0
 
 	case $ARGS_FORCE in
-		allowed )
+		( allowed )
 			USAGE__usage+=' -- [...args...]'
 			;;
-		* )
+		( * )
 			USAGE__usage+=' [...args...]'
 			;;
 	esac

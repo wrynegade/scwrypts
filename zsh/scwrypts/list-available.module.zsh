@@ -36,7 +36,6 @@ ${scwryptsmodule}.default() {
 				   -type d -name .git \
 				-o -type d -name node_modules \
 				-o -type d -name __pycache__ \
-				-o -type d -path ./plugins \
 				-o -type d -path ./.config \
 				-o -type d -path ./.github \
 				-o -type d -path ./docs \
@@ -45,4 +44,14 @@ ${scwryptsmodule}.default() {
 			-print \
 		| sed "s/^\\.\\///; s/\\.[^.]*$//; s/^/${GROUP_TYPE}/" \
 		;
+}
+
+#####################################################################
+
+SCWRYPTS_GROUP_CONFIGURATION__scwrypts.list-available() {
+	# removing a couple of things which need to be ignored in the
+	# scwrypts group, but don't necessarily need to be omitted by
+	# the default list-available :)
+	scwrypts.list-available.default \
+		| grep -v '^\(plugins\|rs\)'
 }

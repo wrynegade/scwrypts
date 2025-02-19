@@ -39,12 +39,12 @@ MAIN() {
 	do
 		_S=1
 		case $1 in
-			--advanced-help )
+			( --advanced-help )
 				scwrypts.environment.update --help
 				return 0
 				;;
 
-			-m | --mode )
+			( -m | --mode )
 				[ $2 ] && ((_S+=1)) || echo.error "missing mode name" || break
 				case $2 in
 					edit | copy | delete | recursive | advanced )
@@ -54,13 +54,13 @@ MAIN() {
 				esac
 				;;
 
-			-n | --name )
+			( -n | --name )
 				[ $2 ] && ((_S+=1)) || echo.error "missing environment name" || break
 				ENVIRONMENT_NAME="$2"
 				;;
 
-			-- ) shift 1; ADVANCED_ARGS=($@); break ;;
-			 * ) echo.error "unknown argument '$1'" ;;
+			( -- ) shift 1; ADVANCED_ARGS=($@); break ;;
+			(  * ) echo.error "unknown argument '$1'" ;;
 		esac
 		shift $_S
 	done
@@ -68,21 +68,21 @@ MAIN() {
 	utils.check-errors --fail
 
 	case $MODE in
-		edit )
+		( edit )
 			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$SCWRYPTS_ENV"
 			;;
-		copy )
+		( copy )
 			local SOURCE_ENVIRONMENT="$(scwrypts.environment.common.get-env-names | utils.fzf 'select an environment to copy')"
 			[ "$SOURCE_ENVIRONMENT" ] || user.abort
 
-			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME=$(echo | FZF_USER_INPUT 'new environment name')
+			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME=$(echo | utils.fzf.user-input 'new environment name')
 			[ "$ENVIRONMENT_NAME" ] || user.abort
 			;;
-		delete )
+		( delete )
 			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$(scwrypts.environment.common.get-env-names | utils.fzf 'select an environment to delete')"
 			[ "$ENVIRONMENT_NAME" ] || user.abort
 			;;
-		advanced )
+		( advanced )
 			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$SCWRYPTS_ENV"
 	esac
 
@@ -92,50 +92,50 @@ MAIN() {
 		;
 
 	case $MODE in
-		edit )
+		( edit )
 			case $ENVIRONMENT_EXISTS in
-				true ) ;;
-				false )
+				( true ) ;;
+				( false )
 					echo.warning "environment $ENVIRONMENT_NAME does not exist"
 					Yn "create new environment '$ENVIRONMENT_NAME'?" || user.abort
 					;;
 			esac
 			;;
 
-		copy )
+		( copy )
 			ARGS+=(--create-from-existing "$SOURCE_ENVIRONMENT")
 			case $ENVIRONMENT_EXISTS in
-				true )
+				( true )
 					echo.error "target environment '$ENVIRONMENT_NAME' already exists; refusing to copy"
 					;;
-				false ) ;;
+				( false ) ;;
 			esac
 			;;
 
-		delete )
+		( delete )
 			ARGS+=(--mode delete)
 			case $ENVIRONMENT_EXISTS in
-				true )
+				( true )
 					echo.reminder 'deleting an environment is PERMANENT\nmake sure your credentials are backed up!'
 					yN "are you sure you want to delete '$ENVIRONMENT_NAME'?" || user.abort
 					;;
-				false )
+				( false )
 					echo.error "environment '$ENVIRONMENT_NAME' does not exist (can't delete it if it's not there)"
 					;;
 			esac
 			;;
 
-		recursive )
+		( recursive )
 			ARGS+=(--mode recursive)
 			case $ENVIRONMENT_EXISTS in
-				true ) ;;
-				false )
+				( true ) ;;
+				( false )
 					echo.error "environment '$ENVIRONMENT_NAME' does not exist; please create it before attempting recursive edit"
 					;;
 			esac
 			;;
 
-		advanced )
+		( advanced )
 			echo.warning "operating in advanced mode; I hope you know what you are doing!"
 			;;
 	esac

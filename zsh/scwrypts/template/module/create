@@ -2,9 +2,13 @@
 #####################################################################
 
 use scwrypts/template/module/create
+use scwrypts/template/zshparse
 
 #####################################################################
 
 scwrypts.template.module.create.parse.usage
+scwrypts.template.zshparse.include-help.usage
+
+#####################################################################
 
 MAIN() { scwrypts.template.module.create $@; }

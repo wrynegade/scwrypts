@@ -30,19 +30,15 @@ USAGE__description="
 
 MAIN() {
 	local MODE=single-variable
-	local VARIABLE_NAMES=()
+	local ARGS=() ARGS_FORCE=true
 
-	eval "$ZSHPARSEARGS"
+	eval "${ZSHPARSEARGS}"
 
 	case $MODE in
-		single-variable )
-			local VARIABLE_NAME
-			for VARIABLE_NAME in ${VARIABLE_NAMES[@]}
-			do
-				utils.environment.check $VARIABLE_NAME $@ --print-value
-			done
+		( single-variable )
+			utils.environment.check --print-value ${ARGS[@]}
 			;;
-		all )
+		( all )
 			scwrypts.environment.user.get-json
 			;;
 	esac
@@ -52,26 +48,22 @@ MAIN.parse() {
 	local PARSED=0
 
 	case $1 in
-		--all ) PARSED=1; MODE=all ;;
-		-*    ) ;;
-		*     ) PARSED=1; VARIABLE_NAMES+=($1) ;;
+		( --all ) PARSED=1; MODE=all ;;
 	esac
 
 	return $PARSED
 }
 
-MAIN.parse.usage() {
-}
 
 MAIN.parse.validate() {
 	case $MODE in
-		single-variable )
-			[[ ${#VARIABLE_NAMES[@]} -gt 0 ]] \
-				|| echo.error "missing variable / lookup path to check"
+		( single-variable )
+			[[ "${#ARGS[@]}" -eq 0 ]] \
+				&& echo.error "missing variable / lookup path to check"
 			;;
-		all )
-			[[ ${#VARIABLE_NAMES[@]} -eq 0 ]] \
-				|| echo.error "unexpected variable name with '--all' flag"
+		( all )
+			[[ "${#ARGS[@]}" -gt 0 ]] \
+				&& echo.error "unexpected variable name with '--all' flag"
 			;;
 	esac
 }

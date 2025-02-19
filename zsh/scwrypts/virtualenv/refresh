@@ -4,7 +4,6 @@ use scwrypts/virtualenv/delete
 #####################################################################
 
 USAGE__options='
-	-g, --group   name of group with specialized virtualenv (default "scwrypts")
 	-t, --type    type of virtual environment to refresh
 	'
 
@@ -23,15 +22,7 @@ MAIN() {
 	do
 		_S=1
 		case $1 in
-			-g | --group )
-				[ $2 ] && ((_S+=1)) \
-					|| echo.error "missing group name" \
-					|| break
-
-				ENV_GROUP="$2"
-				;;
-
-			-t | --type  )
+			( -t | --type  )
 				[ $2 ] && ((_S+=1)) \
 					|| echo.error "missing env type" \
 					|| break
@@ -41,8 +32,6 @@ MAIN() {
 		esac
 		shift $_S
 	done
-
-	[ $ENV_GROUP ] || ENV_GROUP=default
 
 	[ $ENV_TYPE ] || ENV_TYPE=$(\
 		echo ${SCWRYPTS_VIRTUALENV__AVAILABLE_VIRTUALENVS[@]} \
@@ -55,7 +44,7 @@ MAIN() {
 
 	##########################################
 	: \
-		&& DELETE_VIRTUALENV "$ENV_GROUP" "$ENV_TYPE" \
-		&& virtualenv.update "$ENV_GROUP" "$ENV_TYPE" \
+		&& scwrypts.virtualenv.delete "$ENV_TYPE" \
+		&& scwrypts.virtualenv.update "$ENV_TYPE" \
 		;
 }

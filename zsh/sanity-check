@@ -35,15 +35,15 @@ MAIN.parse() {
 	local PARSED=0
 
 	case $1 in
-		-e | --exit-code )
+		( -e | --exit-code )
 			PARSED=2
 			EXIT_CODE="$2"
 			;;
-		-f | --output-function )
+		( -f | --output-function )
 			PARSED=2
 			OUTPUT_FUNCTION="$2"
 			;;
-		-m | --message )
+		( -m | --message )
 			PARSED=2
 			MESSAGE="$2"
 			;;

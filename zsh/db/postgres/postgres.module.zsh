@@ -146,17 +146,17 @@ POSTGRES__SET_LOGIN_ARGS() {
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
-			-h | --host ) DB_HOST="$2"; shift 1 ;;
-			-p | --port ) DB_PORT="$2"; shift 1 ;;
-			-d | --name ) DB_NAME="$2"; shift 1 ;;
-			-U | --user ) DB_USER="$2"; shift 1 ;;
-			-P | --pass ) DB_PASS="$2"; shift 1 ;;
+			( -h | --host ) DB_HOST="$2"; shift 1 ;;
+			( -p | --port ) DB_PORT="$2"; shift 1 ;;
+			( -d | --name ) DB_NAME="$2"; shift 1 ;;
+			( -U | --user ) DB_USER="$2"; shift 1 ;;
+			( -P | --pass ) DB_PASS="$2"; shift 1 ;;
 
-			--file  ) PSQL_FILE="$2";  shift 1 ;;
+			( --file  ) PSQL_FILE="$2";  shift 1 ;;
 
-			--data-dir-prefix ) DATA_DIR_PREFIX="$2"; shift 1 ;;
+			( --data-dir-prefix ) DATA_DIR_PREFIX="$2"; shift 1 ;;
 
-			* ) PSQL_ARGS+=($1) ;;
+			( * ) PSQL_ARGS+=($1) ;;
 		esac
 		shift 1
 	done

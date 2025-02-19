@@ -22,6 +22,13 @@ utils.dependencies.check() {
 		return 1
 	}
 
+	command -v utils.wrapper.${DEPENDENCY} &>/dev/null && {
+		utils.wrapper.${DEPENDENCY} \
+			|| echo.error "failed to define required context wrapper for '$1'" \
+			|| return 1 \
+			;
+	}
+
 	[[ ${DEPENDENCY} =~ ^yq$ ]] && {
 		yq --version | grep -q mikefarah \
 			|| echo.warning 'detected kislyuk/yq but mikefarah/yq is preferred (compatibility may vary)'

@@ -10,7 +10,7 @@ ${scwryptsmodule}() {
 	local PARSED=0
 
 	case $1 in
-		-c | --cluster-name )
+		( -c | --cluster-name )
 			CLUSTER_NAME="$2"
 			((PARSED+=2))
 			;;

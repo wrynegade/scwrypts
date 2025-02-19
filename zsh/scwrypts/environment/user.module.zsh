@@ -95,7 +95,7 @@ ${scwryptsmodule}.zshparse.env-name() {
 	# local ENVIRONMENT_NAME
 	local PARSED=0
 	case $1 in
-		--environment-name )
+		( --environment-name )
 			PARSED=2
 			ENVIRONMENT_NAME=$2
 
@@ -126,9 +126,9 @@ ${scwryptsmodule}.get.helper() {
 	do
 		_S=1
 		case $1 in
-			--parent ) LOADING_ORIGINAL_ENV=false
+			( --parent ) LOADING_ORIGINAL_ENV=false
 				;;
-			* )
+			( * )
 				: \
 					&& [ ! $ENVIRONMENT_NAME ] \
 					|| echo.error "unknown argument '$1'" \
@@ -146,7 +146,7 @@ ${scwryptsmodule}.get.helper() {
 
 	[[ $LOADING_ORIGINAL_ENV =~ true ]] && {
 		case $SCWRYPTS_ENVIRONMENT__SHOW_ENV_HELP in
-			true )
+			( true )
 				echo "
 					#
 					# current scwrypts environment = $ENVIRONMENT_NAME
@@ -172,7 +172,7 @@ ${scwryptsmodule}.get.helper() {
 					---
 				"
 				;;
-			false )
+			( false )
 				echo "---  # current scwrypts environment = $ENVIRONMENT_NAME"
 				;;
 		esac | sed 's/\(^\s\+\|\s\+$\)//g; /^$/d'
@@ -259,16 +259,18 @@ _SCWRYPTS_ENVIRONMENT__CONVERT_SHELL_VALUES() {
 
 ${scwryptsmodule}.get-json.helper() {
 	local SHELL_VALUES="$(_SCWRYPTS_ENVIRONMENT__CONVERT_SHELL_VALUES $@)"
-	local LOOKUP_MAP="$(scwrypts.environment.template.get-envvar-lookup-map)"
+	local LOOKUP_MAP="$(scwrypts.environment.get-envvar-lookup-map)"
 	{
-		echo "$SHELL_VALUES"
+		echo "configuration:"
+		echo "${SHELL_VALUES}" | sed 's/^/  /'
 		local ENVIRONMENT_VARIABLE
+		echo "environment:"
 		for ENVIRONMENT_VARIABLE in $(\
 			scwrypts.environment.get-full-template \
 				| utils.yq '.. | select(has(".ENVIRONMENT")) | .".ENVIRONMENT"' \
 			)
 		do
-			echo "$ENVIRONMENT_VARIABLE: $(echo "$SHELL_VALUES" | utils.yq -r "$(echo "$LOOKUP_MAP" | utils.yq -r ".$ENVIRONMENT_VARIABLE")")"
+			echo "  ${ENVIRONMENT_VARIABLE}: $(echo "${SHELL_VALUES}" | utils.yq -r "$(echo "${LOOKUP_MAP}" | utils.yq -r ".${ENVIRONMENT_VARIABLE}")")"
 		done
 	} | utils.yq -oj
 }
