@@ -15,8 +15,6 @@ executors:
   python:
     docker:
       - image: cimg/python:3.11
-        environment:
-          SCWRYPTS_EXECUTABLE: ~/scwrypts/scwrypts
     resource_class: small
 
   nodejs:
@@ -228,6 +226,8 @@ jobs:
   python-test:
     executor: python
     working_directory: ~/scwrypts/py/lib
+    environment:
+      SCWRYPTS_EXECUTABLE: ${HOME}/scwrypts/scwrypts
     steps:
       - checkout:
           path: ~/scwrypts
