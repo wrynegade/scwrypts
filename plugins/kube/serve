@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-use kubectl --group kubectl
+use kubectl --group kube
 #####################################################################
 
 MAIN() {
@@ -12,7 +12,7 @@ MAIN() {
 	options:
 	  --context      override context
 	  --namespace    override namespace
-	  --subsession   REDIS subsession (default 0)
+	  --subsession   kube.redis subsession (default 0)
 
 	  to show a required password on screen, use both:
 	  --password-secret   Secret resource
@@ -45,5 +45,5 @@ MAIN() {
 
 	utils.check-errors --fail
 
-	KUBECTL__SERVE
+	kube.kubectl.serve
 }

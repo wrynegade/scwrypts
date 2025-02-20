@@ -11,8 +11,8 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 		return 1
 	}
 
-	which REDIS >/dev/null 2>&1 \
-		|| eval "$(scwrypts -n --name meta/get-static-redis-definition --type zsh --group kubectl)"
+	which kube.redis >/dev/null 2>&1 \
+		|| eval "$(scwrypts -n --name meta/get-static-redis-definition --type zsh --group kube)"
 
 	local CLI="$1"; shift 1
 
@@ -190,7 +190,7 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 
 _SCWRYPTS_KUBECTL_SETTINGS() {
 	# (get setting-name) or (set setting-name setting-value)
-	REDIS h$1 ${SCWRYPTS_ENV}:kubectl:settings ${@:2} | grep .
+	kube.redis h$1 ${SCWRYPTS_ENV}:kubectl:settings ${@:2} | grep .
 }
 
 #####################################################################

@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-use kubectl --group kubectl
+use kubectl --group kube
 #####################################################################
 
 MAIN() {
@@ -10,7 +10,7 @@ MAIN() {
 	  context   (optional) the full name of the kubeconfig context to set
 
 	options:
-	  --subsession   REDIS subsession (default 0)
+	  --subsession   kube.redis subsession (default 0)
 
 	  -h, --help   show this dialogue and exit
 	"
@@ -30,10 +30,10 @@ MAIN() {
 		shift 1
 	done
 
-	[ $CONTEXT ] || CONTEXT=$(KUBECTL__SELECT_CONTEXT)
+	[ $CONTEXT ] || CONTEXT=$(kube.kubectl.context.select)
 	[ $CONTEXT ] || echo.error 'must provide or select a valid kube context'
 
 	utils.check-errors --fail
 
-	KUBECTL__SET_CONTEXT $CONTEXT
+	kube.kubectl.context.set $CONTEXT
 }

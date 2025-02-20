@@ -23,16 +23,16 @@ SCWRYPTS_KUBECTL_CUSTOM_COMMAND_PARSE__meta() {
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
-			-h | --help ) HELP=1 ;;
+			( -h | --help ) HELP=1 ;;
 
-			set )
+			( set )
 				USAGE__usage+=" set"
 				USAGE__args="set (namespace|context)"
 				USAGE__description="interactively set a namespace or context for '$SCWRYPTS_ENV'"
 				case $2 in
-					namespace | context ) USER_ARGS+=($1 $2 $3); [ $3 ] && shift 1 ;;
-					-h | --help ) HELP=1 ;;
-					'' )
+					( namespace | context ) USER_ARGS+=($1 $2 $3); [ $3 ] && shift 1 ;;
+					( -h | --help ) HELP=1 ;;
+					( '' )
 						: \
 							&& SCWRYPTS_KUBECTL_CUSTOM_COMMAND__meta set context \
 							&& SCWRYPTS_KUBECTL_CUSTOM_COMMAND__meta set namespace \
@@ -40,40 +40,40 @@ SCWRYPTS_KUBECTL_CUSTOM_COMMAND_PARSE__meta() {
 						return $?
 						;;
 
-					* ) echo.error "cannot set '$2'" ;;
+					( * ) echo.error "cannot set '$2'" ;;
 				esac
 				shift 1
 				;;
 
-			get )
+			( get )
 				USAGE__usage+=" get"
 				USAGE__args="get (namespace|context|all)"
 				USAGE__description="output the current namespace or context for '$SCWRYPTS_ENV'"
 				case $2 in
-					namespace | context | all ) USER_ARGS+=($1 $2) ;;
+					( namespace | context | all ) USER_ARGS+=($1 $2) ;;
 
-					-h | --help ) HELP=1 ;;
+					( -h | --help ) HELP=1 ;;
 
-					* ) echo.error "cannot get '$2'" ;;
+					( * ) echo.error "cannot get '$2'" ;;
 				esac
 				shift 1
 				;;
 
-			copy )
+			( copy )
 				USAGE__usage+=" copy"
 				USAGE__args+="copy [0-9]"
 				USAGE__description="copy current subsession ($SUBSESSION) to target subsession id"
 				case $2 in
-					[0-9] ) USER_ARGS+=($1 $2) ;;
-					-h | --help ) HELP=1 ;;
-					* ) echo.error "target session must be a number [0-9]" ;;
+					( [0-9] ) USER_ARGS+=($1 $2) ;;
+					( -h | --help ) HELP=1 ;;
+					( * ) echo.error "target session must be a number [0-9]" ;;
 				esac
 				shift 1
 				;;
 
-			clear | show | hide | strict | loose ) USER_ARGS+=($1) ;;
+			( clear | show | hide | strict | loose ) USER_ARGS+=($1) ;;
 
-			* ) echo.error "no meta command '$1'"
+			( * ) echo.error "no meta command '$1'"
 		esac
 		shift 1
 	done
@@ -81,10 +81,10 @@ SCWRYPTS_KUBECTL_CUSTOM_COMMAND_PARSE__meta() {
 
 SCWRYPTS_KUBECTL_CUSTOM_COMMAND__meta() {
 	case $1 in
-		get )
+		( get )
 			[[ $2 =~ ^all$ ]] && {
-				local CONTEXT=$(REDIS get --prefix current:context | grep . || utils.colors.print bright-red "none set")
-				local NAMESPACE=$(REDIS get --prefix current:namespace | grep . || utils.colors.print bright-red "none set")
+				local CONTEXT=$(kube.redis get --prefix current:context | grep . || utils.colors.print bright-red "none set")
+				local NAMESPACE=$(kube.redis get --prefix current:namespace | grep . || utils.colors.print bright-red "none set")
 				echo "
 					environment : $SCWRYPTS_ENV
 					context     : $CONTEXT
@@ -97,44 +97,46 @@ SCWRYPTS_KUBECTL_CUSTOM_COMMAND__meta() {
 				return 0
 			}
 
-			REDIS get --prefix current:$2
+			kube.redis get --prefix current:$2
 			;;
 
-		set )
-			scwrypts -n --name set-$2 --type zsh --group kubectl -- $3 --subsession $SUBSESSION >/dev/null \
-				&& echo.success "$2 set"
+		( set )
+			: \
+				&& scwrypts -n --name set-$2 --type zsh --group kube -- $3 --subsession $SUBSESSION >/dev/null \
+				&& k $SUBSESSION meta get $2 \
+				;
 			;;
 
-		copy )
+		( copy )
 			: \
 				&& echo.status "copying $1 to $2" \
-				&& scwrypts -n --name set-context --type zsh --group kubectl -- --subsession $2 $(k meta get context | grep . || echo 'reset') \
-				&& scwrypts -n --name set-namespace --type zsh --group kubectl -- --subsession $2 $(k meta get namespace | grep . || echo 'reset') \
+				&& scwrypts -n --name set-context --type zsh --group kube -- --subsession $2 $(k $1 meta get context | grep . || echo 'reset') \
+				&& scwrypts -n --name set-namespace --type zsh --group kube -- --subsession $2 $(k $1 meta get namespace | grep . || echo 'reset') \
 				&& echo.success "subsession $1 copied to $2" \
 				;
 			;;
 
-		clear )
-			scwrypts -n --name set-context --type zsh --group kubectl -- --subsession $SUBSESSION reset >/dev/null \
+		( clear )
+			scwrypts -n --name set-context --type zsh --group kube -- --subsession $SUBSESSION reset >/dev/null \
 				&& echo.success "subsession $SUBSESSION reset to default"
 			;;
 
-		show )
+		( show )
 			_SCWRYPTS_KUBECTL_SETTINGS set context show >/dev/null \
 				&& echo.success "now showing full command context"
 			;;
 
-		hide )
+		( hide )
 			_SCWRYPTS_KUBECTL_SETTINGS set context hide >/dev/null \
 				&& echo.success "now hiding command context"
 			;;
 
-		loose )
+		( loose )
 			_SCWRYPTS_KUBECTL_SETTINGS set strict 0 >/dev/null \
 				&& echo.warning "now running in 'loose' mode"
 			;;
 
-		strict )
+		( strict )
 			_SCWRYPTS_KUBECTL_SETTINGS set strict 1 >/dev/null \
 				&& echo.success "now running in 'strict' mode"
 			;;

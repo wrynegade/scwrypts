@@ -11,7 +11,7 @@ utils.environment.check SCWRYPTS_KUBECTL_REDIS --default managed
 
 #####################################################################
 
-REDIS() {
+kube.redis() {
 	[ ! $USAGE ] && local USAGE="
 		usage: [...options...]
 
@@ -21,7 +21,7 @@ REDIS() {
 		  -p, --prefix   apply dynamic prefix to the next command line argument
 
 		  --get-prefix              output key prefix for current session+subsession
-		  --get-static-definition   output the static ZSH function definition for REDIS
+		  --get-static-definition   output the static ZSH function definition for kube.redis
 
 		  additional arguments and options are passed through to 'redis-cli'
 	"
@@ -36,14 +36,14 @@ REDIS() {
 	while [[ $# -gt 0 ]]
 	do
 		case $1 in
-			-p | --prefix ) USER_ARGS+=("${REDIS_PREFIX}${SCWRYPTS_ENV}:${SUBSESSION}:$2"); shift 1 ;;
+			( -p | --prefix ) USER_ARGS+=("${REDIS_PREFIX}${SCWRYPTS_ENV}:${SUBSESSION}:$2"); shift 1 ;;
 
-			--subsession            ) SUBSESSION=$2; shift 1 ;;
+			( --subsession            ) SUBSESSION=$2; shift 1 ;;
 
-			--get-prefix            ) echo $REDIS_PREFIX; return 0 ;;
-			--get-static-definition ) ECHO_STATIC_DEFINITION=1 ;;
+			( --get-prefix            ) echo $REDIS_PREFIX; return 0 ;;
+			( --get-static-definition ) ECHO_STATIC_DEFINITION=1 ;;
 
-			* ) USER_ARGS+=($1) ;;
+			( * ) USER_ARGS+=($1) ;;
 		esac
 		shift 1
 	done
@@ -59,14 +59,14 @@ REDIS() {
 	REDIS_ARGS+=(--raw)
 
 	[[ $ECHO_STATIC_DEFINITION -eq 1 ]] && {
-		echo "REDIS() {\
+		echo "kube.redis() {\
 			local USER_ARGS=(); \
 			[ ! \$SUBSESSION ] && local SUBSESSION=0 ;\
 			while [[ \$# -gt 0 ]]; \
 			do \
 				case \$1 in
-				-p | --prefix ) USER_ARGS+=(\"${REDIS_PREFIX}\${SCWRYPTS_ENV}:\${SUBSESSION}:\$2\"); shift 1 ;; \
-				* ) USER_ARGS+=(\$1) ;; \
+				( -p | --prefix ) USER_ARGS+=(\"${REDIS_PREFIX}\${SCWRYPTS_ENV}:\${SUBSESSION}:\$2\"); shift 1 ;; \
+				( * ) USER_ARGS+=(\$1) ;; \
 				esac; \
 				shift 1; \
 			done; \
@@ -78,7 +78,7 @@ REDIS() {
 	redis-cli ${REDIS_ARGS[@]} ${USER_ARGS[@]}
 }
 
-REDIS ping | grep -qi pong || {
+kube.redis ping 2>/dev/null | grep -qi pong || {
 	RPID=$(docker ps -a | grep scwrypts-kubectl-redis | awk '{print $1;}')
 	[ $RPID ] && echo.status 'refreshing redis instance' && docker rm -f $RPID
 	unset RPID
@@ -90,5 +90,5 @@ REDIS ping | grep -qi pong || {
 		redis >/dev/null 2>&1
 
 	echo.status 'awaiting redis connection'
-	until REDIS ping 2>/dev/null | grep -qi pong; do sleep 0.5; done
+	until kube.redis ping 2>/dev/null | grep -qi pong; do sleep 0.5; done
 }

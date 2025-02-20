@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
-use redis --group kubectl
+use kubectl --group kube
 #####################################################################
 
 MAIN() {
-	echo $(REDIS --get-static-definition)
+	kube.kubectl.namespace.get
 }

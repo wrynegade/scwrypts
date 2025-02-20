@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
-use kubectl --group kubectl
+use kubectl --group kube
 #####################################################################
 
 MAIN() {
-	KUBECTL__GET_CONTEXT
+	kube.kubectl.context.get
 }

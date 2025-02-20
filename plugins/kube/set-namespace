@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-use kubectl --group kubectl
+use kubectl --group kube
 #####################################################################
 
 MAIN() {
@@ -10,7 +10,7 @@ MAIN() {
 	  namespace   (optional) the full name of the namespace context to set
 
 	options:
-	  --subsession   REDIS subsession (default 0)
+	  --subsession   kube.redis subsession (default 0)
 
 	  -h, --help   show this dialogue and exit
 	"
@@ -32,10 +32,10 @@ MAIN() {
 		shift 1
 	done
 
-	[ $NAMESPACE ] || NAMESPACE=$(KUBECTL__SELECT_NAMESPACE)
+	[ $NAMESPACE ] || NAMESPACE=$(kube.kubectl.namespace.select)
 	[ $NAMESPACE ] || echo.error 'must provide or select a valid namespace'
 
 	utils.check-errors --fail
 
-	KUBECTL__SET_NAMESPACE $NAMESPACE
+	kube.kubectl.namespace.set $NAMESPACE
 }

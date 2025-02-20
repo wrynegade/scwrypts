@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
-use kubectl --group kubectl
+use redis --group kube
 #####################################################################
 
 MAIN() {
-	KUBECTL__GET_NAMESPACE
+	echo $(kube.redis --get-static-definition)
 }
