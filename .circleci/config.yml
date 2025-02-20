@@ -250,8 +250,6 @@ jobs:
   zsh-test:
     executor: zsh
     working_directory: ~/scwrypts
-    environment:
-      ZSHPARSE_USE_CACHE: false
     steps:
       - checkout:
           path: ~/scwrypts
