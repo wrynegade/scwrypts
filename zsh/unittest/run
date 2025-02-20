@@ -3,8 +3,6 @@
 
 use scwrypts/meta
 
-export ZSHPARSE_USE_CACHE=false
-
 #####################################################################
 
 USAGE__description="

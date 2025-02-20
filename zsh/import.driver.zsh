@@ -35,6 +35,11 @@ command -v use use.is-loaded use.get-library-root &>/dev/null && return 0
 #                                                                   #
  ###################################################################
 
+
+# I have no idea why, but CircleCI obliterates this env var in particular
+# every time. Just going to force it like this for now
+[ $CIRCLECI ] && export ZSHIMPORT_USE_CACHE=false
+
 [ ${ZSHIMPORT_USE_CACHE} ] || export ZSHIMPORT_USE_CACHE=true
 
 [[ ${ZSHIMPORT_USE_CACHE} =~ true ]] && {
