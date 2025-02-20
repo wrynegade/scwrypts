@@ -226,8 +226,6 @@ jobs:
   python-test:
     executor: python
     working_directory: ~/scwrypts/py/lib
-    environment:
-      SCWRYPTS_EXECUTABLE: ${HOME}/scwrypts/scwrypts
     steps:
       - checkout:
           path: ~/scwrypts
@@ -252,6 +250,8 @@ jobs:
   zsh-test:
     executor: zsh
     working_directory: ~/scwrypts
+    environment:
+      ZSHPARSE_USE_CACHE: false
     steps:
       - checkout:
           path: ~/scwrypts
