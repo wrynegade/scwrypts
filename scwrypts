@@ -352,7 +352,7 @@ use scwrypts/get-runstring
 				[[ ${ENV_NAME} =~ ${REQUIRED_REGEX} ]] || continue
 			}
 
-			for f in $(eval echo '$SCWRYPTS_STATIC_CONFIG__'${GROUP})
+			for f in $(find "$(scwrypts.config.group ${GROUP} root)/.config/static" -type f 2>/dev/null)
 			do
 				source "${f}" || utils.fail 5 "invalid static config '${f}'"
 			done
