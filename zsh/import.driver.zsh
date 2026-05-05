@@ -251,8 +251,7 @@ use.compute-scwrypts-library-hash() {
 	LC_ALL=POSIX find "${SCWRYPTS_LIBRARY_ROOT}" -type f -name \*.module.zsh -print0 \
 		| sort -z \
 		| xargs -0 sha1sum \
-		| sha1sum \
-		| awk '{print $1;}' \
+		| utils.sha1sum \
 		;
 }
 

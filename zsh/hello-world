@@ -2,5 +2,5 @@
 #####################################################################
 
 MAIN() {
-	echo.success 'Hello, World!'
+	echo.success 'Hello, World!' --force-print
 }

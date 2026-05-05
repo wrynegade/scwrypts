@@ -68,16 +68,16 @@ utils.parse.autosetup() {
 	do
 		command -v ${P}.locals &>/dev/null || continue
 		which ${P}.locals | sed '1d; $d;'
-
-		[[ ${DEBUG} =~ true ]] \
-			&& echo.debug --force-print "utils.autosetup : parser ${P} locals\n$(which ${P}.locals | sed 's/^/ /; 1d; $d;')"
-	done | sed 's^\s*local \([A-Z0-9a-z_]*\)\(=\(.*\)\)*$[ "$\1" ] || local \1=\3'
+	done | sed 's|$| >/dev/null|'
 
 	usage.reset
 
 	echo "local USAGE__description=$(printf "%q " "${DESCRIPTION}")"
 	echo "local USAGE__usage=${funcstack[2]}"
 	echo "local ERRORS=0"
+	echo "local WARNINGS=0"
+	echo "local DEBUG_ARGS=()"
+	echo "local TRACE_ARGS=()"
 	echo "local POSITIONAL_ARGS=0"
 
 	echo '

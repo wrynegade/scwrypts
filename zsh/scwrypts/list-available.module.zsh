@@ -12,7 +12,7 @@ ${scwryptsmodule}() {
 		GROUP_TYPE=$(scwrypts.config.group ${GROUP} type)
 		[ ${GROUP_TYPE} ] && MINDEPTH=1 && GROUP_TYPE="${GROUP_TYPE}\\/" || MINDEPTH=2
 
-		command -v SCWRYPTS_GROUP_CONFIGURATION__${GROUP}.list-available >/dev/null 2>&1 \
+		command -v SCWRYPTS_GROUP_CONFIGURATION__${GROUP}.list-available &>/dev/null \
 			&& LOOKUP=SCWRYPTS_GROUP_CONFIGURATION__${GROUP}.list-available \
 			|| LOOKUP=scwrypts.list-available.default \
 			;

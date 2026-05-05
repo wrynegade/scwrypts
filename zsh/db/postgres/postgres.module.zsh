@@ -94,7 +94,7 @@ PG_RESTORE() {
 			make sure your database is ready to accept the database file!
 		"
 
-		yN 'continue?' || user.abort
+		yN 'continue?' || echo.error.user-abort || return 1
 
 		PSQL < "$INPUT_FILE"
 		EXIT_CODE=$?

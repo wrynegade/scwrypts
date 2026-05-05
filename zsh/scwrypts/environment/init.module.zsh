@@ -70,7 +70,7 @@ scwrypts.environment.legacy.convert() {
 		echo.status "checking '${ENVIRONMENT_NAME}' configuration files"
 		for GROUP in ${SCWRYPTS_GROUPS[@]}
 		do
-			GROUP_CONFIG_FILENAME="$(scwrypts.environment.common.get-env-filename "${ENVIRONMENT_NAME}" "${GROUP}")"
+			GROUP_CONFIG_FILENAME="$(scwrypts.environment.common.get-env-file "${ENVIRONMENT_NAME}" "${GROUP}")"
 			LEGACY_CONFIG_FILENAME="${SCWRYPTS_ENV_PATH}/${GROUP}/${ENVIRONMENT_NAME}"
 
 			[ ! -f "${GROUP_CONFIG_FILENAME}" ] && [ -f "${LEGACY_CONFIG_FILENAME}" ] && {
@@ -120,7 +120,7 @@ scwrypts.environment.legacy.convert.v4-to-v5.config-file() {
 	local ENV_VAR NEW_TEMPLATE_KEY NEW_TEMPLATE="$(scwrypts.environment.get-full-template --reset-cache)"
 	for ENV_VAR in $(echo "${LEGACY_CONFIG_VALUES}" | utils.yq -r 'keys | .[]')
 	do
-		NEW_TEMPLATE_KEY=$(scwrypts.environment.template.get-envvar-lookup-map | utils.yq -r ".${ENV_VAR}")
+		NEW_TEMPLATE_KEY="$(scwrypts.environment.template.get-envvar-lookup-map | utils.yq -r ".${ENV_VAR}").value"
 		NEW_TEMPLATE_VALUE="$(echo "${LEGACY_CONFIG_VALUES}" | utils.yq -r ".${ENV_VAR}")"
 		echo "${NEW_TEMPLATE_VALUE}" | grep -q '^[[].*[]]$' \
 			|| NEW_TEMPLATE_VALUE="\"${NEW_TEMPLATE_VALUE}\""

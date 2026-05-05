@@ -6,7 +6,7 @@ use unittest/operations
 
 ${scwryptsmodule}() {
 	local ERRORS=0 TEST_ERRORS=0
-	[ "$SCWRYPTS_LOG_LEVEL" ] || SCWRYPTS_LOG_LEVEL=4
+	[[ "$SCWRYPTS_LOG_LEVEL" ]] || local SCWRYPTS_LOG_LEVEL=4
 
 	local UNITTESTS=($(echo "${(k)functions}" | sed 's/ /\n/g' | grep '^test\.' | sort))
 	[[ ${#UNITTESTS[@]} -gt 0 ]] \

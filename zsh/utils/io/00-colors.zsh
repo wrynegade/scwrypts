@@ -22,15 +22,10 @@ utils.colors.remove() { sed 's/\x1b\[[0-9;]*m//g'; }
 #####################################################################
 
 utils.colors.print() {  # print color + message + color-reset sequence
-	local COLOR="$1"
-	local MESSAGE="${@:2}"
+	local color="${1}"
+	local message="${@:2}"
 
-	command -v utils.colors.${COLOR} &>/dev/null || {
-		printf "${MESSAGE}"
-		return
-	}
-
-	printf "$(utils.colors.${COLOR})${MESSAGE}$(utils.colors.reset)"
+	printf "%s" "$(utils.colors.${color} 2>/dev/null)${message}$(utils.colors.reset)"
 }
 
 #####################################################################

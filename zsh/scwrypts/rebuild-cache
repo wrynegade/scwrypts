@@ -30,7 +30,7 @@ MAIN() {
 		( 0 ) ARGS=(${SCWRYPTS_GROUPS[@]}) ;;
 	esac
 
-	local GROUP GROUP_ROOT GROUP_TYPE GROUP_MODULES GROUP_MODULE CACHE_DIR 
+	local GROUP GROUP_ROOT GROUP_TYPE GROUP_MODULES GROUP_MODULE CACHE_DIR
 	for GROUP in ${ARGS[@]}
 	do
 		GROUP_ROOT="$(scwrypts.config.group ${GROUP} zshlibrary)"
@@ -83,7 +83,7 @@ MAIN.parse() {}
 MAIN.parse.validate() {
 	[[ ${ZSHIMPORT_USE_CACHE} =~ true ]] \
 		|| echo.error "ZSHIMPORT_USE_CACHE is set to 'false' so I cannot rebuild the cache"
-	
+
 	[ "${ZSHIMPORT_CACHE_DIR}" ] && [ -d "${ZSHIMPORT_CACHE_DIR}" ] \
 		|| echo.error "I cannot find the ZSHIMPORT_CACHE_DIR '${ZSHIMPORT_CACHE_DIR}'"
 }

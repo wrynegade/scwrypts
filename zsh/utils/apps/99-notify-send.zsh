@@ -1,13 +1,13 @@
 utils.notify-send() {
-	utils.dependencies.check notify-send &>/dev/null || {
-		echo.warning "missing 'notify-send'; cannot send desktop notifications"
+	utils.dependencies.check notify-send --optional &>/dev/null || {
+		echo.warning "cannot send desktop notifications"
 		utils.notify-send() { true; }
 		return 0
 	}
 
 	[ "${SCWRYPT_GROUP}" ] && [ "${SCWRYPT_NAME}" ] \
-		&& local TITLE="scwrypts/${SCWRYPT_GROUP} ${SCWRYPT_NAME}" \
-		|| local TITLE="zsh"
+		&& local title="scwrypts/${SCWRYPT_GROUP} ${SCWRYPT_NAME}" \
+		|| local title="zsh"
 
-	notify-send "${TITLE}" $@
+	notify-send "${title}" "${@}"
 }
