@@ -1,0 +1,63 @@
+#!/usr/bin/env zsh
+#####################################################################
+
+USAGE__description='
+	resets the persistent state cache
+'
+
+USAGE__args='
+	--dry-run   preview the cache files which would be dropped
+'
+
+#####################################################################
+
+MAIN() {
+	eval "$(utils.parse.autosetup)"
+
+	case "${mode}" in
+		( default )
+			zsh-cache.reset.persistent
+			;;
+
+		( dry-run )
+			[[ -d "${SCWRYPTS_CACHE_PATH__persistent}" ]] || {
+				echo.reminder "[dry-run] cache folder does not exist: ${SCWRYPTS_CACHE_PATH__persistent}"
+				return 0
+			}
+
+			echo.reminder "[dry-run] would clear folder ${SCWRYPTS_CACHE_PATH__persistent}
+				contents:
+				$(
+					cd -- "${SCWRYPTS_CACHE_PATH__persistent}"
+					find . -type f | sed 's|^\./|- |' | grep . || echo "$(utils.colors.red)<folder is empty>$(echo.reminder.color)"
+				)"
+			;;
+	esac
+}
+
+#####################################################################
+
+MAIN.parse.locals() {
+	local mode=default
+	local mode_args=()
+}
+
+MAIN.parse() {
+	local p=0
+
+	case "${1}" in
+		( --dry-run ) p=1; mode="${1/--}"; mode_args+=("${1}") ;;
+	esac
+
+	return "${p}"
+}
+
+MAIN.parse.validate() {
+	case "${mode}" in
+		( default | dry-run ) ;;
+		( * ) echo.error "invalid operation mode '${mode}'"
+	esac
+
+	[[ "${#mode_args[@]}" -le 1 ]] \
+		|| echo.error "incompatible arguments '${mode_args[@]}'"
+}

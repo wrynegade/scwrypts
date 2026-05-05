@@ -1,3 +1,5 @@
+DEPENDENCIES+=(readlink envsubst)
+
 ${scwryptsmodule}() {
 	#
 	# returns the fully-qualified path from a user-specified, relative reference
@@ -5,13 +7,20 @@ ${scwryptsmodule}() {
 	#
 	# also uses 'readlink --canonicalize' to read through symlinks to the realpath
 	#
+	local DEBUG_ARGS=() TRACE_ARGS=(-v path_0_raw -v path_1_evaluated -v path_2_target)
 
-	[ "$1" ] || return 1
+	local path_0_raw="${1}"
+	local path_1_evaluated="$(echo "${1}" | envsubst)"
+	local path_2_target="$(
+		case "${path_1_evaluated}" in
+			( /* | ~/* ) echo "${path_1_evaluated}" ;;
+			( * ) echo "${EXECUTION_DIR}/${path_1_evaluated}" ;;
+		esac
+	)"
 
-	[[ ! $1 =~ ^[/~] ]] \
-		&& echo $(readlink --canonicalize -- "${EXECUTION_DIR}/$1") \
-		|| echo "$1" \
-		;
+	echo.trace
 
-	return 0
+	[[ "${path_2_target}" ]] || return 1
+
+	readlink --canonicalize -- "${path_2_target}"
 }

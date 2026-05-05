@@ -1,64 +1,130 @@
 utils.dependencies.check-all() {
-	local DEP ERRORS=0
-	local SCWRYPTS_LOG_LEVEL=1
-	[ ! ${E} ] && E=echo.error
+	local ERRORS=0
+	[[ "${SCWRYPTS_LOG_LEVEL}" ]] || local SCWRYPTS_LOG_LEVEL=1
 
-	DEPENDENCIES=($(echo ${DEPENDENCIES} | sed 's/ \+/\n/g' | sort -u))
+	DEPENDENCIES+=(sed awk grep find readlink)
+	DEPENDENCIES=($(echo ${DEPENDENCIES[@]} | sed 's/ \+/\n/g' | sort -u))
 
-	for DEP in ${DEPENDENCIES[@]}; do utils.dependencies.check ${DEP} || ((ERRORS+=1)); done
-	utils.dependencies.check-coreutils || ((ERRORS+=$?))
+	local dependency
+	for dependency in ${DEPENDENCIES[@]}
+	do
+		utils.dependencies.check "${dependency}" || ((ERRORS+=1))
+	done
 
 	return ${ERRORS}
 }
 
 utils.dependencies.check() {
-	local DEPENDENCY="$1"
-	[ ! ${DEPENDENCY} ] && return 1
-	command -v ${DEPENDENCY} >/dev/null 2>&1 || {
-		[[ ${OPTIONAL} -eq 1 ]] \
-			&& echo.warning "application '$1' preferred but not available on PATH $(utils.dependencies.credits $1)" \
-			|| echo.error   "application '$1' required but not available on PATH $(utils.dependencies.credits $1)" \
-			;
+	local ERRORS=0
+
+	local dependency
+	local dependency_default_args=()
+	local dependency_required=true
+
+	local _s _p
+	while [[ "${#}" -gt 0 ]]
+	do
+		_s=1
+		case "${1}" in
+			( --optional ) dependency_required=false ;;
+			( * )
+				case $((_p+=1)) in
+					( 1 ) dependency="${1}" ;;
+					( * ) dependency_default_args+=("${1}") ;;
+				esac
+		esac
+		shift ${_s} || echo.error "missing required argument for '${1}'" || shift "${#}"
+	done
+	unset _s _p
+
+	[[ "${dependency}" ]] || echo.error 'no dependency specified'
+
+	[[ "${ERRORS}" -eq 0 ]] || return "${ERRORS}"
+
+	##########################################
+
+	local executable_path="$(command -v "${dependency}" 2>/dev/null)"
+	[[ "${executable_path}" ]] || {
+		case "${dependency_required}" in
+			( true  ) echo.error   "application '${dependency}' required but not available on PATH" ;;
+			( false ) echo.warning "application '${dependency}' preferred but not available on PATH" ;;
+		esac
+
+		local credits="$(utils.dependencies.credits "${dependency}")"
+		[[ "${credits}" ]] && echo.reminder "${credits}"
+
 		return 1
 	}
-
-	command -v utils.wrapper.${DEPENDENCY} &>/dev/null && {
-		utils.wrapper.${DEPENDENCY} \
-			|| echo.error "failed to define required context wrapper for '$1'" \
-			|| return 1 \
-			;
+	[[ "${dependency}" =~ "^${executable_path}$" ]] && {
+		# echo "built-in '${dependency}' cannot be wrapped for safety" >&2
+		return 0
 	}
 
-	[[ ${DEPENDENCY} =~ ^yq$ ]] && {
-		yq --version | grep -q mikefarah \
-			|| echo.warning 'detected kislyuk/yq but mikefarah/yq is preferred (compatibility may vary)'
-	}
+	local automatic_trace=true
+	local extra_eval_statements=''
 
-	return 0
-}
+	case "${dependency}" in
+		( yq )
+			yq --version | grep -q mikefarah \
+				|| echo.warning 'detected kislyuk/yq but mikefarah/yq is required'
+			;;
 
-utils.dependencies.check-coreutils() {
-	local COREUTILS=(awk find grep sed readlink)
-	local MISSING_DEPENDENCY_COUNT=0
-	local NON_GNU_DEPENDENCY_COUNT=0
+		( awk | sed | grep | find | readlink )
+			automatic_trace=false
+			"${executable_path}" --version 2>&1 | grep 'GNU' | grep -qv 'BSD' || {
+				executable_path="$(command -v g${dependency})"
+				[[ "${executable_path}" ]] \
+					|| echo.error "unable to locate GNU ${dependency}; if you're on MacOS you may need to install the appropriate gnu-${dependency} package"
+			}
+			;;
 
-	local UTIL
-	for UTIL in $(echo ${COREUTILS})
-	do
-		utils.dependencies.check ${UTIL} || { ((MISSING_DEPENDENCY_COUNT+=1)); continue; }
+		( gawk | gsed | ggrep | gfind | greadlink )
+			echo.error "do not use MacOS / BSD shadows for utilities which require GNU (use ${dependency/g/} instead)"
+			;;
 
-		${UTIL} --version 2>&1 | grep 'GNU' | grep -qv 'BSD' || {
-			echo.warning "non-GNU version of ${UTIL} detected"
-			((NON_GNU_DEPENDENCY_COUNT+=1))
-		}
-	done
+		( aws | eksctl )
+			extra_eval_statements+="
+				echo.warning  'use of ${dependency} directly is highly discouraged; utilize appropriate module instead'
+			"
+			case "${dependency}" in
+				( aws ) extra_eval_statements+="echo.reminder 'use cloud/aws/cli : cloud.aws.cli'" ;;
+				( *   ) extra_eval_statements+="echo.reminder 'use cloud/aws/${dependency} : cloud.aws.${dependency}'" ;;
+			esac
+			;;
+	esac || return "${ERRORS}"
 
-	[[ ${NON_GNU_DEPENDENCY_COUNT} -gt 0 ]] && {
-		echo.warning 'scripts rely on GNU coreutils; compatibility may vary'
-		utils.os.is-macos && echo.reminder 'GNU coreutils can be installed and linked through Homebrew'
-	}
+	eval "${dependency}() {
+		local DEBUG_ARGS=() TRACE_ARGS=() ERRORS=0 WARNINGS=0
+		local default_args=(${(q)dependency_default_args[@]})
+		local print_trace=${automatic_trace}
+		local args=()
 
-	return ${MISSING_DEPENDENCY_COUNT}
+		while [[ \${#} -gt 0 ]]
+		do
+			case \${1} in
+				( --omit-default-args )
+					default_args=()
+					;;
+
+				( --no-scwrypts-trace )
+					print_trace=false
+					;;
+
+				( --force-scwrypts-trace )
+					print_trace=true
+					;;
+
+				( * ) args+=(\"\${1}\") ;;
+			esac
+			shift 1
+		done
+
+		[[ \"\${print_trace}\" =~ true ]] && echo.trace \"${(q-)executable_path} \${(q-)default_args[@]} \${(q-)args[@]}\"
+
+		${extra_eval_statements}
+
+		'${executable_path}' \"\${default_args[@]}\" \"\${args[@]}\"
+	}"
 }
 
 utils.dependencies.credits() {

@@ -1,6 +1,6 @@
 [[ $SCWRYPTS_KUBECTL_DRIVER_READY -eq 1 ]] && return 0
 
-unalias k h f >/dev/null 2>&1
+unalias k h f &>/dev/null
 k() { _SCWRYPTS_KUBECTL_DRIVER kubectl $@; }
 h() { _SCWRYPTS_KUBECTL_DRIVER helm $@; }
 f() { _SCWRYPTS_KUBECTL_DRIVER flux $@; }
@@ -11,7 +11,7 @@ _SCWRYPTS_KUBECTL_DRIVER() {
 		return 1
 	}
 
-	which kube.redis >/dev/null 2>&1 \
+	which kube.redis &>/dev/null \
 		|| eval "$(scwrypts -n --name meta/get-static-redis-definition --type zsh --group kube)"
 
 	local CLI="$1"; shift 1

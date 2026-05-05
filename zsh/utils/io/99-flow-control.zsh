@@ -1,12 +1,19 @@
 #####################################################################
 
 utils.fail()  {  # displays a crash error and exit
+	echo.warning "utils.fail emits an 'exit' code which may unexpectedly terminate the entire scwrypts process"
+	echo.warning "deprecation warning: ${0} will be removed in scwrypts v5.3+"
 	echo.error --force-print ${@:2}
 	exit $1
 }
 
 utils.abort() {  # for consistency; use after user aborts REQUIRED input
+	echo.warning "deprecation warning: this will be removed in scwrypts v5.3+"
 	utils.fail 69 'user abort'
+}
+
+echo.user-abort() {
+	echo.error 'user abort' "${@}"
 }
 
 #####################################################################

@@ -1,8 +1,15 @@
-utils.yq() {
-	yq --version | grep -q mikefarah || {
-		yq $@  # this is a different version from the preferred but throwing this in for compatibility
-		return $?
-	}
+yq --version | grep -q mikefarah && {
+	utils.yq() { yq eval '... comments=""' | yq "${@}"; }
+} || {
+	echo.warning '
+	The utils.yq helper expects mikefarah/yq, but you appear to have kislyuk/yq or another flavor.
+	Compatibility may vary.
+	'
 
-	yq eval '... comments=""' | yq $@
+	utils.yq() { yq "${@}"; }
 }
+
+utils.yq.combine-files() { utils.yq \
+	| utils.yq eval-all '. as $item ireduce ({}; . * $item)' \
+	| utils.yq 'sort_keys(..)' \
+; }

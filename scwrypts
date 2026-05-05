@@ -7,13 +7,18 @@ use scwrypts/environment
 use scwrypts/list-available
 use scwrypts/get-runstring
 
+[[ "${SCWRYPTS_TEMP_PATH}" ]] && [[ -d "${SCWRYPTS_TEMP_PATH}" ]] \
+	&& EXIT_CODE_FILE="${SCWRYPTS_TEMP_PATH}/exit-code" \
+	|| EXIT_CODE_FILE="$(mktemp)" \
+	;
+
 #####################################################################
 () {
 	cd "$(scwrypts.config.group scwrypts root)"
-	GIT_SCWRYPTS() { git -C "$(scwrypts.config.group scwrypts root)" $@; }
+	git.scwrypts() { git -C "$(scwrypts.config.group scwrypts root)" "${@}"; }
 
 	local ERRORS=0
-	local USAGE='
+	local USAGE="
 		usage: scwrypts [...options...] [...patterns...] -- [...script options...]
 
 		options:
@@ -27,22 +32,23 @@ use scwrypts/get-runstring
 		    -y, --yes              auto-accept all [yn] prompts through current scwrypt
 		    -e, --env <env-name>   set environment; overwrites SCWRYPTS_ENV
 
-		    -n                      shorthand for "--log-level 0"
-		    -v, --log-level <0-4>   set incremental scwrypts log level to one of the following:
+		    -n                      shorthand for \"--log-level 0\"
+		    -v, --log-level <0-5>   set incremental scwrypts log level to one of the following:
 		                              0 : only command output and critical failures; skips logfile
-		                              1 : include success / failure messages
-		                              2 : include status update messages
-		                              3 : (default) include warning messages
+		                              1 : include error messages
+		                              2 : include warnings
+		                              3 : (default) include success, status, and user information
 		                              4 : include debug messages
+		                              5 : include trace
 
-		     -o, --output <format>   specify output format; one of: pretty,json (default: pretty)
+		     -o, --output <format>   specify output format; one of: pretty,json,raw,logfmt (default: pretty)
 
 		  alternate commands
 		    -h, --help          display this message and exit
 		    -l, --list          print out command list and exit
 		        --list-envs     print out environment list and exit
 		        --list-groups   print out configured scwrypts groups and exit
-		        --config        "eval"-ed to enable config and "use" import in non-scwrypts environments
+		        --config        \"eval\"-ed to enable config and \"use\" import in non-scwrypts environments
 		        --root          print out scwrypts.config.group.scwrypts.root and exit
 		        --update        update scwrypts library to latest version
 		        --version       print out scwrypts version and exit
@@ -51,29 +57,40 @@ use scwrypts/get-runstring
 		  - a list of glob patterns to loose-match a scwrypt by name
 
 		script options:
-		  - everything after "--" is forwarded to the scwrypt you run
-		    ("-- --help" will provide more information)
-	'
+		  - everything after \"--\" is forwarded to the scwrypt you run
+		    (\"-- --help\" will provide more information)
+	"
 
 	#####################################################################
 	### cli argument parsing and global configuration ###################
 	#####################################################################
 
-	local ENV_NAME="${SCWRYPTS_ENV}"
-	local SEARCH_PATTERNS=()
+	local target_scwrypts_env="${SCWRYPTS_ENV}"
+	local search_patterns=()
 
-	local VARSPLIT SEARCH_GROUP SEARCH_TYPE SEARCH_NAME
+	local search_group search_type search_name
 
-	[ ! ${SCWRYPTS_LOG_LEVEL} ] && local SCWRYPTS_LOG_LEVEL=3
+	[[ "${SCWRYPTS_LOG_LEVEL}" ]] || local SCWRYPTS_LOG_LEVEL=3
 
-	local SHIFT_COUNT
+	local _s
 	while [[ $# -gt 0 ]]
 	do
-		SHIFT_COUNT=1
+		_s=1
 		case $1 in
 			( -[a-z][a-z]* )
-				VARSPLIT=$(echo "$1 " | sed 's/^\(-.\)\(.*\) /\1 -\2/')
-				set -- throw-away $(echo " ${VARSPLIT} ") ${@:2}
+				local varsplit_first="${1:0:2}" varsplit_remaining="-${1:2}"
+				shift 1
+				set -- "${varsplit_first}" "${varsplit_remaining}" "${@}"
+				unset varsplit_first varsplit_remaining
+				_s=0
+				;;
+
+			( --*=* )
+				local varsplit_first="${1%%=*}" varsplit_remaining="${1#*=}"
+				shift 1
+				set -- "${varsplit_first}" "${varsplit_remaining}" "${@}"
+				unset varsplit_first varsplit_remaining
+				_s=0
 				;;
 
 			### alternate commands ###################
@@ -99,8 +116,8 @@ use scwrypts/get-runstring
 				;;
 
 			( --version )
-				case ${SCWRYPTS_INSTALLATION_TYPE} in
-					( manual ) echo "scwrypts $(GIT_SCWRYPTS describe --tags) (via GIT)" ;;
+				case "${SCWRYPTS_INSTALLATION_TYPE}" in
+					( manual ) echo "scwrypts $(git.scwrypts describe --tags) (via GIT)" ;;
 					( *      ) echo "scwrypts $(cat "$(scwrypts.config.group scwrypts root)/VERSION")" ;;
 				esac
 				return 0
@@ -119,34 +136,34 @@ use scwrypts/get-runstring
 				;;
 
 			( --update )
-				case ${SCWRYPTS_INSTALLATION_TYPE} in
-					aur )
+				case "${SCWRYPTS_INSTALLATION_TYPE}" in
+					( aur )
 						echo.reminder --force-print "
 							This installation is built from the AUR. Update through 'makepkg' or use
 							your preferred AUR package management tool (e.g. 'yay -Syu scwrypts')
 							 "
 						;;
 
-					homebrew )
+					( homebrew )
 						echo.reminder --force-print "This installation is managed by homebrew. Update me with 'brew update'"
 						;;
 
-					manual )
-						GIT_SCWRYPTS fetch --quiet origin main
-						GIT_SCWRYPTS fetch --quiet origin main --tags
-						local SYNC_STATUS=$?
+					( manual )
+						git.scwrypts fetch --quiet origin main
+						git.scwrypts fetch --quiet origin main --tags
+						local sync_status="${?}"
 
-						GIT_SCWRYPTS diff --exit-code origin/main -- . >/dev/null 2>&1
-						local DIFF_STATUS=$?
+						git.scwrypts diff --exit-code origin/main -- . &>/dev/null
+						local diff_status="${?}"
 
-						[[ ${SYNC_STATUS} -eq 0 ]] && [[ ${DIFF_STATUS} -eq 0 ]] && {
+						[[ "${sync_status}" -eq 0 ]] && [[ "${diff_status}" -eq 0 ]] && {
 							echo.success 'already up-to-date with origin/main'
 						} || {
-							GIT_SCWRYPTS rebase --autostash origin/main \
+							git.scwrypts rebase --autostash origin/main \
 								&& echo.success 'up-to-date with origin/main' \
-								&& GIT_SCWRYPTS log -n1 \
+								&& git.scwrypts log -n1 \
 								|| {
-									GIT_SCWRYPTS rebase --abort
+									git.scwrypts rebase --abort
 									echo.error 'unable to update scwrypts; please try manual upgrade'
 									echo.reminder "installation in '$(scwrypts.config.group scwrypts root)'"
 								}
@@ -165,25 +182,9 @@ use scwrypts/get-runstring
 
 			### scwrypts filters #####################
 
-			( -m | --name )
-				((SHIFT_COUNT+=1))
-				[ $2 ] || { echo.error "missing value for argument $1"; break; }
-				SEARCH_NAME=$2
-				;;
-
-			( -g | --group )
-				((SHIFT_COUNT+=1))
-				[ $2 ] || { echo.error "missing value for argument $1"; break; }
-				SEARCH_GROUP=$2
-				GROUP=$2
-				;;
-
-			( -t | --type )
-				((SHIFT_COUNT+=1))
-				[ $2 ] || { echo.error "missing value for argument $1"; break; }
-				SEARCH_TYPE=$2
-				TYPE=$2
-				;;
+			( -m | --name  ) _s=2; search_name=$2            ;;
+			( -g | --group ) _s=2; search_group=$2; GROUP=$2 ;;
+			( -t | --type  ) _s=2; search_type=$2;  TYPE=$2  ;;
 
 			### runtime settings #####################
 
@@ -191,49 +192,46 @@ use scwrypts/get-runstring
 
 			( -n ) SCWRYPTS_LOG_LEVEL=0 ;;
 
-			( -v | --log-level )
-				((SHIFT_COUNT+=1))
-				[[ $2 =~ ^[0-4]$ ]] || echo.error "invalid setting for log-level '$2'"
-				SCWRYPTS_LOG_LEVEL=$2
+			( -v | --log-level ) _s=2
+				SCWRYPTS_LOG_LEVEL="${2}"
+
+				# allows CLI user to use the word lookup (e.g. "debug" or "trace")
+				# number is preferred, but this is here for user ease
+				[[ "${SCWRYPTS_LOG_LEVEL}" =~ ^[0-${#SCWRYPTS_LOG_LEVELS[@]}]$ ]] \
+					|| SCWRYPTS_LOG_LEVEL="${(k)SCWRYPTS_LOG_LEVELS[(r)${SCWRYPTS_LOG_LEVEL:l}]}"
+
+				[[ "${SCWRYPTS_LOG_LEVEL}" =~ ^[0-${#SCWRYPTS_LOG_LEVELS[@]}]$ ]] \
+					|| echo.error "invalid setting for log-level '${2}'"
 				;;
 
-			( -o | --output )
-				((SHIFT_COUNT+=1))
-				export SCWRYPTS_OUTPUT_FORMAT=$2
-				case ${SCWRYPTS_OUTPUT_FORMAT} in
-					( pretty | json ) ;;
-					* ) echo.error "unsupported format '${SCWRYPTS_OUTPUT_FORMAT}'" ;;
-				esac
+			( -o | --output ) _s=2
+				export SCWRYPTS_OUTPUT_FORMAT="${2:l}"
+				utils.io.print 'test' --force-print &>/dev/null \
+					|| echo.error "unsupported format '${SCWRYPTS_OUTPUT_FORMAT}'"
 				;;
 
-			( -e | --env )
-				((SHIFT_COUNT+=1))
-				[ $2 ] || { echo.error "missing value for argument $1"; break; }
+			( -e | --env ) _s=2
+				[[ "${target_scwrypts_env}" ]] \
+					&& echo.debug "overwriting session environment to ${2}" -v target_scwrypts_env
 
-				[ ${ENV_NAME} ] && echo.debug 'overwriting session environment'
-
-				ENV_NAME="$2"
-				echo.status "using CLI environment '${ENV_NAME}'"
+				target_scwrypts_env="${2}"
 				;;
 
 			##########################################
 
 			( --  ) shift 1; break ;; # pass arguments after '--' to the scwrypt
-			( --* ) echo.error "unrecognized argument '$1'" ;;
-			( *   ) SEARCH_PATTERNS+=($1) ;;
+			( --* ) echo.error "unrecognized argument '${1}'" ;;
+			( *   ) search_patterns+=(${1}) ;;
 		esac
-		[[ ${SHIFT_COUNT} -le $# ]] \
-			&& shift ${SHIFT_COUNT} \
-			|| echo.error "missing argument for '$1'" \
-			|| shift $# \
-			;
+
+		shift "${_s}" 2>/dev/null || echo.error "missing argument for '${1}'" || shift "${#}"
 	done
 
-	[ ${SCWRYPTS_OUTPUT_FORMAT} ] || export SCWRYPTS_OUTPUT_FORMAT=pretty
+	[[ "${SCWRYPTS_OUTPUT_FORMAT}" ]] || export SCWRYPTS_OUTPUT_FORMAT=pretty
 
-	[ ${SEARCH_NAME} ] && {
-		[ ${SEARCH_TYPE}  ] || echo.error '--name requires --type argument'
-		[ ${SEARCH_GROUP} ] || echo.error '--name requires --group argument'
+	[[ "${search_name}" ]] && {
+		[[ "${search_type}"  ]] || echo.error '--name requires --type argument'
+		[[ "${search_group}" ]] || echo.error '--name requires --group argument'
 	}
 
 	utils.check-errors --fail
@@ -243,283 +241,336 @@ use scwrypts/get-runstring
 	### scwrypts selection / filtering ##################################
 	#####################################################################
 
-	local SCWRYPTS_AVAILABLE=$(scwrypts.list-available)
+	local scwrypts_available="$(scwrypts.list-available)"
 
-	##########################################
+	local scwrypts_available_header="$(echo "${scwrypts_available}" | head -n1)"
+	local scwrypts_available="$(echo "${scwrypts_available}" | sed '1d')"
 
-	[ ${SEARCH_NAME} ] && SCWRYPTS_AVAILABLE=$({
-		echo ${SCWRYPTS_AVAILABLE} | head -n1
-		echo ${SCWRYPTS_AVAILABLE} | utils.colors.remove | grep "^${SEARCH_NAME} *${SEARCH_TYPE} *${SEARCH_GROUP}\$"
-	}) || {
-		[ ${SEARCH_TYPE} ] && {
-			SCWRYPTS_AVAILABLE=$(\
-				{
-					echo ${SCWRYPTS_AVAILABLE} | head -n1
-					echo ${SCWRYPTS_AVAILABLE} | grep ' [^/]*'${SEARCH_TYPE}'[^/]* '
-				} \
+	[[ "${search_name}" ]] && scwrypts_available="$({
+		echo "${scwrypts_available}" | utils.colors.remove | grep -- "^${search_name} *${search_type} *${search_group}\$"
+	})" || {
+		[[ "${search_type}" ]] && scwrypts_available="$(\
+			echo "${scwrypts_available}" \
+				| grep -- ' [^/]*'${search_type}'[^/]* ' \
 				| sed 's/ \+$/'$(utils.colors.reset)'/; s/ \+/^/g'  \
-				| column -ts '^'
-			)
-		}
+				| column -ts '^' \
+		)"
 
-		[ ${SEARCH_GROUP} ] && {
-			SCWRYPTS_AVAILABLE=$(
-				{
-					echo ${SCWRYPTS_AVAILABLE} | head -n1
-					echo ${SCWRYPTS_AVAILABLE} | grep "${SEARCH_GROUP}"'[^/ 	]*$'
-				} \
+		[[ "${search_group}" ]] && scwrypts_available="$(
+			echo "${scwrypts_available}" \
+				| grep -- "${search_group}"'[^/ 	]*$' \
 				| sed 's/ \+$/'$(utils.colors.reset)'/; s/ \+/^/g'  \
-				| column -ts '^'
-			)
-		}
+				| column -ts '^' \
+		)"
 
-		[[ ${#SEARCH_PATTERNS[@]} -gt 0 ]] && {
-			POTENTIAL_ERROR+="\n   PATTERNS : ${SEARCH_PATTERNS}"
-			local P
-			for P in ${SEARCH_PATTERNS[@]}
+		[[ "${#search_patterns[@]}" -gt 0 ]] && {
+			local search_pattern
+			for search_pattern in "${search_patterns[@]}"
 			do
-				SCWRYPTS_AVAILABLE=$(
-					{
-						echo ${SCWRYPTS_AVAILABLE} | head -n1
-						echo ${SCWRYPTS_AVAILABLE} | grep ${P}
-					}
-				)
+				scwrypts_available="$(echo "${scwrypts_available}" | grep -- "${search_pattern}")"
 			done
+			unset search_pattern
 		}
 	}
 
-	[[ $(echo ${SCWRYPTS_AVAILABLE} | wc -l) -lt 2 ]] && {
-		utils.fail 1 "$(echo "
-		no such scwrypt exists
-		  NAME     : '${SEARCH_NAME}'
-		  TYPE     : '${SEARCH_TYPE}'
-		  GROUP    : '${SEARCH_GROUP}'
-		  PATTERNS : '${SEARCH_PATTERNS}'
-		" | sed "1d; \$d; /''$/d")"
-	}
+	[[ $(echo "${scwrypts_available}" | wc -l) -gt 0 ]] \
+		|| echo.error "$(echo "
+			no such scwrypt exists
+			  NAME     : '${search_name}'
+			  TYPE     : '${search_type}'
+			  GROUP    : '${search_group}'
+			  PATTERNS : '${search_patterns[@]}'
+			" | sed "1d; \$d; /''$/d")" \
+		|| return 1
 
 	##########################################
 
-	[[ $(echo ${SCWRYPTS_AVAILABLE} | wc -l) -eq 2 ]] \
-		&& SCWRYPT_SELECTION=$(echo ${SCWRYPTS_AVAILABLE} | tail -n1) \
-		|| SCWRYPT_SELECTION=$(echo ${SCWRYPTS_AVAILABLE} | utils.fzf "select a script to run" --header-lines 1) \
+	[[ "$(echo "${scwrypts_available}" | wc -l)" -eq 1 ]] \
+		&& scwrypt_selection="$(echo "${scwrypts_available}" | tail -n1)" \
+		|| scwrypt_selection="$(echo "${scwrypts_available_header}\n${scwrypts_available}" | utils.fzf "select a script to run" --header-lines 1)" \
 		;
 
-	[ ${SCWRYPT_SELECTION} ] || utils.abort
+	[[ "${scwrypt_selection}" ]] || utils.abort
 
 	##########################################
 
-	() {
-		set -- $(echo $@ | utils.colors.remove)
-		export SCWRYPT_NAME=$1
-		export SCWRYPT_TYPE=$2
-		export SCWRYPT_GROUP=$3
-	} ${SCWRYPT_SELECTION}
-
+	echo "${scwrypt_selection}" | utils.colors.remove | read -r SCWRYPT_NAME SCWRYPT_TYPE SCWRYPT_GROUP
+	export SCWRYPT_NAME SCWRYPT_TYPE SCWRYPT_GROUP
 
 	#####################################################################
 	### environment variables and configuration validation ##############
 	#####################################################################
 
-	local ENV_REQUIRED=true \
-		&& [ ! ${CI} ] \
-		&& [[ ! ${SCWRYPT_NAME} =~ scwrypts/logs ]] \
-		&& [[ ! ${SCWRYPT_NAME} =~ scwrypts/environment ]] \
-		|| ENV_REQUIRED=false
+	local env_required \
+		&& [[ ! "${CI}" ]] \
+		&& [[ ! "${SCWRYPT_NAME}" =~ scwrypts/logs ]] \
+		&& [[ ! "${SCWRYPT_NAME}" =~ scwrypts/environment ]] \
+		&& env_required=true \
+		|| env_required=false \
+		;
 
-	local REQUIRED_ENVIRONMENT_REGEX="$(scwrypts.config.group ${SCWRYPT_GROUP} required_environment_regex)"
+	local required_environment_regex="$(scwrypts.config.group "${SCWRYPT_GROUP}" required_environment_regex)"
 
-	[ ${ENV_NAME} ] && [ ${REQUIRED_ENVIRONMENT_REGEX} ] && {
-		[[ ${ENV_NAME} =~ ${REQUIRED_ENVIRONMENT_REGEX} ]] \
-			|| utils.fail 5 "group '${SCWRYPT_GROUP}' requires current environment name to match '${REQUIRED_ENVIRONMENT_REGEX}' (currently ${ENV_NAME})"
+	[[ "${target_scwrypts_env}" ]] && [[ "${required_environment_regex}" ]] && {
+		[[ "${target_scwrypts_env}" =~ "${required_environment_regex}" ]] \
+			|| echo.error "group '${SCWRYPT_GROUP}' requires current environment name to match '${required_environment_regex}' (currently ${target_scwrypts_env})" \
+			|| return 5
 	}
 
-	[[ ${ENV_REQUIRED} =~ true ]] && {
-		[ ! ${ENV_NAME} ] && {
-			scwrypts.environment.init \
-				|| echo.error "failed to initialize scwrypts environments (see above)" \
-				|| return 1 \
+	case "${env_required}" in
+		( false ) ;;
+		( true )
+			[[ "${target_scwrypts_env}" ]] || {
+				scwrypts.environment.init \
+					|| echo.error "failed to initialize scwrypts environments (see above)" \
+					|| return 1
+
+				target_scwrypts_env="$(scwrypts.environment.select-env)"
+				[[ "${target_scwrypts_env}" ]] || echo.error.user-abort || return 1
+			}
+
+			local group required_group_regex
+			for group in ${SCWRYPTS_GROUPS[@]}
+			do
+				required_group_regex="$(scwrypts.config.group ${group} required_environment_regex)"
+				[[ "${required_group_regex}" ]] && {
+					[[ "${target_scwrypts_env}" =~ ${required_group_regex} ]] || continue
+				}
+
+				for f in $(find "$(scwrypts.config.group ${group} root)/.config/static" -type f 2>/dev/null)
+				do
+					source "${f}" || echo.error "invalid static config '${f}'" || return 5
+				done
+			done
+			unset group required_group_regex
+			;;
+	esac
+
+	export SCWRYPTS_ENV="${target_scwrypts_env}"
+
+	##########################################
+
+	[[ ! "${SUBSCWRYPT}" ]] && export SUBSCWRYPT=0
+
+	local scwrypts_execution_warning_message
+	case "${SCWRYPTS_INSTALLATION_TYPE}" in
+		( manual )
+			local sync_with_main_required \
+				&& [[ "${SUBSCWRYPT}" -eq 0 ]] \
+				&& [[ "${SCWRYPTS_ENV}" =~ prod ]] \
+				&& [[ "${SCWRYPTS_LOG_LEVEL}" -gt 0 ]] \
+				&& sync_with_main_required=true \
+				|| sync_with_main_required=false \
 				;
 
-			ENV_NAME=$(scwrypts.environment.select-env)
-			[ "${ENV_NAME}" ] || user.abort
-		}
+			case "${sync_with_main_required}" in
+				( false ) ;;
+				( true )
+					echo.status "on '${SCWRYPTS_ENV}'; checking diff against origin/main"
 
-		for GROUP in ${SCWRYPTS_GROUPS[@]}
-		do
-			local REQUIRED_REGEX="$(scwrypts.config.group ${GROUP} required_environment_regex)"
-			[ ${REQUIRED_REGEX} ] && {
-				[[ ${ENV_NAME} =~ ${REQUIRED_REGEX} ]] || continue
-			}
-
-			for f in $(find "$(scwrypts.config.group ${GROUP} root)/.config/static" -type f 2>/dev/null)
-			do
-				source "${f}" || utils.fail 5 "invalid static config '${f}'"
-			done
-		done
-	}
-
-	[ ${REQUIRED_ENVIRONMENT_REGEX} ] && {
-		[[ ${ENV_NAME} =~ ${REQUIRED_ENVIRONMENT_REGEX} ]] \
-			|| utils.fail 5 "group '${SCWRYPT_GROUP}' requires current environment name to match '${REQUIRED_ENVIRONMENT_REGEX}' (currently ${ENV_NAME})"
-	}
-
-	export SCWRYPTS_ENV=${ENV_NAME}
-
-	##########################################
-
-	[ ! ${SUBSCWRYPT} ] && export SUBSCWRYPT=0
-
-	[[ ${SCWRYPTS_INSTALLATION_TYPE} =~ ^manual$ ]] && {
-		[[ ${SUBSCWRYPT} -eq 0 ]] && [[ ${SCWRYPTS_ENV} =~ prod ]] && [[ ${SCWRYPTS_LOG_LEVEL} -gt 0 ]] && {
-			echo.status "on '${SCWRYPTS_ENV}'; checking diff against origin/main"
-
-			local WARNING_MESSAGE
-
-			[ ! ${WARNING_MESSAGE} ] && {
-				GIT_SCWRYPTS fetch --quiet origin main \
-					|| WARNING_MESSAGE='I am unable to verify your scwrypts version'
-			}
-
-			[ ! ${WARNING_MESSAGE} ] && {
-				GIT_SCWRYPTS diff --exit-code origin/main -- . >/dev/null 2>&1 \
-					|| WARNING_MESSAGE='your scwrypts is currently out-of-date'
-			}
-
-			[ ${WARNING_MESSAGE} ] && {
-				[[ ${SCWRYPTS_LOG_LEVEL} -lt 3 ]] && {
-					echo.reminder "you are running in $(utils.colors.bright-red)production$(utils.colors.bright-magenta) and ${WARNING_MESSAGE}"
-				} || {
-					GIT_SCWRYPTS diff --exit-code origin/main -- . >&2
-					echo.warning "you are trying to run in $(utils.colors.bright-red)production$(echo.warning.color) but ${WARNING_MESSAGE} (relevant diffs and errors above)"
-					yN 'continue?' || {
-						echo.reminder "you can use 'scwrypts --update' to quickly update scwrypts to latest"
-						user.abort
+					[[ ! "${scwrypts_execution_warning_message}" ]] && {
+						git.scwrypts fetch --quiet origin main &>/dev/null \
+							|| scwrypts_execution_warning_message='I am unable to verify your scwrypts version'
 					}
-				}
-			}
-		}
+
+					[[ ! "${scwrypts_execution_warning_message}" ]] && {
+						git.scwrypts diff --exit-code origin/main -- . &>/dev/null \
+							|| scwrypts_execution_warning_message='your scwrypts is currently out-of-date'
+					}
+				;;
+			esac
+			;;
+	esac
+
+	[[ "${scwrypts_execution_warning_message}" ]] && {
+		case "${SCWRYPTS_LOG_LEVEL}" in
+			( 0 | 1 | 2 )
+				echo.warning "
+					you are running in $(utils.colors.bright-red)production$(echo.warning.color),
+					and ${scwrypts_execution_warning_message}
+					"
+				;;
+			( * )
+				git.scwrypts diff --exit-code origin/main -- . >&2
+				echo.warning "you are trying to run in $(utils.colors.bright-red)production$(echo.warning.color) but ${scwrypts_execution_warning_message} (relevant diffs and errors above)"
+				yN 'continue?' || echo.error.user-abort || return 1
+				;;
+		esac
 	}
 
 	##########################################
 
-	local RUN_STRING=$(scwrypts.get-runstring ${SCWRYPT_NAME} ${SCWRYPT_TYPE} ${SCWRYPT_GROUP})
-	[ "${RUN_STRING}" ] || return 42
+	local scwrypts_run_string="$(scwrypts.get-runstring "${SCWRYPT_NAME}" "${SCWRYPT_TYPE}" "${SCWRYPT_GROUP}")"
+	[[ "${scwrypts_run_string}" ]] || return 42
 
 
 	#####################################################################
 	### logging and pretty header/footer setup ##########################
 	#####################################################################
 
-	local RUN_MODE=normal
-	[[ ${SCWRYPT_NAME} =~ interactive ]] && RUN_MODE=interactive
+	local scwrypts_execution_mode=normal
+	[[ "${SCWRYPT_NAME}" =~ interactive ]] && scwrypts_execution_mode=interactive
 
 	local LOGFILE \
-		&& [[ ${RUN_MODE} =~ normal ]] \
-		&& [[ ${SCWRYPTS_LOG_LEVEL} -gt 0 ]] \
-		&& [[ ${SUBSCWRYPT} -eq 0 ]] \
-		&& [[ ! ${SCWRYPT_NAME} =~ scwrypts/logs ]] \
-		&& LOGFILE="${SCWRYPTS_LOG_PATH}/$(echo ${GROUP}/${TYPE}/${NAME} | sed 's/^\.\///; s/\//\%/g').log" \
+		&& [[ "${scwrypts_execution_mode}" =~ normal ]] \
+		&& [[ "${SCWRYPTS_LOG_LEVEL}" -gt 0 ]] \
+		&& [[ "${SUBSCWRYPT}" -eq 0 ]] \
+		&& [[ ! "${SCWRYPT_NAME}" =~ scwrypts/logs ]] \
+		&& LOGFILE="${SCWRYPTS_LOG_PATH}/$(echo ${SCWRYPT_GROUP}/${SCWRYPT_TYPE}/${SCWRYPT_NAME} | sed 's/^\.\///; s/\//\%/g').log" \
 		|| LOGFILE='/dev/null' \
 		;
 
-	local HEADER FOOTER
-	[[ ${SCWRYPTS_LOG_LEVEL} -ge 2 ]] && {
-		case ${SCWRYPTS_OUTPUT_FORMAT} in
+	scwrypts.runner.header-and-footer() {
+		local output_type="${1}"
+		case "${output_type}" in
+			( header | footer ) ;;
+			( * ) return 1 ;;
+		esac
+
+		local header footer
+
+		[[ "${SCWRYPTS_LOG_LEVEL}" -ge 3 ]] && case "${SCWRYPTS_OUTPUT_FORMAT}" in
 			( raw )
-				HEADER="--- start scwrypt ${SCWRYPT_GROUP}/${SCWRYPT_TYPE} ${SCWRYPT_NAME} in ${SCWRYPTS_ENV} ---"
-				FOOTER="--- end scwrypt ---"
+				header="--- start scwrypt ${SCWRYPT_GROUP}/${SCWRYPT_TYPE} ${SCWRYPT_NAME} in ${SCWRYPTS_ENV} ---"
+				footer="--- end scwrypt ---"
 				;;
+
 			( pretty )
-				HEADER=$(
+				header=$(
 					echo "
 						=====================================================================
 						scwrypt   : ${SCWRYPT_GROUP} ${SCWRYPT_TYPE} ${SCWRYPT_NAME}
 						run at    : $(date)
 						config    : ${SCWRYPTS_ENV}
-						log level : ${SCWRYPTS_LOG_LEVEL}
+						log level : ${SCWRYPTS_LOG_LEVEL} (${SCWRYPTS_LOG_LEVELS[${SCWRYPTS_LOG_LEVEL}]})
 						$(utils.colors.print bright-yellow '--- SCWRYPT BEGIN ---------------------------------------------------')
 					" | sed 's/^\s\+//; 1d'
 				)
 
-				FOOTER="$(utils.colors.print bright-yellow '--- SCWRYPT END   ---------------------------------------------------')"
+				footer="$(utils.colors.print bright-yellow '--- SCWRYPT END   ---------------------------------------------------')"
 				;;
+
 			( json )
-				HEADER=$(echo '{}' | jq -c ".
-					| .timestamp  = \"$(date +%s)\"
-					| .runtime    = \"${SCWRYPTS_RUNTIME_ID}\"
-					| .scwrypt    = \"start of ${SCWRYPT_NAME} ${SCWRYPT_GROUP} ${SCWRYPT_TYPE}\"
-					| .config     = \"${SCWRYPTS_ENV}\"
-					| .logLevel   = \"${SCWRYPTS_LOG_LEVEL}\"
-					| .subscwrypt = ${SUBSCWRYPT}
-					")
+				header=$(jo \
+					timestamp="$(date +%s)" \
+					config="${SCWRYPTS_ENV}" \
+					logLevel="${SCWRYPTS_LOG_LEVEL}" \
+					subscwrypt="${SUBSCWRYPT}" \
+					runtime="${SCWRYPTS_RUNTIME_ID}" \
+					scwryptName="${SCWRYPT_NAME}" \
+					scwryptGroup="${SCWRYPT_GROUP}" \
+					scwryptType="${SCWRYPT_TYPE}" \
+					message="start of execution" \
+					)
+
+				footer=$(jo \
+					timestamp="$(date +%s)" \
+					config="${SCWRYPTS_ENV}" \
+					logLevel="${SCWRYPTS_LOG_LEVEL}" \
+					subscwrypt="${SUBSCWRYPT}" \
+					runtime="${SCWRYPTS_RUNTIME_ID}" \
+					scwryptName="${SCWRYPT_NAME}" \
+					scwryptGroup="${SCWRYPT_GROUP}" \
+					scwryptType="${SCWRYPT_TYPE}" \
+					message="end of execution" \
+					)
+				;;
+
+			( logfmt )
+				header="ts=$(date -u +%Y-%m-%dT%H:%M:%SZ) level=status runtime=${SCWRYPTS_RUNTIME_ID} config=${SCWRYPTS_ENV} logLevel=${SCWRYPTS_LOG_LEVEL} subscwrypt=${SUBSCWRYPT} scwryptName=${SCWRYPT_NAME} scwryptGroup=${SCWRYPT_GROUP} scwryptType=${SCWRYPT_TYPE} msg=\"start of execution\""
+				footer="ts=$(date -u +%Y-%m-%dT%H:%M:%SZ) level=status runtime=${SCWRYPTS_RUNTIME_ID} config=${SCWRYPTS_ENV} logLevel=${SCWRYPTS_LOG_LEVEL} subscwrypt=${SUBSCWRYPT} scwryptName=${SCWRYPT_NAME} scwryptGroup=${SCWRYPT_GROUP} scwryptType=${SCWRYPT_TYPE} msg=\"end of execution\""
 				;;
 		esac
-	}
 
-	[[ ${SUBSCWRYPT} -eq 0 ]] || {
-		case ${SCWRYPTS_OUTPUT_FORMAT} in
+		[[ "${SUBSCWRYPT}" -ne 0 ]] && case "${SCWRYPTS_OUTPUT_FORMAT}" in
+			( raw )
+				header="--- (${SUBSCWRYPT}) begin ${SCWRYPT_GROUP} ${SCWRYPT_TYPE} ${SCWRYPT_NAME} ---"
+				footer="--- (${SUBSCWRYPT}) end   ${SCWRYPT_GROUP} ${SCWRYPT_TYPE} ${SCWRYPT_NAME} ---"
+				;;
+
 			( pretty )
-				HEADER="$(utils.colors.print yellow "--- (${SUBSCWRYPT}) BEGIN ${SCWRYPT_GROUP} ${SCWRYPT_TYPE} ${SCWRYPT_NAME} ---")"
-				FOOTER="$(utils.colors.print yellow "--- (${SUBSCWRYPT}) END   ${SCWRYPT_GROUP} ${SCWRYPT_TYPE} ${SCWRYPT_NAME} ---")"
+				header="$(utils.colors.print yellow "--- (${SUBSCWRYPT}) BEGIN ${SCWRYPT_GROUP} ${SCWRYPT_TYPE} ${SCWRYPT_NAME} ---")"
+				footer="$(utils.colors.print yellow "--- (${SUBSCWRYPT}) END   ${SCWRYPT_GROUP} ${SCWRYPT_TYPE} ${SCWRYPT_NAME} ---")"
+				;;
+
+			( json )
+				header="$(jo \
+					timestamp="$(date +%s)" \
+					subscwryptLevel="${SUBSCWRYPT}" \
+					runtime="${SCWRYPTS_RUNTIME_ID}" \
+					scwryptName="${SCWRYPT_NAME}" \
+					scwryptGroup="${SCWRYPT_GROUP}" \
+					scwryptType="${SCWRYPT_TYPE}" \
+					message='start of subscwrypt execution' \
+				)"
+
+				footer="$(jo \
+					timestamp="$(date +%s)" \
+					subscwryptLevel="${SUBSCWRYPT}" \
+					runtime="${SCWRYPTS_RUNTIME_ID}" \
+					scwryptName="${SCWRYPT_NAME}" \
+					scwryptGroup="${SCWRYPT_GROUP}" \
+					scwryptType="${SCWRYPT_TYPE}" \
+					message='end of subscwrypt execution' \
+				)"
+				;;
+
+			( logfmt )
+				header="ts=$(date -u +%Y-%m-%dT%H:%M:%SZ) level=status runtime=${SCWRYPTS_RUNTIME_ID} config=${SCWRYPTS_ENV} logLevel=${SCWRYPTS_LOG_LEVEL} subscwrypt=${SUBSCWRYPT} scwryptName=${SCWRYPT_NAME} scwryptGroup=${SCWRYPT_GROUP} scwryptType=${SCWRYPT_TYPE} msg=\"start of subscwrypt execution\""
+				footer="ts=$(date -u +%Y-%m-%dT%H:%M:%SZ) level=status runtime=${SCWRYPTS_RUNTIME_ID} config=${SCWRYPTS_ENV} logLevel=${SCWRYPTS_LOG_LEVEL} subscwrypt=${SUBSCWRYPT} scwryptName=${SCWRYPT_NAME} scwryptGroup=${SCWRYPT_GROUP} scwryptType=${SCWRYPT_TYPE} msg=\"end of subscwrypt execution\""
 				;;
 		esac
-	}
 
+		[[ "${(P)output_type}" ]] && echo "${(P)output_type}"
+		return 0
+	}
 
 	#####################################################################
 	### run the scwrypt #################################################
 	#####################################################################
 
-	set -o pipefail
 	{
-		[[ ${SCWRYPTS_LOG_LEVEL} -ge 2 ]] && __SCWRYPTS_PRINT_EXIT_CODE=true
+		local print_exit_code=false
+		[[ "${SCWRYPTS_LOG_LEVEL}" -ge 3 ]] && print_exit_code=true
 
-		[ ${HEADER} ] && echo ${HEADER} >&2
+		scwrypts.runner.header-and-footer header >&2
 
-		(
-			case ${RUN_MODE} in
-				( normal )
-					eval "${RUN_STRING} $(printf "%q " "$@")"
-					;;
-				( interactive )
-					eval "${RUN_STRING} $(printf "%q " "$@")" </dev/tty &>/dev/tty
-					;;
-			esac
-		)
+		case "${scwrypts_execution_mode}" in
+			( normal      ) eval "${scwrypts_run_string} ${(q)@}" ;;
+			( interactive ) eval "${scwrypts_run_string} ${(q)@}" </dev/tty &>/dev/tty ;;
+		esac
 
-		EXIT_CODE=$?
+		local exit_code="${?}"
+		echo "${exit_code}" > "${EXIT_CODE_FILE}"
 
-		[ ${FOOTER} ] && echo ${FOOTER} >&2
+		scwrypts.runner.header-and-footer footer >&2
 
-		[[ ${__SCWRYPTS_PRINT_EXIT_CODE} =~ true ]] && {
-			EXIT_COLOR=$( [[ ${EXIT_CODE} -eq 0 ]] && utils.colors.bright-green || utils.colors.bright-red )
-			case ${SCWRYPTS_OUTPUT_FORMAT} in
-				( raw )
-					echo "terminated with code ${EXIT_CODE}" >&2
-					;;
+		[[ ${print_exit_code} =~ true ]] && {
+			local exit_color="$([[ ${exit_code} -eq 0 ]] && utils.colors.bright-green || utils.colors.bright-red)"
+			case "${SCWRYPTS_OUTPUT_FORMAT}" in
 				( pretty )
-					echo "terminated with ${EXIT_COLOR}code ${EXIT_CODE}$(utils.colors.reset)" >&2
+					echo "terminated with ${exit_color}code ${exit_code}$(utils.colors.reset)" >&2
 					;;
-				( json )
-					[[ ${EXIT_CODE} =~ 0 ]] \
-						&& echo.success --force-print "terminated with code ${EXIT_CODE}" \
-						|| echo.error   --force-print "terminated with code ${EXID_CODE}" \
+
+				( * )
+					[[ "${exit_code}" -eq 0 ]] \
+						&& echo.success --force-print "terminated with code ${exit_code}" \
+						|| echo.error   --force-print "terminated with code ${exit_code}" \
 						;
 					;;
 			esac
 		}
+	} > >(tee --append "${LOGFILE}") 2> >(tee --append "${LOGFILE}" >&2)
+} "${@}"
 
-		return ${EXIT_CODE}
-	} | tee --append "${LOGFILE}"
-} $@
+EXIT_CODE="${?}"
+[[ -f "${EXIT_CODE_FILE}" ]] && EXIT_CODE="$(cat -- "${EXIT_CODE_FILE}")"
 
-EXIT_CODE=$?
+[[ "${SCWRYPTS_TEMP_PATH}" ]] && [[ -d "${SCWRYPTS_TEMP_PATH}" ]] && {
+	rm -- $(find "${SCWRYPTS_TEMP_PATH}" -mindepth 1 -maxdepth 1 -type f)
+	rmdir "${SCWRYPTS_TEMP_PATH}"
+} &>/dev/null
 
-[ "${SCWRYPTS_TEMP_PATH}" ] && [ -d "${SCWRYPTS_TEMP_PATH}" ] \
-	&& {
-		rm -- $(find "${SCWRYPTS_TEMP_PATH}" -mindepth 1 -maxdepth 1 -type f)
-		rmdir "${SCWRYPTS_TEMP_PATH}"
-	}	&>/dev/null
+[[ -f "${EXIT_CODE_FILE}" ]] && rm "${EXIT_CODE_FILE}"
 
-return ${EXIT_CODE}
+return "${EXIT_CODE}"

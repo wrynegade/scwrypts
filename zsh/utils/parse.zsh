@@ -76,7 +76,7 @@ utils.parse() {
 
 	for PARSER in ${VALID_PARSERS[@]}
 	do
-		command -v ${PARSER}.usage &>/dev/null && ${PARSER}.usage
+		command -v ${PARSER}.usage &>/dev/null && ${PARSER}.usage &>/dev/null
 	done
 
 	local EARLY_ESCAPE_CODE _S ERRORS=0 POSITIONAL_ARGS=0

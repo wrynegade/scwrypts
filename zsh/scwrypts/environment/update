@@ -73,20 +73,20 @@ MAIN() {
 			;;
 		( copy )
 			local SOURCE_ENVIRONMENT="$(scwrypts.environment.common.get-env-names | utils.fzf 'select an environment to copy')"
-			[ "$SOURCE_ENVIRONMENT" ] || user.abort
+			[ "$SOURCE_ENVIRONMENT" ] || echo.error.user-abort || return 1
 
 			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME=$(echo | utils.fzf.user-input 'new environment name')
-			[ "$ENVIRONMENT_NAME" ] || user.abort
+			[ "$ENVIRONMENT_NAME" ] || echo.error.user-abort || return 1
 			;;
 		( delete )
 			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$(scwrypts.environment.common.get-env-names | utils.fzf 'select an environment to delete')"
-			[ "$ENVIRONMENT_NAME" ] || user.abort
+			[ "$ENVIRONMENT_NAME" ] || echo.error.user-abort || return 1
 			;;
 		( advanced )
 			[ "$ENVIRONMENT_NAME" ] || ENVIRONMENT_NAME="$SCWRYPTS_ENV"
 	esac
 
-	[ -f "$(scwrypts.environment.common.get-env-filename "$ENVIRONMENT_NAME" scwrypts)" ] \
+	[ -f "$(scwrypts.environment.common.get-env-file "$ENVIRONMENT_NAME" scwrypts)" ] \
 		&& local ENVIRONMENT_EXISTS=true \
 		|| local ENVIRONMENT_EXISTS=false \
 		;
@@ -97,7 +97,7 @@ MAIN() {
 				( true ) ;;
 				( false )
 					echo.warning "environment $ENVIRONMENT_NAME does not exist"
-					Yn "create new environment '$ENVIRONMENT_NAME'?" || user.abort
+					Yn "create new environment '$ENVIRONMENT_NAME'?" || echo.error.user-abort || return 1
 					;;
 			esac
 			;;
@@ -117,7 +117,7 @@ MAIN() {
 			case $ENVIRONMENT_EXISTS in
 				( true )
 					echo.reminder 'deleting an environment is PERMANENT\nmake sure your credentials are backed up!'
-					yN "are you sure you want to delete '$ENVIRONMENT_NAME'?" || user.abort
+					yN "are you sure you want to delete '$ENVIRONMENT_NAME'?" || echo.error.user-abort || return 1
 					;;
 				( false )
 					echo.error "environment '$ENVIRONMENT_NAME' does not exist (can't delete it if it's not there)"

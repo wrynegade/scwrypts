@@ -87,7 +87,7 @@ kube.redis ping 2>/dev/null | grep -qi pong || {
 		--detach \
 		--name scwrypts-kubectl-redis \
 		--publish $SCWRYPTS_KUBECTL_REDIS_PORT__managed:6379 \
-		redis >/dev/null 2>&1
+		redis &>/dev/null
 
 	echo.status 'awaiting redis connection'
 	until kube.redis ping 2>/dev/null | grep -qi pong; do sleep 0.5; done

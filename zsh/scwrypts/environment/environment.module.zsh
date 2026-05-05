@@ -7,26 +7,17 @@
 # common lookups used by all environment logic
 use scwrypts/environment/common
 
-
-# allows utils.fzf selection of environments
-use scwrypts/environment/select-env
-
+# primary source of truth for configuration values in the environment
+use scwrypts/environment/get-user-json
 
 # initialize environments, or skip if already initialized
 use scwrypts/environment/init
 
+# allows utils.fzf selection of environments
+use scwrypts/environment/select-env
 
-# injects metadata and unifies environment template
+# creates a merged template file across all known scwrypts groups' env.yaml
 use scwrypts/environment/get-full-template
-
-
-# lookup environment variables by config path
-use scwrypts/environment/get-envvar-lookup-map
-
-
-# generates local/non-CI configuration
-use scwrypts/environment/user
-
 
 # create/edit/delete operations on local configurations
 use scwrypts/environment/update

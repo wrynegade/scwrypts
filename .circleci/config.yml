@@ -261,11 +261,12 @@ jobs:
                   coreutils \
                   findutils \
                   fzf \
-                  perl \
-                  sed \
                   gawk \
                   git \
+                  grep \
                   jo \
+                  perl \
+                  sed \
                   jq \
                   util-linux \
                   uuidgen \

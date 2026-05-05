@@ -1,119 +1,128 @@
 #####################################################################
 
 use scwrypts/environment/common
-
-use scwrypts/environment/user
 use scwrypts/environment/get-full-template
 use scwrypts/environment/select-env
 
+use zsh-cache/reset
+
 #####################################################################
 
-[ $SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE ] \
+[ "${SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE}" ] \
 	|| export SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE=basic
 
-scwrypts.environment.update() {
-	local EDIT_MODE=$SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE
-	local ENVIRONMENT_NAME="$SCWRYPTS_ENV"
-	local FROM_EXISTING
+${scwryptsmodule}() {
+	local DESCRIPTION='Update a scwrypts environment configuration'
+	local PARSERS=(scwrypts.zshparse.environment-name)
+	eval "$(utils.parse.autosetup)"
+	##########################################
 
-	local USAGE="
-		usage: scwrypts.environment.update [...options...]
+	local TEMP_CONFIG_FILE="${SCWRYPTS_TEMP_PATH_SOCKET}/environment.temp.yaml"
 
-		options:
-			--mode <string>   update execution mode (default: $SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE)
-			   modes:
-			      basic     : create or edit environment with all tooltips and metadata
-			      quiet     : create or edit a compact environment with minimal metadata
-			      init      : create a new environment with no edit prompt
-			      delete    : delete target environment
-			      recursive : (advanced) edit all inherited environments, starting from deepest parent
-			      copy      : (see --create-from-existing; most likely you don't need to set this flag)
-
-			--environment-name <string>       name of the target environment (default is current: $SCWRYPTS_ENV)
-			--create-from-existing <string>   name of the environment to copy
-
-			-h, --help   print this dialogue and exit
-	"
-
-	local _S ERRORS=0
-	while [[ $# -gt 0 ]]
-	do
-		_S=1
-		case $1 in
-			( -h | --help ) utils.io.usage; return 0 ;;
-
-			( --environment-name )
-				[ $2 ] && ((_S+=1)) || echo.error "missing environment name" || break
-				ENVIRONMENT_NAME="$2"
-				;;
-
-			( --create-from-existing )
-				[ $2 ] && ((_S+=1)) || echo.error "must provide environment name to copy" || break
-				EDIT_MODE=copy
-				FROM_EXISTING="$2"
-				;;
-
-			( --mode )
-				[ $2 ] && ((_S+=1)) || echo.error "missing mode" || break
-				EDIT_MODE="$2"
-				command -v scwrypts.environment.update.edit.$EDIT_MODE &>/dev/null \
-					|| echo.error "invalid mode '$EDIT_MODE'"
-
-				;;
-
-			* ) echo.error "unknown argument '$1'" ;;
-		esac
-		shift $_S
-	done
-
-	case $EDIT_MODE in
-		( copy )
-			[ $FROM_EXISTING ] || FROM_EXISTING=$(scwrypts.environment.select-env)
-			[ $FROM_EXISTING ] || echo.error "cannot work in '$EDIT_MODE' without existing target"
-
-			[[ $(scwrypts.environment.common.find-env-files-by-name "$FROM_EXISTING" | wc -l) -gt 0 ]] \
-				|| echo.error "no such environment '$FROM_EXISTING' exists"
-			;;
-
-		( * )
-			[ ! $FROM_EXISTING ] || echo.error "cannot work in '$EDIT_MODE' with --create-from-existing"
-			;;
-	esac
-
-	utils.check-errors || return $?
-
-	local TEMP_CONFIG_FILE="$SCWRYPTS_TEMP_PATH/environment.temp.yaml"
-
-	[ -f "$TEMP_CONFIG_FILE" ] && {
+	[[ -f "${TEMP_CONFIG_FILE}" ]] && {
 		echo.error "temp config file already exists at '$TEMP_CONFIG_FILE'\nis another environment update in-progress?"
-		echo.reminder "if you are certain no other environment update is in progress, you can resolve with\n  rm -- '$TEMP_CONFIG_FILE'"
+		echo.reminder "
+			if you are certain no other environment update is in progress, you can resolve with
+			rm -- ${(q)TEMP_CONFIG_FILE}
+		"
 		return 1
 	}
 
-	scwrypts.environment.update.edit.${EDIT_MODE}
-	local EXIT_CODE=$?
+	"${edit_mode_helper}"
+	local exit_code="${?}"
 
-	rm "$TEMP_CONFIG_FILE" 2>/dev/null
+	rm "${TEMP_CONFIG_FILE}" 2>/dev/null
 
-	return $EXIT_CODE
+	return ${exit_code}
+}
+
+#####################################################################
+
+${scwryptsmodule}.parse.locals() {
+	local edit_mode="${SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE}"
+	local edit_mode_helper
+	local edit_mode_args=()
+	local from_existing
+}
+
+${scwryptsmodule}.parse() {
+	local parsed=0
+
+	case "${1}" in
+		( --mode )
+			parsed=2
+			edit_mode_args+=("${1} ${2}")
+			edit_mode="${2}"
+			;;
+
+		( --create-from-existing )
+			parsed=2
+			edit_mode_args+=("${1}")
+			edit_mode=copy
+			from_existing="${2}"
+			;;
+	esac
+
+	return "${parsed}"
+}
+
+${scwryptsmodule}.parse.usage() {
+	USAGE__options+="
+		--mode <string>   update execution mode (default: ${SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE})
+		   modes:
+		      basic     : create or edit environment with all tooltips and metadata
+		      quiet     : create or edit a compact environment with minimal metadata
+		      init      : create a new environment with no edit prompt
+		      delete    : delete target environment
+		      recursive : (advanced) edit all inherited environments, starting from deepest parent
+		      copy      : (see --create-from-existing; most likely you don't need to set this flag)
+
+		--create-from-existing <string>   name of the environment to copy
+	"
+}
+
+${scwryptsmodule}.parse.validate() {
+	[[ "${#edit_mode_args[@]}" -le 1 ]] \
+		|| echo.error "incompatible arguments ${(q)edit_mode_args[@]}" \
+		|| return
+
+
+	[[ "${edit_mode}" ]] \
+		&& edit_mode_helper="scwrypts.environment.update.edit.${edit_mode}" \
+		&& command -v "${edit_mode_helper}" &>/dev/null \
+		|| echo.error "invalid edit mode '${edit_mode}'" \
+		;
+
+	case "${edit_mode}" in
+		( copy )
+			[[ "${from_existing}" ]] || from_existing="$(scwrypts.environment.select-env)"
+			[[ "${from_existing}" ]] || echo.error "cannot work in '${edit_mode}' without existing target"
+			;
+	esac
+
+	if [[ "${from_existing}" ]]
+	then
+		[[ "$(scwrypts.environment.common.find-env-files-by-name "${from_existing}" | wc -l)" -gt 0 ]] \
+			|| echo.error "no such environment '${from_existing}' exists"
+	fi
 }
 
 #####################################################################
 
 ${scwryptsmodule}.edit.basic() {
-	scwrypts.environment.user.get \
-		--environment-name $ENVIRONMENT_NAME \
+	scwrypts.environment.get-enriched-user-yaml \
+		--environment-name $environment_name \
 		> "$TEMP_CONFIG_FILE"
 
 	utils.io.edit "$TEMP_CONFIG_FILE"
 
-	scwrypts.environment.update.update-user-configs "$(cat "$TEMP_CONFIG_FILE")" "$ENVIRONMENT_NAME"
+	scwrypts.environment.update.update-user-configs "${environment_name}"
 }
 
 ${scwryptsmodule}.edit.quiet() {
-	echo "---  # $ENVIRONMENT_NAME" > "$TEMP_CONFIG_FILE"
-	scwrypts.environment.user.get \
-			--environment-name $ENVIRONMENT_NAME \
+	echo "---  # $environment_name" > "$TEMP_CONFIG_FILE"
+	scwrypts.environment.get-enriched-user-yaml \
+			--environment-name $environment_name \
 		| utils.yq '.
 			| del(.. | select(has(".ENVIRONMENT")).".ENVIRONMENT")
 			| del(.. | select(has(".GROUP")).".GROUP")
@@ -126,75 +135,75 @@ ${scwryptsmodule}.edit.quiet() {
 
 	utils.io.edit "$TEMP_CONFIG_FILE"
 
-	scwrypts.environment.update.update-user-configs "$(cat "$TEMP_CONFIG_FILE")" "$ENVIRONMENT_NAME"
+	scwrypts.environment.update.update-user-configs "${environment_name}"
 }
 
 ${scwryptsmodule}.edit.recursive() {
-	local RECURSIVE_EDIT_MODE="$SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE"
-	[[ $RECURSIVE_EDIT_MODE =~ ^recursive$ ]] \
-		&& RECURSIVE_EDIT_MODE=quiet
+	local recursive_edit_mode="${SCWRYPTS_ENVIRONMENT__PREFERRED_EDIT_MODE}"
+	[[ "${recursive_edit_mode}" =~ ^recursive$ ]] \
+		&& recursive_edit_mode=quiet
 
-	local PARENT_ENVIRONMENT_NAME
-	for PARENT_ENVIRONMENT_NAME in \
-		$(scwrypts.environment.common.get-parent-env-names "$ENVIRONMENT_NAME") \
-		$ENVIRONMENT_NAME
+	local parent_environment_name
+	for parent_environment_name in \
+		$(scwrypts.environment.common.get-parent-env-names "$environment_name") \
+		$environment_name
 		;
 	do
-		echo.status "editing environment '$PARENT_ENVIRONMENT_NAME'"
+		echo.status "editing environment '${parent_environment_name}'"
 		scwrypts.environment.update \
-			--environment-name $PARENT_ENVIRONMENT_NAME \
-			--mode $RECURSIVE_EDIT_MODE \
+			--environment-name "${parent_environment_name}" \
+			--mode "${recursive_edit_mode}" \
 			;
 	done
 }
 
 ${scwryptsmodule}.edit.init() {
-	[ -f "$(scwrypts.environment.common.get-env-filename)" ]
+	[ -f "$(scwrypts.environment.common.get-env-file)" ]
 
-	scwrypts.environment.user.get \
-		--environment-name $ENVIRONMENT_NAME \
-		> "$TEMP_CONFIG_FILE"
+	scwrypts.environment.get-enriched-user-yaml \
+		--environment-name "${environment_name}" \
+		> "${TEMP_CONFIG_FILE}"
 
-	scwrypts.environment.update.update-user-configs "$(cat "$TEMP_CONFIG_FILE")"
+	scwrypts.environment.update.update-user-configs "${environment_name}"
 }
 
 ${scwryptsmodule}.edit.copy() {
-	local GROUP_CONFIG_FILENAME SOURCE_CONFIG_FILENAME
-	for GROUP in ${SCWRYPTS_GROUPS[@]}
+	local group_config_filename SOURCE_CONFIG_FILENAME
+	for group in ${SCWRYPTS_GROUPS[@]}
 	do
 		cp \
-			"$(scwrypts.environment.common.get-env-filename "$FROM_EXISTING" "$GROUP")" \
-			"$(scwrypts.environment.common.get-env-filename "$ENVIRONMENT_NAME" "$GROUP")" \
+			"$(scwrypts.environment.common.get-env-file "${FROM_EXISTING}" "${group}")" \
+			"$(scwrypts.environment.common.get-env-file "${environment_name}" "${group}")" \
 			2>/dev/null \
 			;
 	done
 
-	scwrypts.environment.user.get \
-		--environment-name $ENVIRONMENT_NAME \
-		> "$TEMP_CONFIG_FILE"
+	scwrypts.environment.get-enriched-user-yaml \
+		--environment-name "${environment_name}" \
+		> "${TEMP_CONFIG_FILE}"
 
-	scwrypts.environment.update.update-user-configs "$(cat "$TEMP_CONFIG_FILE")"
+	scwrypts.environment.update.update-user-configs "${environment_name}"
 }
 
 ${scwryptsmodule}.edit.delete() {
 	touch "$TEMP_CONFIG_FILE"
 
-	local ERRORS=0 GROUP GROUP_CONFIG_FILENAME
-	for GROUP in ${SCWRYPTS_GROUPS[@]}
+	local ERRORS=0 group group_config_filename
+	for group in ${SCWRYPTS_GROUPS[@]}
 	do
-		local GROUP_CONFIG_FILENAME="$(scwrypts.environment.common.get-env-filename "$ENVIRONMENT_NAME" "$GROUP")"
-		[ -f "$GROUP_CONFIG_FILENAME" ] || {
-			echo.status "nothing to cleanup for $ENVIRONMENT_NAME/$GROUP"
+		local group_config_filename="$(scwrypts.environment.common.get-env-file "${environment_name}" "${group}")"
+		[ -f "${group_config_filename}" ] || {
+			echo.status "nothing to cleanup for ${environment_name}/${group}"
 			continue
 		}
 
-		rm -- "$GROUP_CONFIG_FILENAME" \
-			&& echo.success "deleted '$GROUP_CONFIG_FILENAME'" \
-			|| echo.error "unable to delete '$GROUP_CONFIG_FILENAME'" \
+		rm -- "${group_config_filename}" \
+			&& echo.success "deleted '${group_config_filename}'" \
+			|| echo.error "unable to delete '${group_config_filename}'" \
 			;
 	done
 
-	return $ERRORS
+	return "${ERRORS}"
 }
 
 #####################################################################
@@ -203,55 +212,54 @@ ${scwryptsmodule}.edit.delete() {
 
 export __SCWRYPTS_ENVIRONMENT__WORKFLOW_IS_CHANGE_SAFE=false
 ${scwryptsmodule}.update-user-configs() {
-	local NEW_CONFIGURATION="$1"
-	[ $NEW_CONFIGURATION ] || return 1
-
-	local ENVIRONMENT_NAME="$2"
-	[ $ENVIRONMENT_NAME ] || return 2
+	local environment_name="${1}"
+	[[ "${environment_name}" ]] || return 2
 
 	# reinject all metadata, since the update function is allowed to strip it
-	NEW_CONFIGURATION="$(
-		{
-			scwrypts.environment.user.get-full-template-with-value-keys --environment "$ENVIRONMENT_NAME"
-			echo ---
-			echo "$NEW_CONFIGURATION"
-		} | scwrypts.environment.common.combine-template-files
-	)"
+	local new_configuration="$({
+		scwrypts.environment.get-full-template.with-value-keys --environment "${environment_name}"
+		echo ---
+		cat -- "${TEMP_CONFIG_FILE}"
+	} | scwrypts.environment.common.combine-template-files)"
+	[[ "${new_configuration}" ]] || return 1
 
-	local METADATA_DELETE_QUERY="$(
-		echo "$NEW_CONFIGURATION" \
+
+	local metadata_delete_query="$(
+		echo "${new_configuration}" \
 			| sed -n 's/^\s\+\(\.[-A-Za-z_:]\+\):.*$/ | del(.. | select(has("\1"))."\1")/p' \
 			| sort --unique \
 			)"
 
-	local GROUP GROUP_CONFIG_FILENAME GROUP_CONFIG
-	for GROUP in ${SCWRYPTS_GROUPS[@]}
+	local group group_config_filename group_config
+	for group in ${SCWRYPTS_GROUPS[@]}
 	do
-		local GROUP_CONFIG="$(echo "$NEW_CONFIGURATION" \
+		local group_config="$(echo "${new_configuration}" \
 			| utils.yq ".
 					| del(.. | select(has(\".PARENTVALUE\") and has(\"value\") and .\".PARENTVALUE\" == .value))
 					| del(.. | select(has(\".PARENTSELECTION\") and has(\"selection\") and .\".PARENTSELECTION\" == .selection))
-					| del(.. | select(has(\".GROUP\") and .\".GROUP\" != \"$GROUP\"))
+					| del(.. | select(has(\".GROUP\") and .\".GROUP\" != \"${group}\"))
 					| del(.. | select(has(\"selection\") and (.selection == null or (.selection | length) == 0)).selection)
 					| del(.. | select(has(\"value\") and .value == null).value)
-					$METADATA_DELETE_QUERY
+					${metadata_delete_query}
 				" \
 		)"
 
-		while echo "$GROUP_CONFIG" | grep -q '{}'
+		while echo "$group_config" | grep -q '{}'
 		do
-			GROUP_CONFIG="$(echo "$GROUP_CONFIG" | utils.yq 'del(.. | select(tag == "!!map" and length == 0))')"
+			group_config="$(echo "${group_config}" | utils.yq 'del(.. | select(tag == "!!map" and length == 0))')"
 		done
 
-		[ "$GROUP_CONFIG" ] || GROUP_CONFIG='# no configuration set'
+		[ "${group_config}" ] || group_config='# no configuration set'
 
-		echo "---  # $ENVIRONMENT_NAME > $GROUP\n$GROUP_CONFIG" > "$(scwrypts.environment.common.get-env-filename "$ENVIRONMENT_NAME" "$GROUP")"
+		echo "---  # ${environment_name} > ${group}\n${group_config}" > "$(scwrypts.environment.common.get-env-file "${environment_name}" "${group}")"
 	done
 
-	[[ $ENVIRONMENT_NAME =~ ^$SCWRYPTS_ENV$ ]] && [[ $__SCWRYPTS_ENVIRONMENT__WORKFLOW_IS_CHANGE_SAFE =~ false ]] && {
+	[[ "${environment_name}" == "${SCWRYPTS_ENV}" ]] && [[ "${__SCWRYPTS_ENVIRONMENT__WORKFLOW_IS_CHANGE_SAFE}" =~ false ]] && {
 		echo.warning "current scwrypts environment has changed"
 		export __SCWRYPTS_ENVIRONMENT__USER_ENVIRONMENT=
 	}
+
+	zsh-cache.reset.all
 
 	return 0
 }

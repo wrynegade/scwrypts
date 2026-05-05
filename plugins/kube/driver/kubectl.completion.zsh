@@ -1,5 +1,5 @@
 #####################################################################
-command -v compdef >/dev/null 2>&1 || return 0
+command -v compdef &>/dev/null || return 0
 #####################################################################
 
 for CLI in kubectl helm flux

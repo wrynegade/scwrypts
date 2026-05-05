@@ -84,7 +84,7 @@ readonly ${scwryptsgroup}__color=$(utils.colors.green)
 #
 
 
-readonly ${scwryptsgroup}__zshlibrary=
+#readonly ${scwryptsgroup}__zshlibrary=
 #
 # ${scwryptsgroup}__zshlibrary (optional) (default = *see below*)
 #

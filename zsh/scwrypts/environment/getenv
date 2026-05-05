@@ -39,7 +39,7 @@ MAIN() {
 			utils.environment.check --print-value ${ARGS[@]}
 			;;
 		( all )
-			scwrypts.environment.user.get-json
+			scwrypts.environment.get-user-json
 			;;
 	esac
 }

@@ -28,8 +28,8 @@ ABORT    >> utils.abort
 
 CHECK_ERRORS >> utils.check-errors
 
-Yn >> utils.Yn
-yN >> utils.yN
+Yn >> user.Yn
+yN >> user.yN
 
 EDIT >> utils.io.edit
 

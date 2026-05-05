@@ -50,15 +50,28 @@ readonly SCWRYPTS_DATA_PATH="${XDG_DATA_HOME:-${HOME}/.local/share}/scwrypts"
 readonly SCWRYPTS_STATE_PATH="${XDG_STATE_HOME:-${HOME}/.local/state}/scwrypts"
 readonly SCWRYPTS_LOG_PATH="${SCWRYPTS_STATE_PATH}/logs"
 
-[ -d /tmp ] \
-	&& readonly SCWRYPTS_TEMP_PATH="/tmp/scwrypts/${SCWRYPTS_RUNTIME_ID}" \
-	|| readonly SCWRYPTS_TEMP_PATH="${XDG_RUNTIME_DIR:-/run/user/${UID}}/scwrypts/${SCWRYPTS_RUNTIME_ID}" \
-	;
+if [[ -d /tmp ]]
+then
+	readonly SCWRYPTS_TEMP_PATH="/tmp/scwrypts/${SCWRYPTS_RUNTIME_ID}"
+	readonly SCWRYPTS_TEMP_PATH_SOCKET="/tmp/scwrypts/socket"
+else
+	readonly SCWRYPTS_TEMP_PATH="${XDG_RUNTIME_DIR:-/run/user/${UID}}/scwrypts/${SCWRYPTS_RUNTIME_ID}"
+	readonly SCWRYPTS_TEMP_PATH_SOCKET="${XDG_RUNTIME_DIR:-/run/user/${UID}}/scwrypts/socket"
+fi
 
-mkdir -p \
+readonly SCWRYPTS_CACHE_PATH__runtime="${SCWRYPTS_TEMP_PATH}/cache"
+readonly SCWRYPTS_CACHE_PATH__persistent="${SCWRYPTS_TEMP_PATH_SOCKET}/cache"
+
+mkdir -p -- \
+	"${SCWRYPTS_CONFIG_PATH}" \
 	"${SCWRYPTS_ENV_PATH}" \
+	"${SCWRYPTS_DATA_PATH}" \
+	"${SCWRYPTS_STATE_PATH}" \
 	"${SCWRYPTS_LOG_PATH}" \
 	"${SCWRYPTS_TEMP_PATH}" \
+	"${SCWRYPTS_TEMP_PATH_SOCKET}" \
+	"${SCWRYPTS_CACHE_PATH__runtime}" \
+	"${SCWRYPTS_CACHE_PATH__persistent}" \
 	;
 
 DEFAULT_CONFIG="${__SCWRYPTS_ROOT}/zsh/config.user.zsh"
@@ -80,9 +93,8 @@ source "${__SCWRYPTS_ROOT}/zsh/config.global.zsh"
 
 SCWRYPTS_GROUPS=()
 
-command -v echo.warning &>/dev/null || WARNING() { echo "echo.warning : $@" >&2; }
-command -v echo.error   &>/dev/null || ERROR()   { echo "echo.error   : $@" >&2; return 1; }
-command -v utils.fail    &>/dev/null || FAIL()    { echo.error "${@:2}"; exit $1; }
+command -v echo.warning &>/dev/null || echo.warning() { echo "echo.warning : $@" >&2; }
+command -v echo.error   &>/dev/null || echo.error()   { echo "echo.error   : $@" >&2; return 1; }
 
 __SCWRYPTS_GROUP_LOADERS=(
 	"${__SCWRYPTS_ROOT}/scwrypts.scwrypts.zsh"
@@ -146,7 +158,7 @@ do
 		|| echo.warning "error encountered when loading group '${__SCWRYPTS_GROUP_NAME}'" \
 		;
 
-	[[ ! ${__SCWRYPTS_GROUP_NAME} =~ ^scwrypts$ ]] && [ ! "$(scwrypts.config.group ${__SCWRYPTS_GROUP_NAME} zshlibrary)" ] && {
+	[ ! "$(scwrypts.config.group ${__SCWRYPTS_GROUP_NAME} zshlibrary)" ] && {
 		case $(scwrypts.config.group ${__SCWRYPTS_GROUP_NAME} type) in
 			( zsh )
 				[ -d "${scwryptsgrouproot}/lib" ] \
@@ -165,7 +177,8 @@ do
 done
 
 [[ ${SCWRYPTS_GROUPS[1]} =~ ^scwrypts$ ]] \
-	|| utils.fail 69 "encountered error when loading essential group 'scwrypts'; aborting"
+	|| echo.error "encountered error when loading essential group 'scwrypts'; aborting" \
+	|| exit 69
 
 #####################################################################
 ### cleanup #########################################################

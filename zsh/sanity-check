@@ -15,39 +15,33 @@ USAGE__description='
 #####################################################################
 
 MAIN() {
-	local OUTPUT_FUNCTION=success
-	local EXIT_CODE=0
-	local MESSAGE='Hello, world!'
+	local output_function=success
+	local exit_code=0
+	local message='Hello, world!'
 
 	eval "${ZSHPARSEARGS}"
 
 	##########################################
 
-	[[ ${OUTPUT_FUNCTION} =~ ^fail$ ]] && utils.fail ${EXIT_CODE} "${MESSAGE}"
+	command -v "echo.${output_function}" &>/dev/null || {
+		echo.warning "no such function echo.${output_function} exists; swapping to echo.status"
+		output_function=status
+	}
 
-	echo.${OUTPUT_FUNCTION} "${MESSAGE}"
-	return ${EXIT_CODE}
+	"echo.${output_function}" "${message}"
+	return ${exit_code}
 }
 
 #####################################################################
 
 MAIN.parse() {
-	local PARSED=0
+	local parsed=0
 
-	case $1 in
-		( -e | --exit-code )
-			PARSED=2
-			EXIT_CODE="$2"
-			;;
-		( -f | --output-function )
-			PARSED=2
-			OUTPUT_FUNCTION="$2"
-			;;
-		( -m | --message )
-			PARSED=2
-			MESSAGE="$2"
-			;;
+	case "${1}" in
+		( -e | --exit-code       ) parsed=2; exit_code="${2}"       ;;
+		( -f | --output-function ) parsed=2; output_function="${2}" ;;
+		( -m | --message         ) parsed=2; message="${2}"         ;;
 	esac
 
-	return ${PARSED}
+	return "${parsed}"
 }

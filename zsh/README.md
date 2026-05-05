@@ -66,15 +66,15 @@ Of the `echo` family, there are two unique functions:
 
 #### Yes / No Prompts
 
-The two helpers `utils.Yn` and `utils.yN` take a user-friendly yes/no question as an argument.
+The two helpers `user.Yn` and `user.yN` take a user-friendly yes/no question as an argument.
 
 - when the user responds "yes", the command returns 0 / success / `&&`
 - when the user responds "no", the command returns 1 / error / `||`
 - when the user responds with _nothing_ (e.g. just presses enter), the _default_ is used
 
 The two commands work identically; however, the capitalization denotes the default:
-- `utils.Yn` = default "yes"
-- `utils.yN` = default "no"
+- `user.Yn` = default "yes"
+- `user.yN` = default "no"
 
 #### Select from a List Prompt
 

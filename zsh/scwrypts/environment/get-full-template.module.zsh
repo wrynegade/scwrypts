@@ -1,48 +1,54 @@
 #####################################################################
 
-use scwrypts/cache-output
 use scwrypts/environment/common
+
+use zsh-cache
 
 #####################################################################
 
 ${scwryptsmodule}() {
-	eval "$(usage.reset)"
-	local USAGE__description="
+	local DESCRIPTION="
 		Provies the combined YAML of all available scwrypts group 'template.yaml' files.
 
 		Template is cached after first generation in a given scwrypts runtime.
 	"
 
-	local \
-		CACHE_ARGS=() \
-		PARSERS=(
-			scwrypts.cache-output.zshparse.args
-			)
+	eval "$(utils.parse.autosetup)"
 
-	eval "$ZSHPARSEARGS"
 	##########################################
 
-	scwrypts.cache-output ${CACHE_ARGS[@]} \
-		--cache-file environment.template.yaml \
-		-- \
-		scwrypts.environment.get-full-template.helper \
-		;
+	zsh-cache --auto
 }
 
-${scwryptsmodule}.helper() {
-	local GROUP GROUP_ROOT GROUP_TEMPLATE_FILENAME
-	{
-	for GROUP in ${SCWRYPTS_GROUPS[@]}
+${scwryptsmodule}.zsh-cache() {
+	local DEBUG_ARGS=() TRACE_ARGS=()
+	local template_file group _
+	while IFS=: read -r group template_file _
 	do
-		GROUP_ROOT="$(scwrypts.config.group ${GROUP} root)"
+		[[ "$(head -n1 "${template_file}")" =~ ^---$ ]] || echo ---
 
-		GROUP_TEMPLATE_FILENAME="${GROUP_ROOT}/.config/env.yaml"
+		cat -- "${template_file}" \
+			| utils.yq "(.. | select(has(\".ENVIRONMENT\"))) += {\".GROUP\":\"${group}\"}"
+	done < <(scwrypts.environment.common.get-all-template-files) \
+		| scwrypts.environment.common.combine-template-files
 
-		[ -f "${GROUP_TEMPLATE_FILENAME}" ] && {
-			[[ $(head -n1 "${GROUP_TEMPLATE_FILENAME}") =~ ^---$ ]] || echo ---
-				cat "${GROUP_TEMPLATE_FILENAME}" \
-					| utils.yq "(.. | select(has(\".ENVIRONMENT\"))) += {\".GROUP\":\"${GROUP}\"}"
-		}
-	done
-	} | scwrypts.environment.common.combine-template-files
+	return 0
+}
+
+${scwryptsmodule}.zsh-cache.get-hash() {
+	{
+		scwrypts.environment.common.get-environment-module-files
+		scwrypts.environment.common.get-all-template-files.only-filenames
+	} | utils.sha1sum.filelist
+}
+
+${scwryptsmodule}.with-value-keys() {
+	scwrypts.environment.get-full-template \
+		| utils.yq '(.. | select(has(".ENVIRONMENT"))) += {
+				"selection": [],
+				"value": null
+			}
+			' \
+		| sed 's/ ""$//' \
+		;
 }

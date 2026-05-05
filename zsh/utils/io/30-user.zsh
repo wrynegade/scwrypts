@@ -9,8 +9,8 @@ utils.io.input() {  # read a single line of user input
 
 # yes/no prompts   && = yes (exit code 0)
 #                  || = no  (exit code 1)
-utils.Yn() { [[ ! $(utils.io.read-yn $@ '[Yn]') =~ [nN] ]]; }  # default 'yes'
-utils.yN() { [[   $(utils.io.read-yn $@ '[yN]') =~ [yY] ]]; }  # default 'no'
+user.Yn() { [[ ! $(utils.io.read-yn $@ '[Yn]') =~ [nN] ]]; }  # default 'yes'
+user.yN() { [[   $(utils.io.read-yn $@ '[yN]') =~ [yY] ]]; }  # default 'no'
 
 utils.io.edit() {  # edit a file in user's preferred editor
 	[ ${CI} ] && {
@@ -25,7 +25,7 @@ utils.io.edit() {  # edit a file in user's preferred editor
 
 utils.io.getsudo() {  # ensure a user has sudo permissions
 	echo.prompt 'checking sudo password' --stdout | head -n1 >&2
-	sudo echo hi >/dev/null 2>&1 </dev/tty \
+	sudo echo hi &>/dev/null </dev/tty \
 		&& echo.success '...authenticated!' \
 		|| echo.error 'failed :c' \
 		|| return 1
@@ -35,51 +35,56 @@ utils.io.getsudo() {  # ensure a user has sudo permissions
 #####################################################################
 
 utils.io.read()  {
-	[ ${CI} ] && [ -t 0 ] \
-		&& utils.fail 42 'currently in CI, but attempting interactive read; aborting'
+	local stdin_is_a_terminal \
+		&& [[ -t 0 ]] \
+		&& stdin_is_a_terminal=true \
+		|| stdin_is_a_terminal=false \
+		;
 
-	local FORCE_USER_INPUT=false
+	[[ "$(normalize.boolean CI)" == true ]] && [[ "${stdin_is_a_terminal}" == true ]] && {
+		echo.error 'currently in CI, but attempting interactive read; aborting'
+		return 42
+	}
+
+	local force_user_input=false
 	local ARGS=()
 
-	while [[ $# -gt 0 ]]
+	while [[ "${#}" -gt 0 ]]
 	do
-		case $1 in
-			--force-user-input ) FORCE_USER_INPUT=true ;;
-			-k )
-				ARGS+=($1)
-				;;
-			* ) ARGS+=($1) ;;
+		case "${1}" in
+			( --force-user-input ) force_user_input=true ;;
+			( * ) ARGS+=("${1}") ;;
 		esac
 		shift 1
 	done
 
 	while read -k -t 0; do :; done;  # flush user stdin
 
-	case ${FORCE_USER_INPUT} in
-		true  )
-			read ${PREARGS[@]} ${ARGS[@]} $@ </dev/tty
+	case "${force_user_input}" in
+		( true )
+			read "${PREARGS[@]}" "${ARGS[@]}" "${@}" </dev/tty
 			;;
-		false )
-			[ -t 0 ] || ARGS=(-u 0 ${ARGS[@]})
-			read ${ARGS[@]} $@
+		( false )
+			[[ "${stdin_is_a_terminal}" == false ]] && ARGS=(-u 0 ${ARGS[@]})
+			read "${ARGS[@]}" "${@}"
 			;;
 	esac
 }
 
 utils.io.read-yn() {  # yes/no read is suprisingly tricky
-	local FORCE_USER_INPUT=false
+	local force_user_input=false
 	local USERPROMPT=()
-	local READ_ARGS=()
+	local read_args=()
 
-	[ "${SCWRYPTS_LOG_LEVEL}" ] || local SCWRYPTS_LOG_LEVEL=4
+	[[ "${SCWRYPTS_LOG_LEVEL}" ]] || local SCWRYPTS_LOG_LEVEL=4
 
-	while [[ $# -gt 0 ]]
+	while [[ "${#}" -gt 0 ]]
 	do
-		case $1 in
-			--force-user-input )
+		case "${1}" in
+			( --force-user-input )
 				# overrides 'scwrypts -y' and stdin pipe but not CI
-				FORCE_USER_INPUT=true
-				READ_ARGS+=($1)
+				force_user_input=true
+				read_args+=($1)
 				;;
 			* ) USERPROMPT+=($1) ;;
 		esac
@@ -88,27 +93,29 @@ utils.io.read-yn() {  # yes/no read is suprisingly tricky
 
 	##########################################
 
-	local SKIP_USER_INPUT=false
+	local skip_user_input=false
+	case "$(normalize.boolean CI)" in
+		( true )  # always skip input in CI
+			skip_user_input=true
+			;;
 
-	[ ${CI} ] \
-		&& SKIP_USER_INPUT=true
-
-	[ ${__SCWRYPTS_YES} ] && [[ ${__SCWRYPTS_YES} -eq 1 ]] && [[ ${FORCE_USER_INPUT} =~ false ]] \
-		&& SKIP_USER_INPUT=true
+		( false )
+			[[ "${force_user_input}" == false ]] && [[ "$(normalize.boolean __SCWRYPTS_YES)" == true ]] \
+				&& skip_user_input=true
+			;;
+	esac
 
 	##########################################
 
 	local yn
 	echo.prompt "${USERPROMPT[@]}"
 
-	case ${SKIP_USER_INPUT} in
-		true ) yn=y ;;
-		false )
-			utils.io.read ${READ_ARGS[@]} -s -k yn
-			;;
+	case "${skip_user_input}" in
+		( true  ) yn=y ;;
+		( false ) utils.io.read "${read_args[@]}" -s -k yn ;;
 	esac
 
-	[[ ${SCWRYPTS_LOG_LEVEL} -ge 1 ]] && echo ${yn} >&2
+	echo.prompt --only-response --response "${yn}"
 
-	echo ${yn}
+	echo "${yn}"
 }

@@ -2,103 +2,124 @@ DEPENDENCIES+=(jo jq printf)
 
 utils.io.print() {
 	local \
-		MESSAGE \
-		PREFIX COLOR \
-		MINIMUM_LOG_LEVEL IGNORE_MINIMUM_LOG_LEVEL=false \
-		PRINT_TO_STDERR=true \
-		PRINT_TO_STDOUT=false \
-		LAST_LINE_END='\n' \
+		message \
+		prefix prefix_delimiter=' : ' color \
+		minimum_log_level ignore_minimum_log_level=false \
+		print_to_stderr=true \
+		print_to_stdout=false \
+		last_line_end=$'\n' \
+		variables=() \
 		;
 
-	[ ${SCWRYPTS_LOG_LEVEL}     ] || local SCWRYPTS_LOG_LEVEL=4
-	[ ${SCWRYPTS_OUTPUT_FORMAT} ] || local SCWRYPTS_OUTPUT_FORMAT=pretty
+	# since this function can be used outside of scwrypts, we bump log
+	# level to maximum to avoid confusion of "why isn't my print
+	# statment working"
+	[[ "${SCWRYPTS_LOG_LEVEL:=${LOG_LEVEL}}" ]] \
+		|| local SCWRYPTS_LOG_LEVEL=4
 
-	local _S
-	while [[ $# -gt 0 ]]
+	[[ "${SCWRYPTS_OUTPUT_FORMAT}" ]] \
+		|| local SCWRYPTS_OUTPUT_FORMAT=pretty
+
+	local _s
+	while [[ "${#}" -gt 0 ]]
 	do
-		_S=1
-		case $1 in
-			( --prefix )
-				_S=2
-				PREFIX="$2"
-				;;
+		_s=1
+		case "${1}" in
+			( --prefix            ) _s=2; prefix="${2}"                       ;;
+			( --prefix-delimiter  ) _s=2; prefix_delimiter="${2}"             ;;
+			( --color             ) _s=2; color="${2}"                        ;;
+			( --minimum-log-level ) _s=2; minimum_log_level="${2}"            ;;
+			( --format            ) _s=2; local SCWRYPTS_OUTPUT_FORMAT="${2}" ;;
 
-			( --color )
-				_S=2
-				COLOR="$2"
-				;;
-
-			( --minimum-log-level )
-				_S=2
-				MINIMUM_LOG_LEVEL=$2
+			( -v ) _s=2  # appends 'name=value' to the end of the message
+				variables+=("${2}")
 				;;
 
 			( --force-print )
-				IGNORE_MINIMUM_LOG_LEVEL=true
+				ignore_minimum_log_level=true
 				;;
 
 			( --stdout )
-				PRINT_TO_STDOUT=true
-				PRINT_TO_STDERR=false
+				print_to_stdout=true
+				print_to_stderr=false
 				;;
 
-			( --no-line-end  )
-				LAST_LINE_END=''
-				;;
-
-			( --format )
-				_S=2
-				local SCWRYPTS_OUTPUT_FORMAT=$2
+			( --no-line-end )  # only applicable to some formats (see below)
+				last_line_end=''
 				;;
 
 			( * )
-				[ "${MESSAGE}" ] && MESSAGE+=" $1" || MESSAGE="$1"
+				[[ "${message}" ]] && message+=" ${1}" || message="${1}"
 				;;
 		esac
 
-		[[ ${_S} -le $# ]] && shift ${_S} || { echo "echo.error : missing argument for '$1'" >&2; return 1; }
+		shift "${_s}" || { echo "ERROR : missing argument for '${1}'" >&2; return 1; }
 	done
 
 	: \
-		&& [ "${MINIMUM_LOG_LEVEL}" ] \
-		&& [[ "${IGNORE_MINIMUM_LOG_LEVEL}" =~ false ]] \
-		&& [[ "${SCWRYPTS_LOG_LEVEL}" -lt "${MINIMUM_LOG_LEVEL}" ]] \
+		&& [[ "${minimum_log_level}" ]] \
+		&& [[ "${ignore_minimum_log_level}" =~ false ]] \
+		&& [[ "${SCWRYPTS_LOG_LEVEL}" -lt "${minimum_log_level}" ]] \
 		&& return 0
 
+	local variable
+	for variable in "${variables[@]}"
+	do
+		message+=$'\n'" - ${variable}=${(Pq)variable}"
+	done
 
-	MESSAGE="$(echo "${MESSAGE}" | sed 's/^	\+//; s/%/%%/g')"
-	case ${SCWRYPTS_OUTPUT_FORMAT} in
-		( raw ) MESSAGE+="${LAST_LINE_END}" ;;
+	case ${SCWRYPTS_OUTPUT_FORMAT:l} in
+		( raw ) message+="${last_line_end}" ;;
+
 		( pretty )
-			MESSAGE="${COLOR}$({
-				while IFS='' read line
+			message="${color}$({
+				while IFS='' read -r line
 				do
-					[[ ${PREFIX} =~ ^[[:space:]]\+$ ]] && printf '\n'
-
-					printf "${PREFIX} : $(echo "${line}" | sed 's/^	\+//; s/ \+$//')"
-
-					PREFIX='          '
-				done <<< $(echo "${MESSAGE}" | sed 's/%/%%/g')
-			})${LAST_LINE_END}$(utils.colors.reset)"
+					[[ ${prefix} =~ ^[[:space:]]\+$ ]] && printf '%s' $'\n'
+					printf "%s" "${prefix}${prefix_delimiter}$(echo "${line}" | sed 's/^	\+//; s/ \+$//')"
+					prefix="$(printf '%*s' ${#prefix} '')"
+				done <<< "${message}"
+			})${last_line_end}$(utils.colors.reset)"
 			;;
+
 		( json )
-			MESSAGE="$(jo \
+			message="$(jo \
 				timestamp=$(date +%s) \
 				runtime=${SCWRYPTS_RUNTIME_ID} \
-				status="$(echo "${PREFIX}" | sed 's/ .*//')" \
-				message="$(echo -n "${MESSAGE}" | sed 's/^\t\+//' | jq -Rs)" \
-				2>/dev/null || echo "{\"error\":\"your message was too long so I encoded it manually\",\"messageB64\":\"$(echo "${MESSAGE}" | base64 | tr -d '\n')\"}"
-			)\n"
+				status="$(echo "${prefix}" | sed 's/ .*//')" \
+				message="$(echo -n "${message}" | sed 's/^\t\+//')" \
+				2>/dev/null || echo "{\"error\":\"your message was too long so I encoded it\",\"messageB64\":\"$(echo "${message}" | base64 | tr -d '\n')\"}"
+			)"$'\n'
 			;;
+
+		( logfmt )
+			local ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+			local level
+			case "${prefix}" in
+				( ERROR*   ) level=error ;;
+				( WARNING* ) level=warn  ;;
+				( DEBUG*   ) level=debug ;;
+				( TRACE*   ) level=trace ;;
+				( *        ) level=info  ;;
+			esac
+
+			local msg="${message}"
+			msg="${msg//\\/\\\\}"
+			msg="${msg//\"/\\\"}"
+			msg="${msg//$'\n'/\\n}"
+
+			message="ts=${ts} level=${level} runtime=${SCWRYPTS_RUNTIME_ID} msg=\"${msg}\""$'\n'
+			;;
+
 		( * )
-			echo "echo.error : unsupported format '${SCWRYPTS_OUTPUT_FORMAT}'" >&2
+			echo "ERROR : unsupported format '${SCWRYPTS_OUTPUT_FORMAT}'" >&2
 			return 1
 			;;
 	esac
 
-
-	[[ ${PRINT_TO_STDERR} =~ true ]] && printf -- "${MESSAGE}" >&2
-	[[ ${PRINT_TO_STDOUT} =~ true ]] && printf -- "${MESSAGE}"
+	[[ "${print_to_stderr}" =~ true ]] && printf "%s" "${message}" >&2
+	[[ "${print_to_stdout}" =~ true ]] && printf "%s" "${message}"
 
 	return 0
 }
